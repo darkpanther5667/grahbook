@@ -216,6 +216,9 @@ async function addCustomerTool(name, phone) {
   };
   db.customers.push(newCustomer);
   await writeDB(db);
+  // Invalidate cache to ensure AI gets fresh data
+  cachedDB = null;
+  dbCacheTimestamp = 0;
   return { success: true, customer: newCustomer };
 }
 
@@ -234,6 +237,9 @@ async function recordPaymentTool(customerId, amount, note, staffPhone) {
     timestamp: new Date().toISOString()
   });
   await writeDB(db);
+  // Invalidate cache to ensure AI gets fresh data
+  cachedDB = null;
+  dbCacheTimestamp = 0;
   const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
   return { success: true, customerName: customer.name, amount: Number(amount), remainingOutstanding: balance };
 }
@@ -253,6 +259,9 @@ async function addCreditTool(customerId, amount, note, staffPhone) {
     timestamp: new Date().toISOString()
   });
   await writeDB(db);
+  // Invalidate cache to ensure AI gets fresh data
+  cachedDB = null;
+  dbCacheTimestamp = 0;
   const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
   return { success: true, customerName: customer.name, amountAdded: Number(amount), totalOutstanding: balance };
 }
@@ -279,6 +288,9 @@ async function addItemToUnpaidBillTool(customerId, itemName, price, qty) {
   currentBill.items.push({ name: itemName, qty: quantity, price: Number(price) });
   currentBill.total += Number(price) * quantity;
   await writeDB(db);
+  // Invalidate cache to ensure AI gets fresh data
+  cachedDB = null;
+  dbCacheTimestamp = 0;
   const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
   return { success: true, customerName: customer.name, itemAdded: itemName, itemPrice: Number(price), qty: quantity, billTotal: currentBill.total, netOutstanding: balance };
 }
@@ -299,6 +311,9 @@ async function generateBillTool(customerId, amount) {
     paid_at: null
   });
   await writeDB(db);
+  // Invalidate cache to ensure AI gets fresh data
+  cachedDB = null;
+  dbCacheTimestamp = 0;
   const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
   return { success: true, customerName: customer.name, billId: newBillId, amount: Number(amount), netOutstanding: balance };
 }
@@ -314,6 +329,9 @@ async function markBillAsPaidTool(customerId) {
   unpaidBill.status = 'paid';
   unpaidBill.paid_at = new Date().toISOString();
   await writeDB(db);
+  // Invalidate cache to ensure AI gets fresh data
+  cachedDB = null;
+  dbCacheTimestamp = 0;
   const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
   return { success: true, customerName: customer.name, billId: unpaidBill.id, amountPaid: unpaidBill.total, netOutstanding: balance };
 }
@@ -1314,6 +1332,9 @@ app.post('/webhook', async (req, res) => {
         };
         db.customers.push(newCustomer);
         await writeDB(db);
+        // Invalidate cache to ensure AI gets fresh data
+        cachedDB = null;
+        dbCacheTimestamp = 0;
         replyText =
           `✅ *Naya Customer Add Ho Gaya!*\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -1339,6 +1360,9 @@ app.post('/webhook', async (req, res) => {
         timestamp: timestampIso
       });
       await writeDB(db);
+      // Invalidate cache to ensure AI gets fresh data
+      cachedDB = null;
+      dbCacheTimestamp = 0;
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `💵 *Payment Recorded!*\n` +
@@ -1367,6 +1391,9 @@ app.post('/webhook', async (req, res) => {
         timestamp: timestampIso
       });
       await writeDB(db);
+      // Invalidate cache to ensure AI gets fresh data
+      cachedDB = null;
+      dbCacheTimestamp = 0;
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `✅ *Udhar Add Ho Gaya!*\n` +
@@ -1390,6 +1417,9 @@ app.post('/webhook', async (req, res) => {
         paid_at: null
       });
       await writeDB(db);
+      // Invalidate cache to ensure AI gets fresh data
+      cachedDB = null;
+      dbCacheTimestamp = 0;
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `📝 *Bill Bana Diya!*\n` +
@@ -1419,6 +1449,9 @@ app.post('/webhook', async (req, res) => {
       currentBill.items.push({ name: itemName, qty: 1, price });
       currentBill.total += price;
       await writeDB(db);
+      // Invalidate cache to ensure AI gets fresh data
+      cachedDB = null;
+      dbCacheTimestamp = 0;
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `🛒 *Item Add Ho Gaya!*\n` +
@@ -1513,6 +1546,9 @@ app.post('/webhook', async (req, res) => {
         unpaidBill.status = 'paid';
         unpaidBill.paid_at = timestampIso;
         await writeDB(db);
+        // Invalidate cache to ensure AI gets fresh data
+        cachedDB = null;
+        dbCacheTimestamp = 0;
         const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
         replyText =
           `✅ *Bill Mark Paid Ho Gaya!*\n` +
