@@ -76,7 +76,9 @@ fun AppNavigation(viewModel: MainViewModel = viewModel()) {
           }
         )
       }
-      composable("customer_detail/{customerId}") { backStackEntry ->
+      composable("customer_detail/{customerId}",
+        arguments = listOf(navArgument("customerId") { type = NavType.StringType })
+      ) { backStackEntry ->
         val customerId = backStackEntry.arguments?.getString("customerId") ?: ""
         val dbState by viewModel.dbState.collectAsState()
         val customerName = when (dbState) {
@@ -105,7 +107,9 @@ fun AppNavigation(viewModel: MainViewModel = viewModel()) {
           }
         )
       }
-      composable("payment/{customerId}") { backStackEntry ->
+      composable("payment/{customerId}",
+        arguments = listOf(navArgument("customerId") { type = NavType.StringType })
+      ) { backStackEntry ->
         val customerId = backStackEntry.arguments?.getString("customerId") ?: ""
         val dbState by viewModel.dbState.collectAsState()
         val customerName = when (dbState) {
@@ -127,7 +131,9 @@ fun AppNavigation(viewModel: MainViewModel = viewModel()) {
           }
         )
       }
-      composable("bill/{customerId}") { backStackEntry ->
+      composable("bill/{customerId}",
+        arguments = listOf(navArgument("customerId") { type = NavType.StringType })
+      ) { backStackEntry ->
         val customerId = backStackEntry.arguments?.getString("customerId") ?: ""
         val dbState by viewModel.dbState.collectAsState()
         val customerName = when (dbState) {
@@ -149,7 +155,9 @@ fun AppNavigation(viewModel: MainViewModel = viewModel()) {
           }
         )
       }
-      composable("ledger/{customerId}") { backStackEntry ->
+      composable("ledger/{customerId}",
+        arguments = listOf(navArgument("customerId") { type = NavType.StringType })
+      ) { backStackEntry ->
         val customerId = backStackEntry.arguments?.getString("customerId") ?: ""
         LedgerScreen(
           viewModel = viewModel,
