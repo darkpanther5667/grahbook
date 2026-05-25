@@ -1711,6 +1711,93 @@ app.post('/api/db', async (req, res) => {
   res.json({ status: 'success' });
 });
 
+// POST /api/register-store - Register a new store
+app.post('/api/register-store', async (req, res) => {
+  try {
+    const { store_name, owner_name, phone, email, business_type, plan } = req.body;
+    
+    if (!store_name || !owner_name || !phone || !email) {
+      return res.status(400).json({ status: 'error', message: 'Missing required fields' });
+    }
+
+    // Generate unique store ID
+    const storeId = generateStoreId(store_name);
+    
+    // Read existing database
+    const db = await readDB();
+    
+    // Initialize stores array if it doesn't exist
+    if (!db.stores) {
+      db.stores = [];
+    }
+    
+    // Check if store already exists
+    const existingStore = db.stores.find(s => s.phone === phone || s.email === email);
+    if (existingStore) {
+      return res.status(400).json({ status: 'error', message: 'Store already registered with this phone or email' });
+    }
+    
+    // Create new store
+    const newStore = {
+      id: storeId,
+      store_name: store_name,
+      owner_name: owner_name,
+      phone: phone,
+      email: email,
+      business_type: business_type || 'retail',
+      plan: plan || 'basic',
+      created_at: new Date().toISOString(),
+      status: 'active'
+    };
+    
+    // Add store to database
+    db.stores.push(newStore);
+    
+    // Write updated database
+    await writeDB(db);
+    
+    // Send welcome message via WhatsApp
+    const welcomeMessage = `🎉 *Welcome to Grahbook!* 🎉\n\nYour store "${store_name}" has been successfully registered.\n\n📱 *Your Store Dashboard Link:* https://grahbook.com/dashboard/${storeId}\n\nUse this link to access your personalized dashboard.\n\nIf you have any questions, feel free to reach out to our support team.\n\nHappy selling! 🚀`;
+    await sendWhatsAppMessage(phone, welcomeMessage);
+    
+    res.json({ 
+      status: 'success', 
+      store_id: storeId,
+      message: 'Store registered successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error registering store:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to register store' });
+  }
+});
+
+// GET /api/store/:storeId - Get store information
+app.get('/api/store/:storeId', async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const db = await readDB();
+    
+    const store = db.stores?.find(s => s.id === storeId);
+    
+    if (!store) {
+      return res.status(404).json({ status: 'error', message: 'Store not found' });
+    }
+    
+    res.json({ status: 'success', store });
+  } catch (error) {
+    console.error('Error fetching store:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch store' });
+  }
+});
+
+// Helper function to generate unique store ID
+function generateStoreId(storeName) {
+  const cleanName = storeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const randomString = Math.random().toString(36).substring(2, 8);
+  return `${cleanName}-${randomString}`;
+}
+
 // ─── MANUAL TRIGGER ROUTES ─────────────────────────────────────────────────────
 
 // POST /api/send-reminders — Manually trigger payment reminders
@@ -2070,12 +2157,12 @@ app.get('/api/report/:date/pdf', async (req, res) => {
 
 // ─── START SERVER ──────────────────────────────────────────────────────────────
 
-// Serve the dashboard HTML file
+// Serve the landing page
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/dashboard.html');
+  res.sendFile(__dirname + '/index.html');
 });
 
-// Serve other HTML pages
+// Serve the dashboard HTML file
 app.get('/dashboard.html', (req, res) => {
   res.sendFile(__dirname + '/dashboard.html');
 });

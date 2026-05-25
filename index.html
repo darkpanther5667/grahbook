@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grahbook | Commerce at the Speed of WhatsApp</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Font Geist and Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#25d366',
+              container: '#25d366',
+              on: '#ffffff',
+            },
+            secondary: '#0f172a',
+            tertiary: '#64748b',
+            background: '#f7f9fb',
+            surface: '#ffffff',
+            'surface-variant': '#e0e3e5',
+            outline: '#6c7b6b',
+            'outline-variant': '#bbcbb9',
+            'on-background': '#191c1e',
+            'on-surface': '#191c1e',
+            'on-surface-variant': '#3c4a3d',
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            heading: ['Geist', 'ui-sans-serif', 'system-ui'],
+          },
+          borderRadius: {
+            DEFAULT: '0.5rem',
+            lg: '0.75rem',
+            xl: '1rem',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f9fb;
+      color: #191c1e;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Geist', sans-serif;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f7f9fb;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #6c7b6b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #25d366;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    }
+  </style>
+</head>
+<body class="min-h-full">
+  <!-- Navigation -->
+  <nav class="bg-white border-b border-surface-variant sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <span class="material-icons text-primary text-3xl">storefront</span>
+          <span class="font-bold text-xl text-secondary">Grahbook</span>
+        </div>
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#features" class="text-tertiary hover:text-secondary transition-all">Features</a>
+          <a href="#pricing" class="text-tertiary hover:text-secondary transition-all">Pricing</a>
+          <a href="#register" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all">Register Your Store</a>
+        </div>
+        <button class="md:hidden text-tertiary">
+          <span class="material-icons">menu</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="gradient-bg text-white py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            Commerce at the Speed of WhatsApp.
+          </h1>
+          <p class="text-lg md:text-xl mb-8 text-white/90">
+            The first AI-powered store bot built for Bharat. Manage billing, UPI payments, and customer chats—all without leaving WhatsApp.
+          </p>
+          <div class="flex items-center gap-4 mb-8">
+            <div class="flex items-center gap-2">
+              <span class="material-icons text-sm">location_on</span>
+              <span class="text-sm">Joined by merchants in Mumbai, Delhi & Bangalore</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <a href="#register" class="px-6 py-3 bg-white text-primary font-bold rounded-lg hover:bg-white/90 transition-all">
+              Start Free Trial
+            </a>
+            <a href="#features" class="px-6 py-3 border border-white text-white font-medium rounded-lg hover:bg-white/10 transition-all">
+              Learn More
+            </a>
+          </div>
+        </div>
+        <div class="hidden lg:block">
+          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="material-icons text-white">payments</span>
+              <span class="font-semibold text-white">UPI INSTANT SETTLE</span>
+            </div>
+            <p class="text-4xl font-bold text-white mb-2">₹12,450.00</p>
+            <p class="text-white/80">Today</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">For Bharat</h2>
+        <p class="text-lg text-tertiary">Built specifically for Indian merchants</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="p-6 bg-background rounded-xl border border-surface-variant hover:shadow-lg transition-all">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <span class="material-icons text-primary text-2xl">chat</span>
+          </div>
+          <h3 class="font-bold text-xl text-secondary mb-3">WhatsApp-First</h3>
+          <p class="text-tertiary">Your customers are on WhatsApp. Now your shop is too. From catalog browsing to checkout, all in one chat.</p>
+        </div>
+        
+        <div class="p-6 bg-background rounded-xl border border-surface-variant hover:shadow-lg transition-all">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <span class="material-icons text-primary text-2xl">account_balance</span>
+          </div>
+          <h3 class="font-bold text-xl text-secondary mb-3">UPI & Local Payments</h3>
+          <p class="text-tertiary">Built for the Indian economy. Accept GPay, PhonePe, and Paytm with automated reconciliation and GST-ready invoices.</p>
+        </div>
+        
+        <div class="p-6 bg-background rounded-xl border border-surface-variant hover:shadow-lg transition-all">
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <span class="material-icons text-primary text-2xl">inventory_2</span>
+          </div>
+          <h3 class="font-bold text-xl text-secondary mb-3">Smart Inventory</h3>
+          <p class="text-tertiary">Manage your stock like a pro. AI-driven alerts for low stock and regional trend analysis for your local market.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonial Section -->
+  <section class="py-20 bg-background">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">Empowering Bharat's Merchants</h2>
+      </div>
+      
+      <div class="max-w-3xl mx-auto">
+        <div class="bg-white p-8 rounded-xl border border-surface-variant shadow-lg">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <span class="material-icons text-primary text-3xl">person</span>
+            </div>
+            <div>
+              <p class="font-bold text-secondary text-lg">Priya Sharma</p>
+              <p class="text-tertiary">Owner, Elegance Ethnic Wear</p>
+            </div>
+          </div>
+          <p class="text-secondary text-lg italic">"Grahbook transformed how I manage my boutique. The WhatsApp bot handles everything - from catalog sharing to payment collection. My customers love it!"</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">The Store Bot That Handles Everything</h2>
+        <p class="text-lg text-tertiary">Focus on your craft, let Grahbook handle the commerce.</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="p-6 bg-background rounded-xl border border-surface-variant">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="material-icons text-primary text-2xl">auto_awesome</span>
+            <h3 class="font-bold text-xl text-secondary">AI-Powered Catalogs</h3>
+          </div>
+          <p class="text-tertiary mb-4">Send beautiful PDFs or interactive WhatsApp catalogs. Our AI automatically syncs with your physical inventory.</p>
+          <div class="flex gap-4">
+            <div class="flex-1 p-3 bg-white rounded-lg border border-surface-variant">
+              <p class="font-semibold text-secondary">Silk Saree</p>
+              <p class="text-primary font-bold">₹4,500.00</p>
+            </div>
+            <div class="flex-1 p-3 bg-white rounded-lg border border-surface-variant">
+              <p class="font-semibold text-secondary">Kurta Set</p>
+              <p class="text-primary font-bold">₹2,200.00</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-6 bg-background rounded-xl border border-surface-variant">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="material-icons text-primary text-2xl">translate</span>
+            <h3 class="font-bold text-xl text-secondary">Hinglish AI Support</h3>
+          </div>
+          <p class="text-tertiary">Our bot understands Hindi, English, and regional dialects. It handles FAQs like a local expert.</p>
+        </div>
+        
+        <div class="p-6 bg-background rounded-xl border border-surface-variant">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="material-icons text-primary text-2xl">payment</span>
+            <h3 class="font-bold text-xl text-secondary">Instant UPI Settle</h3>
+          </div>
+          <p class="text-tertiary">Money goes straight to your bank account. No middle-man delays, just pure commerce.</p>
+        </div>
+        
+        <div class="p-6 bg-background rounded-xl border border-surface-variant">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="material-icons text-primary text-2xl">dashboard</span>
+            <h3 class="font-bold text-xl text-secondary">Merchant HUD</h3>
+          </div>
+          <p class="text-tertiary">A bird's eye view of your business. Track sales across WhatsApp, Instagram, and walk-ins in one unified dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="py-20 bg-background">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">Pricing for Every Stage</h2>
+        <p class="text-lg text-tertiary">Start free, scale as your business grows across Bharat.</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white p-8 rounded-xl border border-surface-variant hover:shadow-lg transition-all">
+          <h3 class="font-bold text-xl text-secondary mb-2">MUKHIYA (BASIC)</h3>
+          <p class="text-3xl font-bold text-primary mb-6">Free</p>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>1,000 orders/mo</span>
+            </li>
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>Basic AI (Hinglish)</span>
+            </li>
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>UPI QR Integration</span>
+            </li>
+          </ul>
+          <button onclick="showRegisterForm('basic')" class="mt-8 w-full px-4 py-3 border border-primary text-primary font-medium rounded-lg hover:bg-primary hover:text-white transition-all">
+            Get Started
+          </button>
+        </div>
+        
+        <div class="bg-white p-8 rounded-xl border-2 border-primary shadow-lg relative">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-sm font-medium rounded-full">Popular</div>
+          <h3 class="font-bold text-xl text-secondary mb-2">BHANDARI (PRO)</h3>
+          <p class="text-3xl font-bold text-primary mb-6">₹499/mo</p>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>Unlimited orders</span>
+            </li>
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>Advanced AI Personalization</span>
+            </li>
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>GST Invoicing + Tally Export</span>
+            </li>
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>Multi-Store Access</span>
+            </li>
+          </ul>
+          <button onclick="showRegisterForm('pro')" class="mt-8 w-full px-4 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-all">
+            Get Started
+          </button>
+        </div>
+        
+        <div class="bg-white p-8 rounded-xl border border-surface-variant hover:shadow-lg transition-all">
+          <h3 class="font-bold text-xl text-secondary mb-2">SAMRAT (ENTERPRISE)</h3>
+          <p class="text-3xl font-bold text-primary mb-6">Custom</p>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>Full White-label</span>
+            </li>
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>Dedicated CRM Integrations</span>
+            </li>
+            <li class="flex items-center gap-2 text-secondary">
+              <span class="material-icons text-primary text-sm">check_circle</span>
+              <span>API & Webhook Access</span>
+            </li>
+          </ul>
+          <button onclick="showRegisterForm('enterprise')" class="mt-8 w-full px-4 py-3 border border-primary text-primary font-medium rounded-lg hover:bg-primary hover:text-white transition-all">
+            Contact Sales
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Register Section -->
+  <section id="register" class="py-20 bg-white">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">Ready to grow your shop?</h2>
+        <p class="text-lg text-tertiary">Join thousands of Indian merchants scaling their dreams through WhatsApp automation.</p>
+      </div>
+      
+      <div class="bg-background p-8 rounded-xl border border-surface-variant">
+        <form id="register-form" onsubmit="handleRegister(event)" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-secondary mb-2">Store Name</label>
+              <input type="text" id="store-name" required placeholder="e.g., Sharma Electronics" class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-secondary mb-2">Owner Name</label>
+              <input type="text" id="owner-name" required placeholder="e.g., Rajesh Sharma" class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-secondary mb-2">Phone Number</label>
+              <input type="tel" id="phone" required pattern="[6-9]{1}[0-9]{9}" placeholder="e.g., 9876543210" class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-secondary mb-2">Email</label>
+              <input type="email" id="email" required placeholder="e.g., rajesh@example.com" class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-secondary mb-2">Business Type</label>
+            <select id="business-type" required class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+              <option value="">Select business type...</option>
+              <option value="retail">Retail Store</option>
+              <option value="wholesale">Wholesale</option>
+              <option value="service">Service Business</option>
+              <option value="restaurant">Restaurant/Food</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-secondary mb-2">Plan</label>
+            <select id="plan" required class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+              <option value="basic">Mukhiya (Basic) - Free</option>
+              <option value="pro">Bhandari (Pro) - ₹499/mo</option>
+              <option value="enterprise">Samrat (Enterprise) - Custom</option>
+            </select>
+          </div>
+          
+          <div class="flex items-start gap-2">
+            <input type="checkbox" id="terms" required class="mt-1">
+            <label for="terms" class="text-sm text-tertiary">I agree to the Terms of Service and Privacy Policy</label>
+          </div>
+          
+          <button type="submit" class="w-full px-4 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all">
+            Register Your Store
+          </button>
+          
+          <p class="text-center text-sm text-tertiary">No credit card required. Cancel anytime.</p>
+        </form>
+        
+        <div id="success-message" class="hidden text-center py-8">
+          <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <span class="material-icons text-primary text-4xl">check_circle</span>
+          </div>
+          <h3 class="font-bold text-xl text-secondary mb-2">Registration Successful!</h3>
+          <p class="text-tertiary mb-4">Your store has been registered. Check your WhatsApp for your unique store link.</p>
+          <p class="text-sm text-tertiary">Store ID: <span id="store-id" class="font-mono font-bold text-primary"></span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mobile App Section -->
+  <section class="py-20 bg-background">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">Commerce on the Go</h2>
+          <p class="text-lg text-tertiary mb-6">Manage your entire shop, track inventory, and reply to customers from our dedicated mobile app.</p>
+          <div class="flex gap-4">
+            <button class="px-6 py-3 bg-black text-white rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-all">
+              <span class="material-icons">apple</span>
+              <span>App Store</span>
+            </button>
+            <button class="px-6 py-3 bg-black text-white rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-all">
+              <span class="material-icons">android</span>
+              <span>Google Play</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex justify-center">
+          <div class="w-64 h-[500px] bg-surface-variant rounded-3xl border-4 border-secondary p-4 flex items-center justify-center">
+            <div class="text-center">
+              <span class="material-icons text-6xl text-tertiary">phone_iphone</span>
+              <p class="text-tertiary mt-2">Mobile App</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-surface-variant py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <span class="material-icons text-primary text-2xl">storefront</span>
+            <span class="font-bold text-lg text-secondary">Grahbook</span>
+          </div>
+          <p class="text-sm text-tertiary">© 2024 Grahbook India. High-velocity commerce for the modern Indian merchant. Proudly built in Bharat.</p>
+        </div>
+        
+        <div>
+          <h4 class="font-bold text-secondary mb-4">Platform</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-tertiary hover:text-secondary transition-all">Privacy Policy</a></li>
+            <li><a href="#" class="text-tertiary hover:text-secondary transition-all">Terms of Service</a></li>
+            <li><a href="#" class="text-tertiary hover:text-secondary transition-all">API Docs</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="font-bold text-secondary mb-4">Support</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-tertiary hover:text-secondary transition-all">WhatsApp Support</a></li>
+            <li><a href="#" class="text-tertiary hover:text-secondary transition-all">Seller Guide</a></li>
+            <li><a href="#" class="text-tertiary hover:text-secondary transition-all">UPI FAQs</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="font-bold text-secondary mb-4">Connect</h4>
+          <div class="flex gap-4">
+            <a href="#" class="text-tertiary hover:text-secondary transition-all">
+              <span class="material-icons">facebook</span>
+            </a>
+            <a href="#" class="text-tertiary hover:text-secondary transition-all">
+              <span class="material-icons">photo_camera</span>
+            </a>
+            <a href="#" class="text-tertiary hover:text-secondary transition-all">
+              <span class="material-icons">alternate_email</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function showRegisterForm(plan) {
+      document.getElementById('plan').value = plan;
+      document.getElementById('register').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function handleRegister(event) {
+      event.preventDefault();
+      
+      const storeData = {
+        store_name: document.getElementById('store-name').value,
+        owner_name: document.getElementById('owner-name').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        business_type: document.getElementById('business-type').value,
+        plan: document.getElementById('plan').value
+      };
+
+      try {
+        const response = await fetch('/api/register-store', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(storeData)
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          document.getElementById('register-form').classList.add('hidden');
+          document.getElementById('success-message').classList.remove('hidden');
+          document.getElementById('store-id').textContent = result.store_id;
+        } else {
+          alert('Registration failed. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error registering store:', error);
+        alert('Registration failed. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>

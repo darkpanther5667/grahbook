@@ -84,7 +84,7 @@
       <div class="flex items-center gap-3">
         <span class="material-icons text-primary text-3xl">storefront</span>
         <div>
-          <h1 class="font-bold text-lg text-secondary leading-tight">Sharma Store</h1>
+          <h1 class="font-bold text-lg text-secondary leading-tight store-name">Sharma Store</h1>
           <span class="text-xs text-primary font-medium">Business Portal</span>
         </div>
       </div>
@@ -92,7 +92,7 @@
 
     <!-- Navigation -->
     <nav class="flex-1 p-4 space-y-1">
-      <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+      <a href="dashboard.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
         <span class="material-icons">dashboard</span>
         <span>Dashboard</span>
       </a>
@@ -104,7 +104,7 @@
         <span class="material-icons">smart_toy</span>
         <span>Bot Config</span>
       </a>
-      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+      <a href="billing.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
         <span class="material-icons">receipt_long</span>
         <span>Billing</span>
       </a>
@@ -125,7 +125,7 @@
           <span class="material-icons text-primary">person</span>
         </div>
         <div class="flex-1">
-          <p class="font-semibold text-sm text-secondary">Rajesh Sharma</p>
+          <p class="font-semibold text-sm text-secondary owner-name">Rajesh Sharma</p>
           <p class="text-xs text-tertiary">Admin</p>
         </div>
       </div>
@@ -246,8 +246,69 @@
     let database = {
       customers: [],
       transactions: [],
-      bills: []
+      bills: [],
+      stores: []
     };
+    
+    let currentStore = null;
+    let storeId = null;
+
+    // Get store ID from URL
+    function getStoreIdFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('store_id');
+    }
+
+    // Fetch store information
+    async function fetchStoreInfo() {
+      storeId = getStoreIdFromUrl();
+      if (!storeId) {
+        window.location.href = '/';
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/store/${storeId}`);
+        const data = await response.json();
+        if (data.status === 'success') {
+          currentStore = data.store;
+          updateStoreBranding();
+        } else {
+          window.location.href = '/';
+        }
+      } catch (error) {
+        console.error('Error fetching store info:', error);
+        window.location.href = '/';
+      }
+    }
+
+    // Update store branding
+    function updateStoreBranding() {
+      if (currentStore) {
+        const storeNameElements = document.querySelectorAll('.store-name');
+        storeNameElements.forEach(el => {
+          el.textContent = currentStore.store_name;
+        });
+
+        const ownerNameElements = document.querySelectorAll('.owner-name');
+        ownerNameElements.forEach(el => {
+          el.textContent = currentStore.owner_name;
+        });
+
+        updateNavigationLinks();
+      }
+    }
+
+    // Update navigation links with store_id
+    function updateNavigationLinks() {
+      const navLinks = document.querySelectorAll('.nav-link');
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && !href.includes('?')) {
+          link.setAttribute('href', `${href}?store_id=${storeId}`);
+        }
+      });
+    }
 
     // Fetch data from backend
     async function fetchDatabase() {
@@ -388,8 +449,10 @@
     document.getElementById('search-input').addEventListener('input', updateCustomerList);
 
     // Initialize
-    fetchDatabase();
-    setInterval(fetchDatabase, 30000);
+    fetchStoreInfo().then(() => {
+      fetchDatabase();
+      setInterval(fetchDatabase, 30000);
+    });
   </script>
 </body>
 </html>
