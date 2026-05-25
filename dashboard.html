@@ -75,1918 +75,354 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #25d366;
     }
-
-    /* Print styling rules */
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      #print-modal-content, #print-modal-content * {
-        visibility: visible;
-      }
-      #print-modal-content {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        color: #000000 !important;
-        background: #ffffff !important;
-      }
-      .no-print {
-        display: none !important;
-      }
-      /* Ensure text is clearly black on white */
-      #print-modal-content h1, 
-      #print-modal-content h2, 
-      #print-modal-content td, 
-      #print-modal-content th,
-      #print-modal-content div,
-      #print-modal-content p,
-      #print-modal-content span {
-        color: #000000 !important;
-      }
-    }
-
-    /* Hide standard radio input, style active pills */
-    .tab-btn.active {
-      border-color: #25d366;
-      color: #25d366;
-      background-color: rgba(37, 211, 102, 0.08);
-    }
   </style>
 </head>
-<body class="flex flex-col h-full overflow-hidden">
+<body class="flex h-full overflow-hidden">
 
-  <!-- Main Container -->
-  <div class="flex flex-1 overflow-hidden h-full">
-    
-    <!-- Sidebar Navigation (Hidden on tiny mobile, shown as bottom tabs on smaller portrait screens) -->
-    <aside class="hidden md:flex flex-col w-64 bg-white border-r border-surface-variant p-5 shrink-0 justify-between">
-      <div class="space-y-6">
-        <!-- Brand Header -->
-        <div class="flex items-center gap-3 py-3 border-b border-surface-variant">
-          <span class="material-icons text-primary text-3xl">storefront</span>
-          <div>
-            <h1 class="font-bold text-lg text-secondary leading-tight" id="shop-name-display">Sharma Store</h1>
-            <span class="text-xs text-primary font-medium">Khata & Billing</span>
-          </div>
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r border-surface-variant flex flex-col shrink-0">
+    <!-- Brand -->
+    <div class="p-6 border-b border-surface-variant">
+      <div class="flex items-center gap-3">
+        <span class="material-icons text-primary text-3xl">storefront</span>
+        <div>
+          <h1 class="font-bold text-lg text-secondary leading-tight">Sharma Store</h1>
+          <span class="text-xs text-primary font-medium">Business Portal</span>
         </div>
-
-        <!-- Navigation items -->
-        <nav class="space-y-1">
-          <button onclick="switchTab('overview')" id="nav-overview" class="tab-btn active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background transition-all font-medium">
-            <span class="material-icons">grid_view</span>
-            <span>Home Overview</span>
-          </button>
-          
-          <button onclick="switchTab('khata')" id="nav-khata" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background transition-all font-medium">
-            <span class="material-icons">people_alt</span>
-            <span>Khata Ledger</span>
-          </button>
-
-          <button onclick="switchTab('bills')" id="nav-bills" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background transition-all font-medium">
-            <span class="material-icons">receipt_long</span>
-            <span>Bills & Invoices</span>
-          </button>
-
-          <button onclick="switchTab('reports')" id="nav-reports" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background transition-all font-medium">
-            <span class="material-icons">analytics</span>
-            <span>Reports & Insights</span>
-          </button>
-        </nav>
       </div>
+    </div>
 
-      <!-- Footer Info -->
-      <div class="bg-background p-4 rounded-xl border border-surface-variant">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="material-icons text-xs text-primary">circle</span>
-          <span class="text-xs text-tertiary font-medium">Bot Webhook Server</span>
+    <!-- Navigation -->
+    <nav class="flex-1 p-4 space-y-1">
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium">
+        <span class="material-icons">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">shopping_cart</span>
+        <span>Orders</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">smart_toy</span>
+        <span>Bot Config</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">receipt_long</span>
+        <span>Billing</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">group</span>
+        <span>Customers</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">settings</span>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <!-- User Profile -->
+    <div class="p-4 border-t border-surface-variant">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <span class="material-icons text-primary">person</span>
         </div>
-        <p class="text-xs text-secondary">Port 3000 running</p>
-        <span class="text-[10px] text-primary block mt-1">v1.0.0 (Offline-Enabled)</span>
+        <div class="flex-1">
+          <p class="font-semibold text-sm text-secondary">Rajesh Sharma</p>
+          <p class="text-xs text-tertiary">Admin</p>
+        </div>
       </div>
-    </aside>
+    </div>
+  </aside>
 
-    <!-- Main Content Panel -->
-    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto pb-20 md:pb-5">
-      
-      <!-- Top header bar (always visible) -->
-      <header class="bg-white/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4 flex items-center justify-between border-b border-surface-variant">
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white border-b border-surface-variant px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-secondary">Overview</h2>
+          <p class="text-sm text-tertiary">Real-time performance metrics and bot activity for Sharma Store</p>
+        </div>
         <div class="flex items-center gap-4">
-          <!-- Logo for mobile view -->
-          <div class="flex md:hidden items-center gap-2">
-            <span class="material-icons text-primary text-2xl">storefront</span>
-            <span class="font-bold text-secondary text-md">Sharma Store</span>
-          </div>
-          <div class="hidden md:block">
-            <p class="text-xs text-tertiary">Merchant Center Dashboard</p>
-            <h2 class="text-xl font-bold text-secondary flex items-center gap-2">
-              Namaste, <span id="owner-name-display" class="text-primary">Rajesh Sharma</span>! 👋
-            </h2>
-          </div>
-        </div>
-
-        <!-- Sync Clock / Status -->
-        <div class="flex items-center gap-3">
-          <div class="text-right hidden sm:block">
-            <span class="text-xs text-tertiary block" id="current-date-formatted">Loading Date...</span>
-            <span class="text-[10px] font-mono text-tertiary" id="current-utc-time">UTC</span>
-          </div>
-          <button onclick="resetToInitialSample()" title="Reset Database to original data" class="px-3 py-1.5 rounded-lg border border-surface-variant hover:border-primary text-tertiary hover:text-primary hover:bg-background text-xs flex items-center gap-1 transition-all">
-            <span class="material-icons text-sm">restart_alt</span>
-            <span>Reset Data</span>
+          <button class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all">
+            <span class="material-icons text-sm mr-1">add</span>
+            New Invoice
           </button>
         </div>
-      </header>
+      </div>
+    </header>
 
-      <!-- Tab Sections Wrapper -->
-      <div class="p-6 space-y-6 max-w-7xl mx-auto w-full flex-1">
-        
-        <!-- SECTION 1: OVERVIEW -->
-        <section id="section-overview" class="space-y-6">
-          <!-- Info Grid Cards -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <!-- Total Outstanding Card -->
-            <div class="bg-white p-5 rounded-xl border border-surface-variant flex items-center justify-between hover:border-primary transition-all shadow-sm">
-              <div class="space-y-1">
-                <span class="text-xs text-tertiary font-medium">Total Balance Due (Net Khata)</span>
-                <p class="text-3xl font-bold text-secondary font-mono" id="overview-outstanding">₹0</p>
-                <span class="text-[10px] text-primary flex items-center gap-1">
-                  <span class="material-icons text-xs">money_off</span>
-                  <span>Owed by all registered customers</span>
-                </span>
-              </div>
-              <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
-                <span class="material-icons text-2xl">account_balance_wallet</span>
-              </div>
-            </div>
-
-            <!-- Today's Collections Card -->
-            <div class="bg-white p-5 rounded-xl border border-surface-variant flex items-center justify-between hover:border-primary transition-all shadow-sm">
-              <div class="space-y-1">
-                <span class="text-xs text-tertiary font-medium">Today's Collections (Payments)</span>
-                <p class="text-3xl font-bold text-primary font-mono" id="overview-collections">₹0</p>
-                <span class="text-[10px] text-primary flex items-center gap-1">
-                  <span class="material-icons text-xs">trending_up</span>
-                  <span id="overview-collections-date">Received Today</span>
-                </span>
-              </div>
-              <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
-                <span class="material-icons text-2xl">payments</span>
-              </div>
-            </div>
-
-            <!-- Pending Bills Card -->
-            <div class="bg-white p-5 rounded-xl border border-surface-variant flex items-center justify-between hover:border-primary transition-all shadow-sm sm:col-span-2 lg:col-span-1">
-              <div class="space-y-1">
-                <span class="text-xs text-tertiary font-medium font-semibold">Active Unpaid Bills</span>
-                <p class="text-3xl font-bold text-secondary font-mono" id="overview-pending-bills">0</p>
-                <span class="text-[10px] text-tertiary flex items-center gap-1">
-                  <span class="material-icons text-xs">pending_actions</span>
-                  <span>Invoices awaiting processing</span>
-                </span>
-              </div>
-              <div class="w-12 h-12 rounded-xl bg-tertiary/10 border border-tertiary/30 flex items-center justify-center text-tertiary">
-                <span class="material-icons text-2xl">schedule_send</span>
-              </div>
-            </div>
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <!-- Total Revenue -->
+        <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm text-tertiary font-medium">Total Revenue</span>
+            <span class="material-icons text-primary">payments</span>
           </div>
-
-          <!-- Bottom Grid Split: Top Customers & Recent Transactions -->
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- Left Pane: Top 3 Customers -->
-            <div class="lg:col-span-5 space-y-4">
-              <div class="flex items-center justify-between">
-                <h3 class="text-md font-bold text-secondary uppercase tracking-widest text-xs flex items-center gap-1">
-                  <span class="material-icons text-sm text-primary">emoji_events</span>
-                  <span>Top Outstanding Ledger</span>
-                </h3>
-              </div>
-              <div id="top-customers-list" class="space-y-4">
-                <!-- Dynamically populated top 3 customer cards -->
-              </div>
-            </div>
-
-            <!-- Right Pane: Recent 10 Transactions -->
-            <div class="lg:col-span-7 bg-white rounded-xl border border-surface-variant overflow-hidden shadow-sm flex flex-col">
-              <div class="px-5 py-4 border-b border-surface-variant bg-background flex items-center justify-between">
-                <h3 class="text-sm font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
-                  <span class="material-icons text-sm text-tertiary">history</span>
-                  <span>Recent Ledger Transactions</span>
-                </h3>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-surface-variant text-tertiary font-mono">Last 10 Actions</span>
-              </div>
-              
-              <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                  <thead>
-                    <tr class="border-b border-surface-variant text-[11px] text-tertiary uppercase tracking-wider bg-background">
-                      <th class="py-3 px-4">Ref #</th>
-                      <th class="py-3 px-4">Customer</th>
-                      <th class="py-3 px-4 text-center">Type</th>
-                      <th class="py-3 px-4 text-right">Amount</th>
-                      <th class="py-3 px-4">Timestamp</th>
-                    </tr>
-                  </thead>
-                  <tbody id="recent-transactions-tbody" class="divide-y divide-surface-variant text-xs">
-                    <!-- Loaded dynamically -->
-                  </tbody>
-                </table>
-              </div>
-              <div class="p-3 text-center border-t border-surface-variant bg-background text-xs">
-                <button onclick="switchTab('khata')" class="text-primary hover:text-secondary transition-all inline-flex items-center gap-1 font-medium">
-                  <span>View detailed Khata balance details</span>
-                  <span class="material-icons text-sm">arrow_forward</span>
-                </button>
-              </div>
-            </div>
+          <p class="text-3xl font-bold text-secondary mb-2">₹12,480.00</p>
+          <div class="flex items-center gap-1 text-sm text-primary">
+            <span class="material-icons text-sm">trending_up</span>
+            <span>+14.2% from last month</span>
           </div>
-        </section>
+        </div>
 
-        <!-- SECTION 2: KHATA (CUSTOMER ACCOUNTS) -->
-        <section id="section-khata" class="hidden space-y-6">
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-surface-variant/60">
-            <!-- Search field -->
-            <div class="relative w-full sm:max-w-md">
-              <span class="material-icons absolute left-3 top-2.5 text-tertiary text-lg">search</span>
-              <input type="text" id="khata-search-input" oninput="populateCustomerKhataList()" placeholder="Hindi/English Name ya Mobile search karein..." class="w-full pl-10 pr-4 py-2 bg-white border border-surface-variant focus:border-amber-500 focus:outline-none rounded-xl text-on-surface text-sm placeholder:text-tertiary">
-            </div>
-
-            <!-- Action buttons -->
-            <div class="flex items-center gap-2 w-full sm:w-auto self-end sm:self-center">
-              <button onclick="openModal('addCustModal')" class="flex-1 sm:flex-initial bg-primary hover:bg-primary-dark text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center justify-center gap-1 transition-all shadow-md shadow-amber-500/10">
-                <span class="material-icons text-sm">person_add</span>
-                <span>Naya Customer Add Karein</span>
-              </button>
-            </div>
+        <!-- Active Sessions -->
+        <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm text-tertiary font-medium">Active WhatsApp Sessions</span>
+            <span class="material-icons text-primary">chat</span>
           </div>
-
-          <!-- Split Layout: Left customer selection cards, Right details ledger view (dynamic, sticky) -->
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Customer Cards Grid (lg:col-span-5) -->
-            <div class="lg:col-span-5 space-y-3 max-h-[600px] overflow-y-auto pr-2" id="khata-customers-container">
-              <!-- Rendered dynamically -->
-            </div>
-
-            <!-- Detailed Khata Ledger Display Panel (lg:col-span-7) -->
-            <div class="lg:col-span-7 bg-white rounded-2xl border border-surface-variant/60 overflow-hidden shadow-xl sticky top-24" id="ledger-detail-panel">
-              <!-- Dynamic content based on clicked customer -->
-              <div class="flex flex-col items-center justify-center py-20 px-6 text-center space-y-4">
-                <div class="w-16 h-16 rounded-full bg-white border border-surface-variant flex items-center justify-center text-tertiary">
-                  <span class="material-icons text-3xl">contact_page</span>
-                </div>
-                <div>
-                  <h4 class="font-bold text-tertiary">No Customer Selected</h4>
-                  <p class="text-xs text-tertiary mt-1">Left list mein se kisi customer par click karke unka detailed Khata Ledger or transactions dekhein, naya entry add karein.</p>
-                </div>
-              </div>
-            </div>
+          <p class="text-3xl font-bold text-secondary mb-2">42</p>
+          <div class="flex items-center gap-1 text-sm text-primary">
+            <span class="material-icons text-sm">online_prediction</span>
+            <span>Live Now</span>
           </div>
-        </section>
+        </div>
 
-        <!-- SECTION 3: BILLS & INVOICES -->
-        <section id="section-bills" class="hidden space-y-6">
-          <!-- Filtering Toolbar -->
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-surface-variant/60">
-            <!-- Group filter tags -->
-            <div class="flex gap-1.5 p-1 bg-white rounded-xl border border-surface-variant/60 w-full sm:w-auto">
-              <button onclick="setBillFilter('all')" id="bill-filter-all" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-tertiary hover:text-white" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #F59E0B;">
-                All Invoices
-              </button>
-              <button onclick="setBillFilter('paid')" id="bill-filter-paid" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-tertiary hover:text-white">
-                Paid (जमा)
-              </button>
-              <button onclick="setBillFilter('unpaid')" id="bill-filter-unpaid" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-tertiary hover:text-white">
-                Unpaid (बाकी)
-              </button>
-            </div>
-
-            <!-- Search Bill No OR Name -->
-            <div class="relative w-full sm:max-w-xs">
-              <span class="material-icons absolute left-3 top-2.5 text-tertiary text-lg">search</span>
-              <input type="text" id="bill-search-input" oninput="populateBillsList()" placeholder="Bill No. / Customer Name search..." class="w-full pl-10 pr-4 py-2 bg-white border border-surface-variant focus:border-amber-500 focus:outline-none rounded-xl text-on-surface text-sm placeholder:text-tertiary">
-            </div>
+        <!-- New Orders -->
+        <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm text-tertiary font-medium">New Orders</span>
+            <span class="material-icons text-primary">shopping_cart</span>
           </div>
-
-          <!-- Bills Table Container -->
-          <div class="bg-white rounded-2xl border border-surface-variant/60 overflow-hidden shadow-xl">
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="border-b border-surface-variant text-[11px] text-tertiary uppercase tracking-wider bg-white/20">
-                    <th class="py-4 px-5">Invoice ID</th>
-                    <th class="py-4 px-5">Customer Name</th>
-                    <th class="py-4 px-5">Billing Date</th>
-                    <th class="py-4 px-5 text-center">Items Count</th>
-                    <th class="py-4 px-5 text-right">Grand Total</th>
-                    <th class="py-4 px-5 text-center">Payment Status</th>
-                    <th class="py-4 px-5 text-right no-print">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="bills-list-tbody" class="divide-y divide-slate-800 text-[13px]">
-                  <!-- Rendered dynamically -->
-                </tbody>
-              </table>
-            </div>
-            
-            <!-- Empty state fallback -->
-            <div id="bills-empty-state" class="hidden flex flex-col items-center justify-center p-12 text-center text-tertiary">
-              <span class="material-icons text-4xl mb-2">subtitles_off</span>
-              <p class="text-xs">Koi matching invoice record nahi mila matching search/filters par.</p>
-            </div>
+          <p class="text-3xl font-bold text-secondary mb-2">15</p>
+          <div class="flex items-center gap-1 text-sm text-tertiary">
+            <span>Today's total</span>
           </div>
-        </section>
+        </div>
 
-        <!-- SECTION 4: REPORTS & INSIGHTS -->
-        <section id="section-reports" class="hidden space-y-6">
-          <!-- Filters line -->
-          <div class="bg-white p-4 rounded-2xl border border-surface-variant/60 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3 w-full sm:w-auto">
-              <div class="flex flex-col gap-1 w-full sm:w-auto">
-                <span class="text-[10px] text-tertiary uppercase font-semibold">From Date</span>
-                <input type="date" id="filter-from-date" class="px-3 py-1.5 bg-white border border-surface-variant rounded-lg text-xs text-white focus:outline-none focus:border-amber-500">
-              </div>
-              <div class="flex flex-col gap-1 w-full sm:w-auto">
-                <span class="text-[10px] text-tertiary uppercase font-semibold">To Date</span>
-                <input type="date" id="filter-to-date" class="px-3 py-1.5 bg-white border border-surface-variant rounded-lg text-xs text-white focus:outline-none focus:border-amber-500">
-              </div>
-              <button onclick="applyReportFilters()" class="self-end px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs transition-all font-semibold select-none">
-                Apply Filters
-              </button>
-            </div>
-
-            <!-- Export utility -->
-            <button onclick="exportTransactionsCSV()" class="w-full sm:w-auto bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all">
-              <span class="material-icons text-sm">download_for_offline</span>
-              <span>CSV Record Export (.CSV)</span>
-            </button>
+        <!-- Conversion Rate -->
+        <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm text-tertiary font-medium">Bot Conversion Rate</span>
+            <span class="material-icons text-primary">analytics</span>
           </div>
-
-          <!-- Charts Grid Split -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Bar Chart: Daily Collection Collections -->
-            <div class="bg-white p-5 rounded-2xl border border-surface-variant/60 shadow-lg space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h4 class="font-bold text-on-surface text-sm">Collections: Cash/Part Payment Trend</h4>
-                  <p class="text-xs text-tertiary mt-0.5">Sum of daily customer cash payments (Last 7 Days)</p>
-                </div>
-                <span class="material-icons text-tertiary">analytics</span>
-              </div>
-              <div class="h-64 relative">
-                <canvas id="dailyCollectionsChart"></canvas>
-              </div>
-            </div>
-
-            <!-- Pie Chart: Bill Payment Distribution -->
-            <div class="bg-white p-5 rounded-2xl border border-surface-variant/60 shadow-lg space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h4 class="font-bold text-on-surface text-sm">Invoice Payment Clearance Statistics</h4>
-                  <p class="text-xs text-tertiary mt-0.5">Paid vs Active Outstanding/Unpaid stores invoices</p>
-                </div>
-                <span class="material-icons text-tertiary">inventory_2</span>
-              </div>
-              <div class="h-64 relative flex justify-center">
-                <canvas id="paidUnpaidChart" class="max-w-[240px]"></canvas>
-              </div>
-            </div>
+          <p class="text-3xl font-bold text-secondary mb-2">18.4%</p>
+          <div class="flex items-center gap-1 text-sm text-tertiary">
+            <span>Auto-response efficiency</span>
           </div>
-
-          <!-- Most Active Defaulters/Outstanding Ledger users -->
-          <div class="bg-white p-5 rounded-2xl border border-surface-variant/60 shadow-lg space-y-4">
-            <h4 class="font-bold text-on-surface text-sm uppercase tracking-wider text-xs flex items-center gap-1 text-amber-400">
-              <span class="material-icons text-sm">warning</span>
-              <span>Outstanding balance rank chart indices</span>
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="ranking-defaulters-grid">
-              <!-- Dynamically populated rank cards -->
-            </div>
-          </div>
-        </section>
-
+        </div>
       </div>
 
-      <!-- BOTTOM PANEL: WHATSAPP BOT WORKFLOW SIMULATOR -->
-      <section class="no-print mt-auto border-t border-surface-variant bg-slate-900/90 backdrop-blur-md px-6 py-4 flex flex-col gap-3 sticky bottom-0 z-40 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 flex items-center justify-center">
-              <span class="material-icons text-md">forum</span>
+      <!-- Charts and Activity -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Revenue Chart -->
+        <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+          <h3 class="font-bold text-secondary mb-4">Revenue Over Time</h3>
+          <p class="text-sm text-tertiary mb-4">Last 7 days performance</p>
+          <div class="h-64">
+            <canvas id="revenueChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Live Bot Activity -->
+        <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+          <h3 class="font-bold text-secondary mb-4">Live Bot Activity</h3>
+          <div class="space-y-4">
+            <div class="flex items-start gap-3 p-3 bg-background rounded-lg">
+              <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <span class="material-icons text-primary text-sm">person</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-secondary">+1 555-0123</p>
+                <p class="text-xs text-tertiary truncate">"Looking for the premium plan catalog..."</p>
+              </div>
+              <span class="text-xs text-tertiary">2m ago</span>
             </div>
+            <div class="flex items-start gap-3 p-3 bg-background rounded-lg">
+              <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <span class="material-icons text-primary text-sm">person</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-secondary">+44 20 7946 0958</p>
+                <p class="text-xs text-tertiary truncate">"Payment confirmed for Order #8291"</p>
+              </div>
+              <span class="text-xs text-tertiary">15m ago</span>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-background rounded-lg">
+              <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <span class="material-icons text-primary text-sm">person</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-secondary">+91 98765 43210</p>
+                <p class="text-xs text-tertiary truncate">"Can I get this in blue?"</p>
+              </div>
+              <span class="text-xs text-tertiary">22m ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm mb-6">
+        <h3 class="font-bold text-secondary mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button class="flex items-center gap-3 p-4 bg-background rounded-xl hover:bg-surface-variant transition-all text-left">
+            <span class="material-icons text-primary">receipt_long</span>
             <div>
-              <h3 class="text-xs font-bold text-on-surface uppercase tracking-widest flex items-center gap-2">
-                <span>WhatsApp Bot Command Simulator Pane</span>
-                <span class="text-[10px] px-2 py-0.5 font-normal rounded-full bg-green-500/10 text-green-400">Live Engine</span>
-              </h3>
-              <p class="text-[10px] text-tertiary">Staff-side command results, regex processing parsing simulated directly below:</p>
+              <p class="font-medium text-secondary">Create Invoice</p>
+              <p class="text-xs text-tertiary">Send to customer chat</p>
             </div>
-          </div>
-          <p class="text-[9px] text-tertiary hidden sm:block">Test query inputs: "Ramesh ka khata mein 100 daal do" or "Suresh ka 500 ka bill banao"</p>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <!-- Text simulator query -->
-          <div class="relative flex-1">
-            <span class="material-icons absolute left-3 top-2.5 text-tertiary text-lg">message</span>
-            <input type="text" id="wa-input-cmd" value="Ramesh ka khata mein 100 daal do" placeholder="WhatsApp style command (e.g., Suresh ka 500 का bill create karo)" class="w-full pl-10 pr-24 py-2 bg-slate-850 border border-surface-variant focus:border-green-500 focus:outline-none rounded-xl text-on-surface text-sm">
-            <button onclick="simulateWhatsAppCommand()" class="absolute right-1.5 top-1 bg-green-600 hover:bg-green-750 text-white font-medium px-4 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1">
-              <span>Send Bot</span>
-              <span class="material-icons text-xs">send</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Simulator Result Panel expansion UI (Output reply box) -->
-        <div id="wa-simulator-response-box" class="hidden bg-slate-950/80 rounded-xl p-3 border border-surface-variant text-xs text-tertiary grid grid-cols-1 md:grid-cols-12 gap-3 transition-all">
-          <div class="md:col-span-4 border-r border-surface-variant pr-3 space-y-1">
-            <span class="text-[9px] text-zinc-500 uppercase font-bold tracking-wider block">Parsed Intent Metadata</span>
-            <div id="sim-parsed-badge" class="font-mono text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded px-1.5 py-0.5 w-fit">Parsed</div>
-            <p class="text-[10px] text-tertiary font-medium" id="sim-parsed-details">Command actions log</p>
-          </div>
-          <div class="md:col-span-8 flex flex-col justify-center space-y-1 pl-1">
-            <span class="text-[9px] text-green-500 uppercase font-bold tracking-wider flex items-center gap-1">
-              <span class="material-icons text-[10px]">smart_toy</span>
-              <span>Shop Bot Hindi Confirmation Reply</span>
-            </span>
-            <div class="text-xs bg-slate-900 p-2.5 rounded border border-green-950/40 text-green-300 font-mono" id="sim-bot-reply">-</div>
-          </div>
-        </div>
-      </section>
-
-    </main>
-  </div>
-
-  <!-- BOTTOM PORTRAIT TABS NAV (Shown on low aspect tablet/mobile browsers only) -->
-  <div class="no-print md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-surface-variant h-16 flex items-center justify-around z-40 px-2 shadow-2xl">
-    <button onclick="switchTab('overview')" class="flex flex-col items-center justify-center gap-1 text-tertiary mobile-nav-btn" id="mob-nav-overview">
-      <span class="material-icons text-xl">grid_view</span>
-      <span class="text-[9px]">Home</span>
-    </button>
-    <button onclick="switchTab('khata')" class="flex flex-col items-center justify-center gap-1 text-tertiary mobile-nav-btn" id="mob-nav-khata">
-      <span class="material-icons text-xl">people_alt</span>
-      <span class="text-[9px]">Khata</span>
-    </button>
-    <button onclick="switchTab('bills')" class="flex flex-col items-center justify-center gap-1 text-tertiary mobile-nav-btn" id="mob-nav-bills">
-      <span class="material-icons text-xl">receipt_long</span>
-      <span class="text-[9px]">Invoices</span>
-    </button>
-    <button onclick="switchTab('reports')" class="flex flex-col items-center justify-center gap-1 text-tertiary mobile-nav-btn" id="mob-nav-reports">
-      <span class="material-icons text-xl">analytics</span>
-      <span class="text-[9px]">Analysis</span>
-    </button>
-  </div>
-
-  <!-- TOAST ALERTS OVERLAY (Bottom screen floats) -->
-  <div id="toast-container" class="no-print fixed bottom-24 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
-
-  <!-- BACKDROP & MODAL DIALOGS -->
-  <!-- MODAL 1: ADD NEW CUSTOMER -->
-  <div id="addCustModal" class="no-print fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-surface-variant max-w-md w-full overflow-hidden shadow-2xl transform transition-all">
-      <div class="px-5 py-4 border-b border-surface-variant bg-white/30 flex items-center justify-between">
-        <h3 class="font-bold text-secondary text-sm flex items-center gap-2">
-          <span class="material-icons text-primary text-md">person_add</span>
-          <span>Naya Khata Khatadar Details</span>
-        </h3>
-        <button onclick="closeModal('addCustModal')" class="text-tertiary hover:text-white transition-all">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <form id="add-cust-form" onsubmit="handleNewCustomerSubmit(event)" class="p-5 space-y-4 text-xs">
-        <div class="space-y-1">
-          <label class="block font-semibold text-slate-350">Customer Name (Hindi या English Name matches)</label>
-          <input type="text" id="cust-name-input" required placeholder="e.g. Satish Gupta (सतीश गुप्ता)" class="w-full px-3 py-2 bg-white border border-surface-variant focus:border-amber-500 focus:outline-none rounded-xl text-on-surface">
-        </div>
-        <div class="space-y-1">
-          <label class="block font-semibold text-slate-350">Mobile Numbers (10 Digits WhatsApp)</label>
-          <input type="tel" id="cust-phone-input" pattern="[6-9]{1}[0-9]{9}" required placeholder="e.g. 9812345678" class="w-full px-3 py-2 bg-white border border-surface-variant focus:border-amber-500 focus:outline-none rounded-xl text-on-surface">
-        </div>
-        <div class="flex items-center gap-2 justify-end pt-2">
-          <button type="button" onclick="closeModal('addCustModal')" class="px-4 py-2 border border-surface-variant text-tertiary hover:text-white rounded-lg text-xs transition-all font-semibold select-none">
-            Cancel
           </button>
-          <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-dark text-slate-950 rounded-lg text-xs font-bold transition-all select-none">
-            Save Customer
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL 2: ADD LEDGER ENTRY FOR CHOSEN CUSTOMER -->
-  <div id="addEntryModal" class="no-print fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-surface-variant max-w-md w-full overflow-hidden shadow-2xl transform transition-all">
-      <div class="px-5 py-4 border-b border-surface-variant bg-white/30 flex items-center justify-between">
-        <h3 class="font-bold text-secondary text-sm flex items-center gap-2">
-          <span class="material-icons text-primary text-md">post_add</span>
-          <span>Ledger entry manual post input</span>
-        </h3>
-        <button onclick="closeModal('addEntryModal')" class="text-tertiary hover:text-white transition-all">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <form id="add-entry-form" onsubmit="handleNewEntrySubmit(event)" class="p-5 space-y-4 text-xs">
-        <input type="hidden" id="entry-customer-id">
-        <div class="space-y-1">
-          <label class="block font-semibold text-tertiary">Target Outstanding Customer</label>
-          <input type="text" id="entry-customer-name-display" readonly disabled class="w-full px-3 py-2 bg-slate-900 border border-surface-variant text-tertiary rounded-xl font-bold">
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-1">
-            <label class="block font-semibold text-slate-450">Transaction Type</label>
-            <select id="entry-type" class="w-full px-3 py-2 bg-white border border-surface-variant focus:border-amber-500 focus:outline-none rounded-xl text-on-surface font-semibold text-xs">
-              <option value="credit">Credit (उधार / Balance due increases)</option>
-              <option value="payment">Payment Receive (नकद / Balance reduces)</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block font-semibold text-slate-450">Amount (INR / ₹)</label>
-            <input type="number" id="entry-amount" required min="1" placeholder="e.g. 250" class="w-full px-3 py-2 bg-white border border-surface-variant focus:border-amber-500 focus:outline-none rounded-xl text-on-surface font-mono font-bold text-sm">
-          </div>
-        </div>
-        <div class="space-y-1">
-          <label class="block font-semibold text-tertiary">Description notes / memo</label>
-          <input type="text" id="entry-notes" placeholder="e.g. Diwal dils sugar purchase, or UPI pay ref" class="w-full px-3 py-2 bg-white border border-surface-variant focus:border-amber-500 focus:outline-none rounded-xl text-on-surface">
-        </div>
-        <div class="flex items-center gap-2 justify-end pt-2">
-          <button type="button" onclick="closeModal('addEntryModal')" class="px-4 py-2 border border-surface-variant text-tertiary hover:text-white rounded-lg text-xs transition-all font-semibold select-none">
-            Cancel
-          </button>
-          <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-dark text-slate-950 rounded-lg text-xs font-bold transition-all select-none">
-            Post Entry
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL 3: INVOICE PRINT VIEW MODAL -->
-  <div id="invoiceViewModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white text-slate-900 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col my-5">
-      <!-- Top banner actions -->
-      <div class="px-5 py-3 border-b border-neutral-200 bg-neutral-100 flex items-center justify-between no-print">
-        <h4 class="font-bold text-gray-700 text-xs uppercase tracking-wider flex items-center gap-1">
-          <span class="material-icons text-sm">print</span>
-          <span>Retail Invoice print preview</span>
-        </h4>
-        <div class="flex items-center gap-2">
-          <button onclick="window.print()" class="px-3 py-1.5 bg-indigo-650 hover:bg-indigo-800 text-white rounded text-xs transition-all flex items-center gap-1 font-semibold">
-            <span class="material-icons text-sm">print</span>
-            <span>Print PDF</span>
-          </button>
-          <button onclick="closeModal('invoiceViewModal')" class="text-neutral-500 hover:text-black transition-all">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Printable area segment structured beautiful classic design -->
-      <div id="print-modal-content" class="p-8 space-y-6 flex-1 bg-white">
-        <!-- Receipt Header -->
-        <div class="flex items-start justify-between border-b-2 border-slate-200 pb-5">
-          <div class="space-y-1">
-            <h1 class="text-2xl font-black uppercase text-slate-900 tracking-tight" id="inv-shop-name">-</h1>
-            <p class="text-xs text-neutral-500 font-semibold uppercase tracking-wider" id="inv-shop-address">-</p>
-            <p class="text-xs text-neutral-500" id="inv-shop-phone">-</p>
-          </div>
-          <div class="text-right space-y-1">
-            <span class="inline-block px-3 py-1 bg-neutral-100 text-neutral-850 font-black tracking-widest text-[11px] rounded" id="inv-status">RETAIL INVOICE</span>
-            <p class="text-xs text-neutral-400 font-mono mt-2" id="inv-id">Invoice id: -</p>
-            <p class="text-xs text-neutral-405 font-mono" id="inv-date">Date: -</p>
-          </div>
-        </div>
-
-        <!-- Customer detail split -->
-        <div class="grid grid-cols-2 gap-4 text-xs">
-          <div class="p-3 bg-neutral-50 rounded border border-neutral-100">
-            <span class="text-[9px] text-neutral-400 uppercase font-black block tracking-wider">Bill To Customer</span>
-            <p class="font-bold text-neutral-850 text-sm mt-0.5" id="inv-cust-name">-</p>
-            <p class="text-neutral-500 mt-0.5" id="inv-cust-phone">Phone: -</p>
-          </div>
-          <div class="p-3 bg-neutral-50 rounded border border-neutral-100 flex flex-col justify-between">
+          <button class="flex items-center gap-3 p-4 bg-background rounded-xl hover:bg-surface-variant transition-all text-left">
+            <span class="material-icons text-primary">campaign</span>
             <div>
-              <span class="text-[9px] text-neutral-400 uppercase font-black block tracking-wider">Storekeeper operator</span>
-              <p class="font-medium text-neutral-800 mt-0.5" id="inv-shop-owner">-</p>
+              <p class="font-medium text-secondary">Broadcast Message</p>
+              <p class="text-xs text-tertiary">Reach all customers</p>
             </div>
-            <p class="text-[10px] text-zinc-400 text-right leading-none uppercase font-mono italic">Verified ledger match</p>
-          </div>
-        </div>
-
-        <!-- Items table -->
-        <div class="space-y-1">
-          <table class="w-full text-left font-sans text-xs border-collapse">
-            <thead>
-              <tr class="border-b border-neutral-300 text-neutral-400 uppercase text-[10px] font-bold tracking-wider">
-                <th class="py-2">Item Description</th>
-                <th class="py-2 text-center w-16">Qty</th>
-                <th class="py-2 text-right w-24">Price (₹)</th>
-                <th class="py-2 text-right w-28">Total (₹)</th>
-              </tr>
-            </thead>
-            <tbody id="inv-items-tbody" class="divide-y divide-neutral-100">
-              <!-- Dynamically populated rows in Javascript -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Invoice footer calculations -->
-        <div class="flex justify-between border-t border-slate-200 pt-5 text-neutral-900">
-          <div class="text-[10px] text-neutral-400 max-w-xs space-y-1">
-            <p class="font-bold uppercase tracking-wider">Thank you for shopping! 🙏</p>
-            <p class="italic">This is a digital system generated invoice. For any query, refer to our WhatsApp store bot message verification.</p>
-          </div>
-          <div class="text-right space-y-1 max-w-[200px] w-full text-xs">
-            <div class="flex justify-between font-medium">
-              <span class="text-neutral-500">Subtotal:</span>
-              <span id="inv-subtotal" class="font-mono">₹-</span>
+          </button>
+          <button class="flex items-center gap-3 p-4 bg-background rounded-xl hover:bg-surface-variant transition-all text-left">
+            <span class="material-icons text-primary">inventory_2</span>
+            <div>
+              <p class="font-medium text-secondary">View Catalog</p>
+              <p class="text-xs text-tertiary">Manage products</p>
             </div>
-            <div class="flex justify-between font-medium text-green-600 border-b border-dashed border-neutral-200 pb-1">
-              <span>Discount/Tax:</span>
-              <span class="font-mono">₹0.00</span>
-            </div>
-            <div class="flex justify-between text-base font-black text-slate-900 pt-1">
-              <span>Grand Total:</span>
-              <span id="inv-total" class="font-mono">₹-</span>
-            </div>
-          </div>
+          </button>
         </div>
       </div>
 
-      <!-- Footer action sheet bottom modal strictly no print -->
-      <div class="px-5 py-4 border-t border-neutral-200 bg-neutral-50 flex items-center justify-between no-print">
-        <div class="flex items-center gap-1.5" id="inv-action-mark-paid-pane">
-          <!-- Button loaded if bill status is unpaid -->
+      <!-- Bot Status -->
+      <div class="bg-primary/10 border border-primary/20 rounded-xl p-6">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+            <span class="material-icons text-white text-2xl">smart_toy</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-bold text-secondary mb-1">Bot Status: Optimal</h3>
+            <p class="text-sm text-tertiary mb-3">Your AI assistant is currently handling 85% of inbound inquiries autonomously.</p>
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 bg-primary text-white text-xs font-medium rounded-full">New: AI Auto-Responses</span>
+              <span class="text-sm text-tertiary">Enable smarter natural language processing for your bot.</span>
+            </div>
+          </div>
         </div>
-        <button onclick="closeModal('invoiceViewModal')" class="px-4 py-2 bg-neutral-200 hover:bg-neutral-300 text-slate-800 rounded-lg text-xs transition-all font-semibold select-none">
-          Dismiss
-        </button>
       </div>
     </div>
-  </div>
+  </main>
 
-  <!-- APPLICATION DATA ENGINE & DYNAMIC LOGIC SCRIPT -->
   <script>
-    // Embedded sample database to fall back offline in browser
-    const INITIAL_FALLBACK_DB = {
-      "shop": {
-        "name": "Sharma General Store",
-        "owner": "Rajesh Sharma",
-        "phone": "9999999999",
-        "address": "Main Bazaar, Farrukhabad, Uttar Pradesh"
-      },
-      "customers": [
-        { "id": "c1", "name": "Ramesh Kumar", "phone": "9876543210", "created_at": "2026-05-01" },
-        { "id": "c2", "name": "Suresh Singh", "phone": "9812345678", "created_at": "2026-05-02" },
-        { "id": "c3", "name": "Amit Sharma", "phone": "9543210987", "created_at": "2026-05-03" },
-        { "id": "c4", "name": "Sunita Devi", "phone": "9456781230", "created_at": "2026-05-04" },
-        { "id": "c5", "name": "Vikram Patel", "phone": "9321098765", "created_at": "2026-05-05" }
-      ],
-      "transactions": [
-        { "id": "t1", "customer_id": "c1", "type": "credit", "amount": 240, "note": "Atta and Chana Dal on credit", "staff_phone": "9111111111", "timestamp": "2026-05-20T10:00:00Z" },
-        { "id": "t2", "customer_id": "c2", "type": "credit", "amount": 500, "note": "Mustard Oil & Soap", "staff_phone": "9111111111", "timestamp": "2026-05-21T11:15:00Z" },
-        { "id": "t3", "customer_id": "c3", "type": "credit", "amount": 150, "note": "Biscuits & Tea packet", "staff_phone": "9111111111", "timestamp": "2026-05-21T14:30:00Z" },
-        { "id": "t4", "customer_id": "c4", "type": "payment", "amount": 200, "note": "Advance payment cash", "staff_phone": "9111111111", "timestamp": "2026-05-22T09:00:00Z" },
-        { "id": "t5", "customer_id": "c5", "type": "credit", "amount": 350, "note": "Spices & Rice basket", "staff_phone": "9111111111", "timestamp": "2026-05-22T16:20:00Z" },
-        { "id": "t6", "customer_id": "c1", "type": "credit", "amount": 100, "note": "Added via WhatsApp by Raju", "staff_phone": "9111111111", "timestamp": "2026-05-23T10:30:00Z" },
-        { "id": "t7", "customer_id": "c2", "type": "payment", "amount": 300, "note": "Partially paid cash", "staff_phone": "9222222222", "timestamp": "2026-05-23T11:00:00Z" },
-        { "id": "t8", "customer_id": "c3", "type": "credit", "amount": 80, "note": "Matches & candles", "staff_phone": "9222222222", "timestamp": "2026-05-23T15:45:00Z" },
-        { "id": "t9", "customer_id": "c4", "type": "credit", "amount": 420, "note": "Refined Oil 2L", "staff_phone": "9111111111", "timestamp": "2026-05-24T08:10:00Z" },
-        { "id": "t10", "customer_id": "c5", "type": "credit", "amount": 120, "note": "Toothpaste & Brush", "staff_phone": "9222222222", "timestamp": "2026-05-24T09:30:00Z" },
-        { "id": "t11", "customer_id": "c1", "type": "payment", "amount": 150, "note": "UPI payment received", "staff_phone": "9111111111", "timestamp": "2026-05-24T10:00:00Z" },
-        { "id": "t12", "customer_id": "c2", "type": "credit", "amount": 600, "note": "Pulse 5kg bags", "staff_phone": "9111111111", "timestamp": "2026-05-24T11:15:00Z" },
-        { "id": "t13", "customer_id": "c3", "type": "payment", "amount": 230, "note": "Full ledger settlement", "staff_phone": "9222222222", "timestamp": "2026-05-24T12:00:00Z" },
-        { "id": "t14", "customer_id": "c4", "type": "credit", "amount": 90, "note": "Sugar 2kg", "staff_phone": "9111111111", "timestamp": "2026-05-24T13:40:00Z" },
-        { "id": "t15", "customer_id": "c5", "type": "credit", "amount": 300, "note": "Washing powder", "staff_phone": "9222222222", "timestamp": "2026-05-24T14:10:00Z" },
-        { "id": "t16", "customer_id": "c1", "type": "credit", "amount": 110, "note": "Salt & Spices packets", "staff_phone": "9111111111", "timestamp": "2026-05-24T14:30:00Z" },
-        { "id": "t17", "customer_id": "c2", "type": "credit", "amount": 180, "note": "Bath soap pack of 4", "staff_phone": "9222222222", "timestamp": "2026-05-24T15:00:00Z" },
-        { "id": "t18", "customer_id": "c3", "type": "credit", "amount": 150, "note": "Onions 5kg", "staff_phone": "9111111111", "timestamp": "2026-05-24T15:30:00Z" },
-        { "id": "t19", "customer_id": "c4", "type": "credit", "amount": 200, "note": "Potatoes 10kg", "staff_phone": "9222222222", "timestamp": "2026-05-24T15:45:00Z" },
-        { "id": "t20", "customer_id": "c5", "type": "payment", "amount": 100, "note": "Cash token payment", "staff_phone": "9111111111", "timestamp": "2026-05-24T16:00:00Z" }
-      ],
-      "bills": [
-        { "id": "b1", "customer_id": "c1", "items": [{ "name": "Atta 5kg", "qty": 1, "price": 250 }, { "name": "Chana Dal 1kg", "qty": 2, "price": 95 }], "total": 440, "status": "unpaid", "created_at": "2026-05-20T10:00:00Z", "paid_at": null },
-        { "id": "b2", "customer_id": "c2", "items": [{ "name": "Mustard Oil 1L", "qty": 2, "price": 180 }, { "name": "Bath Soap", "qty": 5, "price": 28 }], "total": 500, "status": "paid", "created_at": "2026-05-21T11:15:00Z", "paid_at": "2026-05-23T11:00:00Z" },
-        { "id": "b3", "customer_id": "c3", "items": [{ "name": "Marie Gold Biscuits", "qty": 10, "price": 10 }, { "name": "Red Label Tea 250g", "qty": 1, "price": 120 }], "total": 220, "status": "paid", "created_at": "2026-05-21T14:30:00Z", "paid_at": "2026-05-24T12:00:00Z" },
-        { "id": "b4", "customer_id": "c4", "items": [{ "name": "Refined Soyabean Oil 1L", "qty": 3, "price": 140 }], "total": 420, "status": "unpaid", "created_at": "2026-05-22T08:10:00Z", "paid_at": null },
-        { "id": "b5", "customer_id": "c5", "items": [{ "name": "Garam Masala 100g", "qty": 2, "price": 75 }, { "name": "Basmati Rice 5kg", "qty": 1, "price": 450 }], "total": 600, "status": "unpaid", "created_at": "2026-05-22T16:20:00Z", "paid_at": null },
-        { "id": "b6", "customer_id": "c1", "items": [{ "name": "Sugar 5kg", "qty": 1, "price": 220 }, { "name": "Tata Salt 1kg", "qty": 1, "price": 28 }], "total": 248, "status": "unpaid", "created_at": "2026-05-23T10:30:00Z", "paid_at": null },
-        { "id": "b7", "customer_id": "c2", "items": [{ "name": "Toor Dal 2kg", "qty": 1, "price": 310 }, { "name": "Moong Dal 1kg", "qty": 1, "price": 140 }], "total": 450, "status": "paid", "created_at": "2026-05-23T11:45:00Z", "paid_at": "2026-05-24T11:15:00Z" },
-        { "id": "b8", "customer_id": "c3", "items": [{ "name": "Madhur Sugar 1kg", "qty": 2, "price": 48 }], "total": 96, "status": "unpaid", "created_at": "2026-05-23T15:45:00Z", "paid_at": null },
-        { "id": "b9", "customer_id": "c4", "items": [{ "name": "Ghee 1L", "qty": 1, "price": 650 }], "total": 650, "status": "unpaid", "created_at": "2026-05-24T09:15:00Z", "paid_at": null },
-        { "id": "b10", "customer_id": "c5", "items": [{ "name": "Detol Handwash Refill", "qty": 2, "price": 99 }, { "name": "Colgate MaxFresh", "qty": 1, "price": 120 }], "total": 318, "status": "unpaid", "created_at": "2026-05-24T13:10:00Z", "paid_at": null }
-      ],
-      "staff": [
-        { "id": "s1", "name": "Raju Storekeeper", "phone": "9111111111", "role": "staff" },
-        { "id": "s2", "name": "Amit Assistant", "phone": "9222222222", "role": "staff" }
-      ]
+    // Global database state
+    let database = {
+      customers: [],
+      transactions: [],
+      bills: []
     };
 
-    // State Variables
-    let database = {};
-    let activeTab = 'overview';
-    let selectedCustomerId = null;
-    let selectedBillId = null;
-    let billFilter = 'all';
-    
-    // Charts variables references to allow destroys
-    let dailyCollectionsChartInstance = null;
-    let paidUnpaidChartInstance = null;
-
-    // Local UTC Clock
-    function startClock() {
-      const update = () => {
-        const utcIso = new Date().toISOString();
-        const strDate = new Date().toLocaleDateString('en-GB', {
-          weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
-        });
-        document.getElementById('current-date-formatted').textContent = strDate;
-        document.getElementById('current-utc-time').textContent = "SYSTEM DATE / TIME (UTC): " + utcIso.replace("T", " ").substring(0, 19);
-      };
-      update();
-      setInterval(update, 1000);
-    }
-
-    // Load DB from LocalStorage or Fallback
-    function loadDatabase() {
-      const stored = localStorage.getItem('sharma_khata_db_v2');
-      if (stored) {
-        try {
-          database = JSON.parse(stored);
-        } catch(e) {
-          database = JSON.parse(JSON.stringify(INITIAL_FALLBACK_DB));
-        }
-      } else {
-        database = JSON.parse(JSON.stringify(INITIAL_FALLBACK_DB));
-        saveDatabase();
-      }
-      
-      // Load info to top panel displays
-      document.getElementById('shop-name-display').textContent = database.shop.name;
-      document.getElementById('owner-name-display').textContent = database.shop.owner;
-      
-      renderAll();
-    }
-
-    function saveDatabase() {
-      localStorage.setItem('sharma_khata_db_v2', JSON.stringify(database));
-    }
-
-    function resetToInitialSample() {
-      if (confirm("Kya aap sach me database purane sample data par reset karna chahte hain? Sabhi naye changes hat jayenge.")) {
-        database = JSON.parse(JSON.stringify(INITIAL_FALLBACK_DB));
-        saveDatabase();
-        showToast("Database safely restored to initial 5 customers, 20 transactions & 10 bills!", "success");
-        renderAll();
-      }
-    }
-
-    // Auto Refresh Logic
-    function startAutoRefresh() {
-      setInterval(() => {
-        // Just reload layout details to simulate incoming logs/real-time feel
-        loadDatabase();
-        showToast("Dashboard stats auto-refreshed (30s)", "success");
-      }, 30000);
-    }
-
-    // Switching views
-    function switchTab(tabId) {
-      activeTab = tabId;
-      
-      // Hide all panels
-      ['overview', 'khata', 'bills', 'reports'].forEach(t => {
-        document.getElementById(`section-${t}`).classList.add('hidden');
-        // Desktop nav active class remove
-        document.getElementById(`nav-${t}`).classList.remove('active');
-        document.getElementById(`nav-${t}`).classList.remove('bg-white/60');
-        document.getElementById(`nav-${t}`).classList.add('text-tertiary');
-        
-        // Mobile nav active class remove
-        const mobBtn = document.getElementById(`mob-nav-${t}`);
-        if(mobBtn) {
-          mobBtn.classList.remove('text-primary');
-          mobBtn.classList.add('text-tertiary');
-        }
-      });
-
-      // Show targeted panel
-      document.getElementById(`section-${tabId}`).classList.remove('hidden');
-      
-      // Highlight active buttons
-      const activeBtn = document.getElementById(`nav-${tabId}`);
-      if (activeBtn) {
-        activeBtn.classList.add('active');
-        activeBtn.classList.add('bg-white/60');
-        activeBtn.classList.remove('text-tertiary');
-      }
-      
-      const activeMobBtn = document.getElementById(`mob-nav-${tabId}`);
-      if (activeMobBtn) {
-        activeMobBtn.classList.add('text-primary');
-        activeMobBtn.classList.remove('text-tertiary');
-      }
-
-      // Re-render specific tab contents
-      renderAll();
-    }
-
-    // Ledger Calculation Helper
-    function getCustomerOutstanding(customerId) {
-      let balance = 0;
-      
-      // Credits add to outstanding, Payments subtract
-      database.transactions.forEach(t => {
-        if (t.customer_id === customerId) {
-          if (t.type === 'credit') {
-            balance += t.amount;
-          } else if (t.type === 'payment') {
-            balance -= t.amount;
-          }
-        }
-      });
-
-      // Unpaid bill totals add to outstanding
-      database.bills.forEach(b => {
-        if (b.customer_id === customerId && b.status === 'unpaid') {
-          balance += b.total;
-        }
-      });
-
-      return balance;
-    }
-
-    // Render All elements
-    function renderAll() {
-      calculateOverviewStatistics();
-      populateTopDefaulters();
-      populateRecentTransactions();
-      
-      if (activeTab === 'khata') {
-        populateCustomerKhataList();
-      } else if (activeTab === 'bills') {
-        populateBillsList();
-      } else if (activeTab === 'reports') {
-        renderReportsCharts();
-      }
-    }
-
-    // CALCULATE CARD METRICS
-    function calculateOverviewStatistics() {
-      // 1. Total Outstanding (Combining outstanding balance across all customers)
-      let totalOutstanding = 0;
-      database.customers.forEach(c => {
-        totalOutstanding += getCustomerOutstanding(c.id);
-      });
-      document.getElementById('overview-outstanding').textContent = "₹" + totalOutstanding.toLocaleString('en-IN');
-
-      // 2. Today's Collections (Payments logged on May 24, 2026 UTC/Local format)
-      // Since sample is on 2026-05-24, let's filter collections by "2026-05-24"
-      const targetDate = "2026-05-24";
-      let todayCollections = 0;
-      database.transactions.forEach(t => {
-        if (t.type === 'payment' && t.timestamp.startsWith(targetDate)) {
-          todayCollections += t.amount;
-        }
-      });
-      document.getElementById('overview-collections').textContent = "₹" + todayCollections.toLocaleString('en-IN');
-      document.getElementById('overview-collections-date').textContent = "Received on " + new Date(targetDate).toLocaleDateString('en-GB');
-
-      // 3. Pending Bills (Count of bills with status "unpaid")
-      const pendingCount = database.bills.filter(b => b.status === 'unpaid').length;
-      document.getElementById('overview-pending-bills').textContent = pendingCount;
-    }
-
-    // TOP OUTSTANDING CUSTOMERS (TOP 3) ON HOME VIEW
-    function populateTopDefaulters() {
-      // Get all customers sorted by outstanding descending
-      const ranked = database.customers.map(c => {
-        return {
-          ...c,
-          outstanding: getCustomerOutstanding(c.id)
-        };
-      }).sort((a,b) => b.outstanding - a.outstanding);
-
-      const top3_HTML = ranked.slice(0, 3).map((c, i) => {
-        let medalColor = 'text-amber-400';
-        if (i === 1) medalColor = 'text-tertiary';
-        if (i === 2) medalColor = 'text-amber-600';
-
-        return `
-          <div onclick="openCustomerLedger('${c.id}')" class="cursor-pointer bg-white hover:bg-white/80 p-4 rounded-xl border border-surface-variant/60 hover:border-slate-500 transition-all flex items-center justify-between group shadow-md shadow-black/10">
-            <div class="flex items-center gap-3">
-              <span class="material-icons ${medalColor} text-xl">workspace_premium</span>
-              <div>
-                <h4 class="font-bold text-white group-hover:text-amber-400 transition-all">${c.name}</h4>
-                <p class="text-[11px] text-tertiary font-medium">Mob: ${c.phone}</p>
-              </div>
-            </div>
-            <div class="text-right">
-              <span class="text-xs text-tertiary block font-semibold uppercase tracking-widest text-[9px]">Owes</span>
-              <p class="text-sm font-black text-rose-450 font-mono">₹${c.outstanding.toLocaleString('en-IN')}</p>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      document.getElementById('top-customers-list').innerHTML = top3_HTML || "<div class='text-xs text-tertiary'>All customer balance sheets cleared!</div>";
-    }
-
-    // RECENT 10 LEDGER HISTORY
-    function populateRecentTransactions() {
-      // Sort database transactions by timestamp descending
-      const sortedTxs = [...database.transactions].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
-      
-      const tbody = document.getElementById('recent-transactions-tbody');
-      tbody.innerHTML = sortedTxs.map(t => {
-        const custName = database.customers.find(c => c.id === t.customer_id)?.name || 'Deleted Customer';
-        const isCredit = t.type === 'credit';
-        
-        const typeBadge = isCredit 
-          ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">CREDIT</span>`
-          : `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PAYMENT</span>`;
-
-        const amtColor = isCredit ? 'text-rose-400' : 'text-emerald-400';
-        const amtSign = isCredit ? '+' : '-';
-        const formattedTime = new Date(t.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date(t.timestamp).toLocaleDateString('en-GB');
-
-        return `
-          <tr class="hover:bg-white/30 transition-all">
-            <td class="py-3 px-4 font-mono font-bold text-tertiary">${t.id}</td>
-            <td class="py-3 px-4 font-medium text-secondary">${custName}</td>
-            <td class="py-3 px-4 text-center">${typeBadge}</td>
-            <td class="py-3 px-4 text-right font-mono font-bold ${amtColor}">${amtSign}₹${t.amount}</td>
-            <td class="py-3 px-4 text-tertiary text-[11px] font-mono">${formattedTime}</td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    // SECTION 2: CUSTOMERS KHATA RENDER
-    function populateCustomerKhataList() {
-      const searchVal = document.getElementById('khata-search-input').value.toLowerCase().trim();
-      const container = document.getElementById('khata-customers-container');
-      
-      // Filter customers
-      const filtered = database.customers.filter(c => {
-        return c.name.toLowerCase().includes(searchVal) || c.phone.includes(searchVal);
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="p-8 text-center bg-white/20 rounded-2xl border border-surface-variant/40 text-tertiary text-xs">
-            <span class="material-icons text-3xl mb-1">person_off</span>
-            <p>Nahi mila! Koi customer matched nahi mila name ya mobile se.</p>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = filtered.map(c => {
-        const bal = getCustomerOutstanding(c.id);
-        const lastTx = getLastTransactionString(c.id);
-        const isSelected = selectedCustomerId === c.id;
-        const selectorClass = isSelected 
-          ? 'border-primary bg-primary/10 shadow-lg shadow-amber-500/5' 
-          : 'border-surface-variant/60 bg-white';
-
-        return `
-          <div onclick="openCustomerLedger('${c.id}')" class="cursor-pointer p-4 rounded-xl border ${selectorClass} hover:border-slate-500 transition-all flex items-center justify-between group">
-            <div class="space-y-1">
-              <h4 class="font-bold text-white group-hover:text-primary transition-all">${c.name}</h4>
-              <p class="text-[11px] text-tertiary font-medium">Mob: ${c.phone}</p>
-              <span class="text-[10px] text-tertiary block font-mono">Last Act: ${lastTx}</span>
-            </div>
-            <div class="text-right">
-              <span class="text-[9px] text-tertiary block uppercase font-bold tracking-widest leading-none">Net Bal</span>
-              <p class="text-base font-black font-mono leading-normal ${bal > 0 ? 'text-rose-400' : 'text-emerald-400'}">₹${bal.toLocaleString('en-IN')}</p>
-              <span class="text-[9px] font-bold ${bal > 0 ? 'text-red-400/90 bg-red-500/10' : 'text-green-400/90 bg-green-500/10'} px-1.5 py-0.5 rounded">${bal > 0 ? 'उधार' : 'Settled'}</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // Auto load first customer detailed ledger if none chosen initially
-      if (!selectedCustomerId && filtered.length > 0) {
-        openCustomerLedger(filtered[0].id);
-      }
-    }
-
-    function getLastTransactionString(customerId) {
-      // Find latest sorted transaction for customer
-      const custTxs = database.transactions.filter(t => t.customer_id === customerId);
-      if (custTxs.length === 0) return "No entries";
-      
-      const sorted = custTxs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      return new Date(sorted[0].timestamp).toLocaleDateString('en-GB') + " (₹" + sorted[0].amount + ")";
-    }
-
-    // OPEN CUSTOMER LEDGER DETAIL FOR SELECTION PANE (Right Panel)
-    function openCustomerLedger(customerId) {
-      selectedCustomerId = customerId;
-      
-      // Force refresh selecting class borders in cards
-      const searchVal = document.getElementById('khata-search-input') ? document.getElementById('khata-search-input').value : "";
-      // If we are showing "overview" tab, switch back to "khata" tab internally
-      if (activeTab !== 'khata') {
-        switchTab('khata');
-        document.getElementById('khata-search-input').value = searchVal;
-      }
-
-      // Populate cards to trigger active selection highlight
-      populateCustomerKhataList();
-
-      const customer = database.customers.find(c => c.id === customerId);
-      if (!customer) return;
-
-      const ledgerPanel = document.getElementById('ledger-detail-panel');
-
-      // Grab all credit notes, invoices (unpaid/paid) & payments to build timeline ledger
-      const events = [];
-
-      // Credit/Debit transactions
-      database.transactions.forEach(t => {
-        if (t.customer_id === customerId) {
-          events.push({
-            id: t.id,
-            origin: 'transaction',
-            type: t.type, // 'credit' or 'payment'
-            amount: t.amount,
-            notes: t.note,
-            user: t.staff_phone === '9111111111' ? 'Raju' : 'Amit',
-            timestamp: t.timestamp
-          });
-        }
-      });
-
-      // Bills / Invoices
-      database.bills.forEach(b => {
-        if (b.customer_id === customerId) {
-          events.push({
-            id: b.id,
-            origin: 'bill',
-            type: 'bill',
-            amount: b.total,
-            notes: `Bill #${b.id} with ${b.items.length} items`,
-            status: b.status, // unpaid or paid
-            timestamp: b.created_at
-          });
-        }
-      });
-
-      // Sort chronological descending
-      events.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-      const customerNetOutstanding = getCustomerOutstanding(customerId);
-      const formattedRegisterDate = new Date(customer.created_at).toLocaleDateString('en-GB');
-
-      // Build Ledger List HTML
-      let ledgerRows_HTML = "";
-      if (events.length === 0) {
-        ledgerRows_HTML = `
-          <div class="py-10 text-center text-tertiary text-xs">
-            <span class="material-icons text-2xl">receipt_long</span>
-            <p class="mt-1">Is customer khaate me koi billing/debit records nahi hain.</p>
-          </div>
-        `;
-      } else {
-        ledgerRows_HTML = events.map(e => {
-          let badge = "";
-          let amtSign = "";
-          let amtColor = "";
-          let actionLabel = "";
-
-          if (e.origin === 'bill') {
-            const isPaid = e.status === 'paid';
-            badge = isPaid 
-              ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/10 text-green-450 border border-green-500/20">BILL PAID</span>`
-              : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-450 border border-amber-500/20">BILL UNPAID</span>`;
-            
-            // Unpaid bills are counted as debit outstanding
-            amtSign = "+";
-            amtColor = "text-rose-450";
-            actionLabel = "Invoice Generated";
-          } else {
-            const isCredit = e.type === 'credit';
-            badge = isCredit 
-              ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">MANUAL CREDIT</span>`
-              : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">MANUAL PAYMENT</span>`;
-            
-            amtSign = isCredit ? "+" : "-";
-            amtColor = isCredit ? "text-rose-450" : "text-emerald-400";
-            actionLabel = isCredit ? "Khata Added" : "Payment Received";
-          }
-
-          const relativeDate = new Date(e.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date(e.timestamp).toLocaleDateString('en-GB');
-
-          return `
-            <div class="flex items-start justify-between p-3 rounded-xl border border-surface-variant/60 bg-slate-900/30 hover:bg-white/20 transition-all text-xs">
-              <div class="space-y-1 max-w-[70%]">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-on-surface">${actionLabel}</span>
-                  ${badge}
-                </div>
-                <p class="text-tertiary">${e.notes}</p>
-                <div class="flex items-center gap-2 text-[10px] text-zinc-500">
-                  <span class="font-mono">${e.id}</span>
-                  <span>•</span>
-                  <span>${relativeDate}</span>
-                  ${e.user ? `<span>• posted by: ${e.user}</span>` : ''}
-                </div>
-              </div>
-              <div class="text-right">
-                <span class="font-mono font-bold text-sm ${amtColor}">${amtSign}₹${e.amount}</span>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      ledgerPanel.innerHTML = `
-        <!-- Profile Header -->
-        <div class="px-5 py-4 border-b border-surface-variant bg-white/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <span class="material-icons text-xl">person</span>
-            </div>
-            <div>
-              <h3 class="font-black text-white text-sm" id="ledger-cust-name-header">${customer.name}</h3>
-              <p class="text-[11px] text-tertiary">Registered on: ${formattedRegisterDate} • Mob: ${customer.phone}</p>
-            </div>
-          </div>
-          <!-- Outstanding Balance Summary box -->
-          <div class="bg-darkbg px-4 py-2 rounded-xl text-center border border-surface-variant min-w-[120px]">
-            <span class="text-[9px] text-tertiary uppercase font-bold block tracking-wider">Balance Due</span>
-            <span class="font-mono font-black text-sm text-rose-400">₹${customerNetOutstanding.toLocaleString('en-IN')}</span>
-          </div>
-        </div>
-
-        <!-- Utility Operations Ribbon -->
-        <div class="no-print p-3 border-b border-surface-variant bg-slate-900/60 flex items-center justify-between gap-2">
-          <p class="text-[10px] text-tertiary italic">Update client manual values directly:</p>
-          <button onclick="openAddEntryModal('${customer.id}')" class="bg-primary hover:bg-primary-dark text-slate-950 font-bold px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1 transition-all">
-            <span class="material-icons text-sm">post_add</span>
-            <span>Manual Entry Add Karein</span>
-          </button>
-        </div>
-
-        <!-- Ledger Timeline Container -->
-        <div class="p-5 max-h-[420px] overflow-y-auto space-y-3">
-          <span class="text-[10px] text-tertiary font-bold uppercase tracking-wider block">Timeline Ledger statements</span>
-          <div class="space-y-3">
-            ${ledgerRows_HTML}
-          </div>
-        </div>
-      `;
-    }
-
-    // MODAL STATE OPENS / CLOSES
-    function openModal(id) {
-      document.getElementById(id).classList.remove('hidden');
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
-    }
-
-    // Backdrop dismissal modal binds
-    window.addEventListener('click', (e) => {
-      ['addCustModal', 'addEntryModal', 'invoiceViewModal'].forEach(id => {
-        const modal = document.getElementById(id);
-        if (modal && e.target === modal) {
-          closeModal(id);
-        }
-      });
-    });
-
-    // Escape Key Bind
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        ['addCustModal', 'addEntryModal', 'invoiceViewModal'].forEach(id => {
-          closeModal(id);
-        });
-      }
-    });
-
-    // CUSTOMER SAVING HANDLER
-    function handleNewCustomerSubmit(e) {
-      e.preventDefault();
-      
-      const name = document.getElementById('cust-name-input').value.trim();
-      const phone = document.getElementById('cust-phone-input').value.trim();
-
-      // Check duplicates
-      const dup = database.customers.find(c => c.phone === phone);
-      if (dup) {
-        showToast("Error: Is phone number se customer already registered hai!", "error");
-        return;
-      }
-
-      // Generate new client object
-      const newCustId = 'c_' + Math.random().toString(36).substring(2, 9);
-      database.customers.push({
-        id: newCustId,
-        name: name,
-        phone: phone,
-        created_at: new Date().toISOString().substring(0, 10)
-      });
-
-      saveDatabase();
-      showToast(`Success! Naya Khatadar "${name}" safely added.`, "success");
-      
-      // Cleanup & modal closings
-      document.getElementById('add-cust-form').reset();
-      closeModal('addCustModal');
-
-      // Refresh list, select current naya customer
-      selectedCustomerId = newCustId;
-      renderAll();
-    }
-
-    // MANUAL ENTRY MODAL LOADING
-    function openAddEntryModal(customerId) {
-      const cust = database.customers.find(c => c.id === customerId);
-      if (!cust) return;
-
-      document.getElementById('entry-customer-id').value = customerId;
-      document.getElementById('entry-customer-name-display').value = cust.name;
-      document.getElementById('entry-amount').value = "";
-      document.getElementById('entry-notes').value = "";
-
-      openModal('addEntryModal');
-    }
-
-    function handleNewEntrySubmit(e) {
-      e.preventDefault();
-
-      const customerId = document.getElementById('entry-customer-id').value;
-      const type = document.getElementById('entry-type').value;
-      const amt = parseInt(document.getElementById('entry-amount').value);
-      const notes = document.getElementById('entry-notes').value.trim() || (type === 'credit' ? "Manual Credit Added" : "Manual Payment Received");
-
-      if (amt <= 0 || isNaN(amt)) {
-        showToast("Amount must be a positive integer!", "error");
-        return;
-      }
-
-      // Generate transaction post
-      const txId = 't_' + Math.random().toString(36).substring(2, 9);
-      database.transactions.push({
-        id: txId,
-        customer_id: customerId,
-        type: type,
-        amount: amt,
-        note: notes,
-        staff_phone: "9111111111", // Admin/Raju posting
-        timestamp: new Date().toISOString()
-      });
-
-      saveDatabase();
-      showToast(`Post posted successfully! ₹${amt} logged to Customer ledger.`, "success");
-      
-      closeModal('addEntryModal');
-      
-      // Select & reload ledger
-      selectedCustomerId = customerId;
-      renderAll();
-    }
-
-    // TOAST SYSTEM FLOW
-    function showToast(text, type = "success") {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      
-      toast.className = `p-3.5 rounded-xl text-xs font-semibold border flex items-center gap-2 pointer-events-auto shadow-xl transition-all duration-300 transform translate-y-2 opacity-0 select-none`;
-      
-      if (type === 'success') {
-        toast.className += ` bg-slate-900 border-green-500/40 text-green-400`;
-        toast.innerHTML = `<span class="material-icons text-green-400 text-sm">check_circle</span> <span>${text}</span>`;
-      } else {
-        toast.className += ` bg-slate-900 border-red-500/40 text-red-400`;
-        toast.innerHTML = `<span class="material-icons text-red-400 text-sm">error</span> <span>${text}</span>`;
-      }
-
-      container.appendChild(toast);
-      
-      // Animate Entrance
-      setTimeout(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-      }, 50);
-
-      // Animate Dismiss
-      setTimeout(() => {
-        toast.classList.add('translate-y-2', 'opacity-0');
-        setTimeout(() => {
-          toast.remove();
-        }, 300);
-      }, 3500);
-    }
-
-    // SECTION 3: INVOICES & BILLS TABLE
-    function setBillFilter(status) {
-      billFilter = status;
-      
-      // Toggle button highlights
-      ['all', 'paid', 'unpaid'].forEach(filter => {
-        const btn = document.getElementById(`bill-filter-${filter}`);
-        if(btn) {
-          if (filter === status) {
-            btn.style.background = 'rgba(245, 158, 11, 0.1)';
-            btn.style.border = '1px solid rgba(245, 158, 11, 0.2)';
-            btn.style.color = '#F59E0B';
-          } else {
-            btn.style.background = 'none';
-            btn.style.border = '1px solid transparent';
-            btn.style.color = '#94A3B8';
-          }
-        }
-      });
-
-      populateBillsList();
-    }
-
-    function populateBillsList() {
-      const searchVal = document.getElementById('bill-search-input').value.toLowerCase().trim();
-      const tbody = document.getElementById('bills-list-tbody');
-      const empState = document.getElementById('bills-empty-state');
-
-      // Sort chronological descending
-      let list = [...database.bills].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-
-      // Filter status
-      if (billFilter !== 'all') {
-        list = list.filter(b => b.status === billFilter);
-      }
-
-      // Filter search
-      if (searchVal) {
-        list = list.filter(b => {
-          const custName = database.customers.find(c => c.id === b.customer_id)?.name || '';
-          return b.id.toLowerCase().includes(searchVal) || custName.toLowerCase().includes(searchVal);
-        });
-      }
-
-      if (list.length === 0) {
-        tbody.innerHTML = "";
-        empState.classList.remove('hidden');
-        return;
-      }
-      empState.classList.add('hidden');
-
-      tbody.innerHTML = list.map(b => {
-        const cust = database.customers.find(c => c.id === b.customer_id) || { name: 'Unknown Customer', phone: '0000000000' };
-        
-        const isPaid = b.status === 'paid';
-        const statusBadge = isPaid
-          ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/20 uppercase tracking-wide">Paid (जमा)</span>`
-          : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase tracking-wide">Unpaid (बाकी)</span>`;
-
-        const billingDateStr = new Date(b.created_at).toLocaleDateString('en-GB') + ' ' + new Date(b.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-
-        return `
-          <tr class="hover:bg-white/30 transition-all">
-            <td class="py-4 px-5 font-mono font-bold text-tertiary">${b.id}</td>
-            <td class="py-4 px-5 font-semibold text-secondary">
-              <div class="leading-relaxed">${cust.name}</div>
-              <span class="text-[10px] text-tertiary block font-normal leading-none font-mono">Mob: ${cust.phone}</span>
-            </td>
-            <td class="py-4 px-5 text-tertiary text-[11px] font-mono">${billingDateStr}</td>
-            <td class="py-4 px-5 text-center font-bold font-mono text-xs">${b.items.length}</td>
-            <td class="py-4 px-5 text-right font-mono font-bold text-white text-xs">₹${b.total}</td>
-            <td class="py-4 px-5 text-center">${statusBadge}</td>
-            <td class="py-4 px-5 text-right no-print">
-              <div class="flex items-center gap-2 justify-end">
-                <button onclick="viewInvoiceDetail('${b.id}')" title="View Printable Invoice" class="px-2.5 py-1 bg-white hover:bg-slate-700 text-tertiary hover:text-white rounded border border-surface-variant/80 hover:border-slate-500 text-xs transition-all flex items-center gap-1">
-                  <span class="material-icons text-sm">zoom_in</span>
-                  <span>View</span>
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    // LOAD BEAUTIFUL RETAIL INVOICE MODAL (Invoice look)
-    function viewInvoiceDetail(billId) {
-      selectedBillId = billId;
-      const bill = database.bills.find(b => b.id === billId);
-      if (!bill) return;
-
-      const customer = database.customers.find(c => c.id === bill.customer_id) || { name: 'Walk-in Customer', phone: '9999999999' };
-
-      // Set Shop Details values
-      document.getElementById('inv-shop-name').textContent = database.shop.name;
-      document.getElementById('inv-shop-address').textContent = database.shop.address;
-      document.getElementById('inv-shop-phone').textContent = "WhatsApp Contact: +91 " + database.shop.phone;
-
-      // Set Invoice ID details
-      document.getElementById('inv-id').textContent = "Invoice ID: " + bill.id;
-      document.getElementById('inv-date').textContent = "Date: " + new Date(bill.created_at).toLocaleString('en-GB', { hourCycle: 'h23' });
-      document.getElementById('inv-status').textContent = bill.status.toUpperCase();
-      
-      const statusBox = document.getElementById('inv-status');
-      if (bill.status === 'paid') {
-        statusBox.className = "inline-block px-3 py-1 bg-green-100 text-green-800 font-black tracking-widest text-[11px] rounded uppercase border border-green-200";
-      } else {
-        statusBox.className = "inline-block px-3 py-1 bg-rose-100 text-rose-800 font-black tracking-widest text-[11px] rounded uppercase border border-rose-250";
-      }
-
-      // Customer Info
-      document.getElementById('inv-cust-name').textContent = customer.name;
-      document.getElementById('inv-cust-phone').textContent = "Phone: +91 " + customer.phone;
-      document.getElementById('inv-shop-owner').textContent = database.shop.owner;
-
-      // Populate Items Grid
-      const tbody = document.getElementById('inv-items-tbody');
-      tbody.innerHTML = bill.items.map((it, index) => {
-        const itemTotal = it.price * it.qty;
-        return `
-          <tr class="text-neutral-700">
-            <td class="py-2.5 text-neutral-900 font-bold">${index + 1}. ${it.name}</td>
-            <td class="py-2.5 text-center font-mono">${it.qty}</td>
-            <td class="py-2.5 text-right font-mono">₹${it.price.toFixed(2)}</td>
-            <td class="py-2.5 text-right font-bold font-mono text-neutral-900">₹${itemTotal.toFixed(2)}</td>
-          </tr>
-        `;
-      }).join('');
-
-      // Calculations Footer
-      document.getElementById('inv-subtotal').textContent = "₹" + bill.total.toFixed(2);
-      document.getElementById('inv-total').textContent = "₹" + bill.total.toFixed(2);
-
-      // Render Unpaid processing footer actions
-      const actionsPane = document.getElementById('inv-action-mark-paid-pane');
-      if (bill.status === 'unpaid') {
-        actionsPane.innerHTML = `
-          <button onclick="markBillPaid('${bill.id}')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1">
-            <span class="material-icons text-sm">verified</span>
-            <span>Mark Invoice as PAID</span>
-          </button>
-          <span class="text-[10px] text-tertiary max-w-[150px] italic">Marking as paid will post cash debit transaction to ledger.</span>
-        `;
-      } else {
-        actionsPane.innerHTML = `
-          <div class="flex items-center gap-1.5 text-green-600 font-bold text-xs bg-green-50 px-3 py-1.5 rounded border border-green-100">
-            <span class="material-icons text-sm">verified_user</span>
-            <span>Successfully Paid & Settled</span>
-          </div>
-        `;
-      }
-
-      openModal('invoiceViewModal');
-    }
-
-    // ACTION: MARK BILL AS PAID RECEIPT MATCH
-    function markBillPaid(billId) {
-      const bill = database.bills.find(b => b.id === billId);
-      if (!bill) return;
-
-      if (confirm("Kya aap such me is invoice ko PAID/जमा mark karna chahte hain? Isse khata automatically clear ho jayega.")) {
-        bill.status = 'paid';
-        bill.paid_at = new Date().toISOString();
-
-        // Push automatic balancing payment transaction
-        const txId = 't_' + Math.random().toString(36).substring(2, 9);
-        database.transactions.push({
-          id: txId,
-          customer_id: bill.customer_id,
-          type: 'payment',
-          amount: bill.total,
-          note: `Received full clearance payment for Invoice #${bill.id}`,
-          staff_phone: "9111111111", // Admin payment receipt
-          timestamp: new Date().toISOString()
-        });
-
-        saveDatabase();
-        showToast(`Invoice #${billId} successfully paid! Ledger balance matched.`, "success");
-        
-        closeModal('invoiceViewModal');
-        selectedCustomerId = bill.customer_id;
-        renderAll();
-      }
-    }
-
-    // SECTION 4: REPORTS & HIGH CHART RENDER
-    function renderReportsCharts() {
-      // 1. Prepare Last 7 days collections data (payments only)
-      const last7Days = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        last7Days.push(d.toISOString().substring(0, 10));
-      }
-
-      const collectionsMap = {};
-      last7Days.forEach(day => collectionsMap[day] = 0);
-
-      database.transactions.forEach(t => {
-        if (t.type === 'payment') {
-          const day = t.timestamp.substring(0, 10);
-          if (collectionsMap[day] !== undefined) {
-            collectionsMap[day] += t.amount;
-          }
-        }
-      });
-
-      const collectionsData = last7Days.map(day => collectionsMap[day]);
-      const last7DaysLabels = last7Days.map(day => {
-        const split = day.split('-');
-        return `${split[2]}/${split[1]}`; // DD/MM visual
-      });
-
-      // 2. Prepare Paid/Unpaid bills counts
-      const paidBillsTotal = database.bills.filter(b => b.status === 'paid').length;
-      const unpaidBillsTotal = database.bills.filter(b => b.status === 'unpaid').length;
-
-      // Render Charts
+    // Fetch data from backend
+    async function fetchDatabase() {
       try {
-        if (dailyCollectionsChartInstance) {
-          dailyCollectionsChartInstance.destroy();
-        }
-        if (paidUnpaidChartInstance) {
-          paidUnpaidChartInstance.destroy();
-        }
-
-        // Color styles matching Theme dark orange
-        const ctxBar = document.getElementById('dailyCollectionsChart').getContext('2d');
-        dailyCollectionsChartInstance = new Chart(ctxBar, {
-          type: 'bar',
-          data: {
-            labels: last7DaysLabels,
-            datasets: [{
-              label: 'Nitin Collections (₹)',
-              data: collectionsData,
-              backgroundColor: '#F59E0B',
-              borderRadius: 6,
-              hoverBackgroundColor: '#D97706',
-              barPercentage: 0.6
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: '#1E293B',
-                titleColor: '#FFFFFF',
-                bodyColor: '#F59E0B',
-                borderColor: '#334155',
-                borderWidth: 1
-              }
-            },
-            scales: {
-              y: {
-                grid: { color: 'rgba(51, 65, 85, 0.4)' },
-                ticks: { color: '#94A3B8', font: { family: 'Noto Sans' } }
-              },
-              x: {
-                grid: { display: false },
-                ticks: { color: '#94A3B8', font: { family: 'Noto Sans' } }
-              }
-            }
-          }
-        });
-
-        const ctxPie = document.getElementById('paidUnpaidChart').getContext('2d');
-        paidUnpaidChartInstance = new Chart(ctxPie, {
-          type: 'doughnut',
-          data: {
-            labels: ['Cleared/Paid (जमा)', 'Active/Pending (बाकी)'],
-            datasets: [{
-              data: [paidBillsTotal, unpaidBillsTotal],
-              backgroundColor: ['#10B981', '#EF4444'],
-              borderWidth: 2,
-              borderColor: '#1E293B'
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: { color: '#F8FAFC', font: { family: 'Noto Sans', size: 10 } }
-              }
-            },
-            cutout: '70%'
-          }
-        });
-
-      } catch (e) {
-        console.error("Error drawing Reports Charts logic:", e);
+        const response = await fetch('/api/db');
+        const data = await response.json();
+        database = data;
+        updateDashboard();
+      } catch (error) {
+        console.error('Error fetching database:', error);
       }
+    }
 
-      // Populate Report tabular indices list: rank customers custom view
-      const rankBox = document.getElementById('ranking-defaulters-grid');
-      const rankedList = database.customers.map(c => {
-        return {
-          ...c,
-          outstanding: getCustomerOutstanding(c.id)
-        }
-      }).sort((a,b) => b.outstanding - a.outstanding).slice(0, 3);
+    // Update dashboard with real data
+    function updateDashboard() {
+      // Calculate total revenue
+      const totalRevenue = database.transactions
+        .filter(t => t.type === 'payment')
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      // Update revenue display
+      document.querySelector('.text-3xl.font-bold.text-secondary').textContent = '₹' + totalRevenue.toLocaleString('en-IN');
+      
+      // Update orders count
+      const newOrders = database.bills.filter(b => {
+        const today = new Date().toDateString();
+        return new Date(b.created_at).toDateString() === today;
+      }).length;
+      document.querySelectorAll('.text-3xl.font-bold.text-secondary')[2].textContent = newOrders;
+      
+      // Update bot activity with real data
+      updateBotActivity();
+    }
 
-      rankBox.innerHTML = rankedList.map((c, i) => {
+    // Update bot activity with real transactions
+    function updateBotActivity() {
+      const activityContainer = document.querySelector('.space-y-4');
+      const recentTransactions = database.transactions
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 3);
+      
+      const activityHTML = recentTransactions.map(t => {
+        const customer = database.customers.find(c => c.id === t.customer_id);
+        const customerName = customer ? customer.name : 'Unknown';
+        const timeAgo = getTimeAgo(new Date(t.timestamp));
+        
         return `
-          <div class="bg-darkbg p-4 rounded-xl border border-surface-variant/60 flex items-center justify-between">
-            <div class="space-y-1">
-              <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-white text-tertiary">Rank #${i+1}</span>
-              <p class="font-bold text-white text-xs mt-1 block">${c.name}</p>
-              <p class="text-[10px] text-tertiary font-medium">${c.phone}</p>
+          <div class="flex items-start gap-3 p-3 bg-background rounded-lg">
+            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <span class="material-icons text-primary text-sm">person</span>
             </div>
-            <div class="text-right">
-              <span class="text-[9px] text-zinc-500 block uppercase font-bold tracking-widest leading-none">Net Due</span>
-              <span class="font-mono text-sm font-black text-rose-400 leading-normal block">₹${c.outstanding.toLocaleString('en-IN')}</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-secondary">${customerName}</p>
+              <p class="text-xs text-tertiary truncate">${t.notes || t.type.toUpperCase()}</p>
             </div>
+            <span class="text-xs text-tertiary">${timeAgo}</span>
           </div>
         `;
       }).join('');
-    }
-
-    // EXPORT DATABASE TRANSACTION HISTORY TO REAL CSV EXPORTS
-    function exportTransactionsCSV() {
-      // Create headers
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "Transaction Ref,Customer ID,Customer Name,Type,Amount (INR),Timestamp,Description Notes\r\n";
-
-      database.transactions.forEach(t => {
-        const cName = database.customers.find(c => c.id === t.customer_id)?.name || 'Deleted Customer';
-        const notesEx = (t.note || '').replace(/"/g, '""');
-        csvContent += `"${t.id}","${t.customer_id}","${cName}","${t.type.toUpperCase()}",${t.amount},"${t.timestamp}","${notesEx}"\r\n`;
-      });
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `sharma_store_transactions_record_export_${new Date().toISOString().substring(0,10)}.csv`);
-      document.body.appendChild(link); // Required for FF
       
-      link.click();
-      document.body.removeChild(link);
-      showToast("CSV records safely generated and downloaded!", "success");
+      activityContainer.innerHTML = activityHTML;
     }
 
-    // BOT COMMANDS CENTRALIZED EMULATED REGEX LOGIC (MATCHING BOT WEBHOOK AND RETURNING REPLY)
-    function botParseCommand(message) {
-      const text = message.toLowerCase().trim();
-      const timestampIso = new Date().toISOString();
-      const responseBack = { type: 'unknown', details: '', reply: '', updates: null };
+    // Get time ago string
+    function getTimeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      if (seconds < 60) return 'Just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      return `${Math.floor(hours / 24)}d ago`;
+    }
 
-      // 1. Audit Sale command: "Aaj ki sale"
-      if (
-        text.includes("aaj") && (text.includes("sale") || text.includes("bikri") || text.includes("total sale") || text.includes("collect")) ||
-        text.includes("today sale") || text.includes("today's sale")
-      ) {
-        // Today sales sum
-        const todayString = timestampIso.substring(0, 10);
-        const billsToday = database.bills.filter(b => b.created_at.startsWith(todayString));
-        const billsTotal = billsToday.reduce((sum, b) => sum + b.total, 0);
-
-        // Collections today
-        const collectionsToday = database.transactions.filter(t => t.type === 'payment' && t.timestamp.startsWith(todayString));
-        const paymentTotal = collectionsToday.reduce((sum, t) => sum + t.amount, 0);
-
-        responseBack.type = 'today_sale';
-        responseBack.details = `Sales query for today: ${todayString}`;
-        responseBack.reply = `📊 *Sharma General Store Sales Report*\n\n📅 Date: ${new Date().toLocaleDateString('en-GB')}\n💰 Aaj ki total sales: *₹${billsTotal}*\n📥 Aaj ka collection: *₹${paymentTotal}*\n📝 Active bills count: ${billsToday.length}`;
-        return responseBack;
-      }
-
-      // Check client match
-      let customer = null;
-      // Sort length DESC
-      const sortedCusts = [...database.customers].sort((a,b) => b.name.length - a.name.length);
-      for (const c of sortedCusts) {
-        if (text.includes(c.name.toLowerCase())) {
-          customer = c;
-          break;
-        }
-      }
-
-      // First name match fallback
-      if (!customer) {
-        for (const c of sortedCusts) {
-          const first = c.name.split(' ')[0].toLowerCase();
-          if (first.length > 2 && text.includes(first)) {
-            customer = c;
-            break;
+    // Revenue Chart
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+          label: 'Revenue',
+          data: [8500, 9200, 8800, 10500, 11200, 9800, 12480],
+          borderColor: '#25d366',
+          backgroundColor: 'rgba(37, 211, 102, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
           }
-        }
-      }
-
-      if (!customer) {
-        responseBack.reply = `❌ *Command Samajh nahi aaya!*\n\n👉 Sim matches try karein:\n🔹 _"Ramesh ka khata mein 100 daal do"_\n🔹 _"Suresh ka 500 ka bill banao"_\n🔹 _"Ramesh ka kitna baaki hai"_\n🔹 _"Ramesh ka bill bhej do"_\n🔹 _"Ramesh ka 50 mein Chini add karo"_`;
-        return responseBack;
-      }
-
-      const custId = customer.id;
-      const custName = customer.name;
-
-      // A. Send bill command: "Ramesh ka bill bhej do"
-      if (text.includes("bill bhej") || text.includes("send bill")) {
-        const customerBills = database.bills.filter(b => b.customer_id === custId);
-        
-        responseBack.type = 'send_bill';
-        responseBack.details = `Send latest invoice sheet to ${custName}`;
-
-        if (customerBills.length === 0) {
-          responseBack.reply = `❌ *${custName}* ka koi processed bill nahi mila.`;
-        } else {
-          const bVal = customerBills[customerBills.length - 1];
-          const itemLines = bVal.items.map((it, idx) => `${idx+1}. ${it.name} (${it.qty}x ₹${it.price})`).join("\n");
-          
-          responseBack.reply = `📄 *SHARMA GENERAL STORE*\n----------------------------\n*Bill #${bVal.id}*\n📅 Date: ${new Date(bVal.created_at).toLocaleDateString('en-GB')}\n👤 Customer: *${custName}*\n----------------------------\n${itemLines}\n----------------------------\n💰 *Grand Total: ₹${bVal.total}*\n📌 Status: *${bVal.status.toUpperCase()}*`;
-        }
-        return responseBack;
-      }
-
-      // B. Query outstanding balance: "Ramesh ka kitna baaki hai"
-      if (
-        text.includes("kitna baaki") || 
-        text.includes("outstanding") || 
-        text.includes("hisab") || 
-        text.includes("balance") || 
-        text.includes("baqi") || 
-        text.includes("kitna bacha")
-      ) {
-        const bal = getCustomerOutstanding(custId);
-        responseBack.type = 'query_balance';
-        responseBack.details = `Ledger balance check for ${custName}`;
-        
-        if (bal > 0) {
-          responseBack.reply = `ℹ️ *${custName}* ka abhi tak kul baaki balance *₹${bal}* hai.`;
-        } else if (bal === 0) {
-          responseBack.reply = `✅ *${custName}* ka sara hisab chukta hai. Balance is ₹0.`;
-        } else {
-          responseBack.reply = `😊 *${custName}* ka advance balance *₹${Math.abs(bal)}* hai shop mein.`;
-        }
-        return responseBack;
-      }
-
-      // C. Match adding item to bill: "[Name] ka [amount] mein [item] add karo" / "[Name] ka [item] [amount] add"
-      const addLineMatch = text.match(/(?:(?:ka|ke)\s+(\d+)\s*(?:mein|me)?\s*([a-zA-Z\u0900-\u097F]+?)\s*add\s*(?:karo|do)?)|(?:(?:ka|ke)\s*([a-zA-Z\u0900-\u097F]+?)\s*(\d+)\s*add\s*(?:karo|do)?)/);
-      if (addLineMatch) {
-        let price = 0;
-        let itemName = "";
-        if (addLineMatch[1] && addLineMatch[2]) {
-          price = parseInt(addLineMatch[1]);
-          itemName = addLineMatch[2].trim();
-        } else if (addLineMatch[3] && addLineMatch[4]) {
-          itemName = addLineMatch[3].trim();
-          price = parseInt(addLineMatch[4]);
-        }
-        if (itemName && price > 0) {
-          responseBack.type = 'add_item';
-          responseBack.details = `Add item: "${itemName}" (₹${price}) to ${custName}'s bill`;
-          
-          responseBack.updates = () => {
-            // Find an active unpaid bill for this customer, or create one
-            let currentBill = database.bills.find(b => b.customer_id === custId && b.status === "unpaid");
-
-            if (!currentBill) {
-              const newBillId = 'b_' + Math.random().toString(36).substring(2, 9);
-              currentBill = {
-                id: newBillId,
-                customer_id: custId,
-                items: [],
-                total: 0,
-                status: "unpaid",
-                created_at: timestampIso,
-                paid_at: null
-              };
-              database.bills.push(currentBill);
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '₹' + value.toLocaleString();
+              }
             }
-
-            currentBill.items.push({
-              name: itemName,
-              qty: 1,
-              price: price
-            });
-            currentBill.total += price;
-            saveDatabase();
-          };
-
-          // Note down simulated output
-          const simulatedUpdates = JSON.parse(JSON.stringify(database));
-          let currentBillSIM = simulatedUpdates.bills.find(b => b.customer_id === custId && b.status === "unpaid");
-          if (!currentBillSIM) {
-            currentBillSIM = { id: 'temp_b', items: [], total: 0, status: "unpaid" };
-            simulatedUpdates.bills.push(currentBillSIM);
           }
-          currentBillSIM.total += price;
-          
-          // Use temporary outstanding estimate for output response
-          let tempBalSum = getCustomerOutstanding(custId) + price;
-
-          responseBack.reply = `🛒 *Item Added to Bill!*\n👤 Customer: *${custName}*\n📦 Item: *${itemName}* (₹${price})\n📈 New Bill Total: *₹${currentBillSIM.total}*\n💳 Net Outstanding: *₹${tempBalSum}*`;
-          return responseBack;
         }
       }
-
-      // D. Generate fixed total bill: "Suresh ka 500 ka bill banao"
-      const billMatch = text.match(/(?:(?:ka|ke)\s+(\d+)\s*(?:ka|ke)?\s*bill\s*(?:banao|banaiye|create))/i) || text.match(/bill\s+(?:banao|create)?\s*(?:of|for)?\s*(\d+)/i);
-      if (billMatch) {
-        const amtVal = parseInt(billMatch[1]);
-        responseBack.type = 'generate_bill';
-        responseBack.details = `Generate fixed bill of ₹${amtVal} for ${custName}`;
-        
-        responseBack.updates = () => {
-          const newBillId = 'b_' + Math.random().toString(36).substring(2, 9);
-          database.bills.push({
-            id: newBillId,
-            customer_id: custId,
-            items: [{ "name": "General Grocery Item", "qty": 1, "price": amtVal }],
-            total: amtVal,
-            status: "unpaid",
-            created_at: timestampIso,
-            paid_at: null
-          });
-          saveDatabase();
-        };
-
-        const currentOutstandingEstimated = getCustomerOutstanding(custId) + amtVal;
-
-        responseBack.reply = `📝 *Bill Generated!* \n👤 Customer: *${custName}*\n💵 Amount: *₹${amtVal}*\n\n✅ Bill successfully created (Unpaid). Total due on khata: *₹${currentOutstandingEstimated}*`;
-        return responseBack;
-      }
-
-      // E. Add credit entry command: "Ramesh ka khata mein 100 daal do"
-      const creditMatch = text.match(/(?:(?:khata|khate|account|me|mein)?\s*(\d+)\s*(?:daal|add|jama|credit|plus|deposit|rukhe|rs|rupaye))/i) || text.match(/(\d+)\s*(?:daal|add|jama|credit|deposit)/i);
-      if (creditMatch) {
-        const amtVal = parseInt(creditMatch[1]);
-        responseBack.type = 'add_credit';
-        responseBack.details = `Add ₹${amtVal} credit transaction entry to ${custName}`;
-
-        responseBack.updates = () => {
-          const newTxId = 't_' + Math.random().toString(36).substring(2, 9);
-          database.transactions.push({
-            id: newTxId,
-            customer_id: custId,
-            type: 'credit',
-            amount: amtVal,
-            note: "Added via emulated WhatsApp bot command",
-            staff_phone: "9111111111", // Default Raju phone
-            timestamp: timestampIso
-          });
-          saveDatabase();
-        };
-
-        const currentOutstandingEstimated = getCustomerOutstanding(custId) + amtVal;
-
-        responseBack.reply = `✅ *${custName}* ke khate mein *₹${amtVal}* credit add ho gaya hai.\n\n👤 Staff name: Raju Storekeeper\n💰 Kul Baaki: *₹${currentOutstandingEstimated}*`;
-        return responseBack;
-      }
-
-      responseBack.reply = `❌ *Command Code Fallback!* Try standard keywords.`;
-      return responseBack;
-    }
-
-    // TRIGGER SIMULATOR RUN
-    function simulateWhatsAppCommand() {
-      const msg = document.getElementById('wa-input-cmd').value.trim();
-      if (!msg) return;
-
-      const responseBox = document.getElementById('wa-simulator-response-box');
-      responseBox.classList.remove('hidden');
-
-      // Process inside our emulated bot
-      const actionResult = botParseCommand(msg);
-      
-      // Update UI displays inside result metadata panel
-      document.getElementById('sim-parsed-badge').textContent = `PARSED: ${actionResult.type.toUpperCase()}`;
-      document.getElementById('sim-parsed-badge').className = actionResult.type === 'unknown' 
-        ? "font-mono text-[9px] bg-red-500/10 text-red-400 border border-red-500/20 rounded px-1.5 py-0.5 w-fit uppercase font-semibold"
-        : "font-mono text-[9px] bg-indigo-500/15 text-indigo-400 border border-indigo-500/25 rounded px-1.5 py-0.5 w-fit uppercase font-semibold";
-
-      document.getElementById('sim-parsed-details').textContent = actionResult.details || "Command parameters match error";
-      
-      // Render formatting the reply box matching whatsapp font style emojis
-      const txtNode = document.getElementById('sim-bot-reply');
-      txtNode.innerHTML = actionResult.reply.replace(/\n/g, '<br>').replace(/\*(.*?)\*/g, "<strong>$1</strong>").replace(/_(.*?)_/g, "<em>$1</em>");
-
-      if (actionResult.type !== 'unknown' && typeof actionResult.updates === 'function') {
-        // Execute the database state updates dynamically! This updates the whole dashboard in real-time feel!
-        actionResult.updates();
-        
-        // Success notification
-        showToast("WhatsApp Bot updated database states successfully!", "success");
-        renderAll();
-
-        // If 'khata' was chosen, reload selected customer ledger to see instant changes
-        if (selectedCustomerId) {
-          openCustomerLedger(selectedCustomerId);
-        }
-      }
-    }
-
-    // Start-up triggers
-    window.addEventListener('DOMContentLoaded', () => {
-      startClock();
-      loadDatabase();
-      startAutoRefresh();
     });
+
+    // Initialize
+    fetchDatabase();
+    setInterval(fetchDatabase, 30000); // Refresh every 30 seconds
   </script>
 </body>
 </html>

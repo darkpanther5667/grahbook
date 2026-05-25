@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Management | Sharma Store</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Font Geist and Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#25d366',
+              container: '#25d366',
+              on: '#ffffff',
+            },
+            secondary: '#0f172a',
+            tertiary: '#64748b',
+            background: '#f7f9fb',
+            surface: '#ffffff',
+            'surface-variant': '#e0e3e5',
+            outline: '#6c7b6b',
+            'outline-variant': '#bbcbb9',
+            'on-background': '#191c1e',
+            'on-surface': '#191c1e',
+            'on-surface-variant': '#3c4a3d',
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            heading: ['Geist', 'ui-sans-serif', 'system-ui'],
+          },
+          borderRadius: {
+            DEFAULT: '0.5rem',
+            lg: '0.75rem',
+            xl: '1rem',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f9fb;
+      color: #191c1e;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Geist', sans-serif;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f7f9fb;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #6c7b6b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #25d366;
+    }
+  </style>
+</head>
+<body class="flex h-full overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r border-surface-variant flex flex-col shrink-0">
+    <!-- Brand -->
+    <div class="p-6 border-b border-surface-variant">
+      <div class="flex items-center gap-3">
+        <span class="material-icons text-primary text-3xl">storefront</span>
+        <div>
+          <h1 class="font-bold text-lg text-secondary leading-tight">Sharma Store</h1>
+          <span class="text-xs text-primary font-medium">Business Portal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 p-4 space-y-1">
+      <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">shopping_cart</span>
+        <span>Orders</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">smart_toy</span>
+        <span>Bot Config</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">receipt_long</span>
+        <span>Billing</span>
+      </a>
+      <a href="customers.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium">
+        <span class="material-icons">group</span>
+        <span>Customers</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">settings</span>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <!-- User Profile -->
+    <div class="p-4 border-t border-surface-variant">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <span class="material-icons text-primary">person</span>
+        </div>
+        <div class="flex-1">
+          <p class="font-semibold text-sm text-secondary">Rajesh Sharma</p>
+          <p class="text-xs text-tertiary">Admin</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white border-b border-surface-variant px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-secondary">Customer Directory</h2>
+          <p class="text-sm text-tertiary">Manage and monitor your customer relationships and spendings.</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <button onclick="openAddCustomerModal()" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all">
+            <span class="material-icons text-sm mr-1">add</span>
+            Add Customer
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <!-- New Customers -->
+        <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm text-tertiary font-medium">New Customers</span>
+            <span class="material-icons text-primary">person_add</span>
+          </div>
+          <p class="text-3xl font-bold text-secondary mb-2" id="total-customers">0</p>
+          <div class="flex items-center gap-1 text-sm text-tertiary">
+            <span>Versus last 30 days</span>
+          </div>
+        </div>
+
+        <!-- Avg. Lifetime Value -->
+        <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm text-tertiary font-medium">Avg. Lifetime Value</span>
+            <span class="material-icons text-primary">account_balance_wallet</span>
+          </div>
+          <p class="text-3xl font-bold text-secondary mb-2" id="avg-lifetime-value">₹0</p>
+          <div class="flex items-center gap-1 text-sm text-primary">
+            <span>Consistent growth observed</span>
+          </div>
+        </div>
+
+        <!-- Churn Rate -->
+        <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm text-tertiary font-medium">Churn Rate</span>
+            <span class="material-icons text-primary">trending_down</span>
+          </div>
+          <p class="text-3xl font-bold text-secondary mb-2">1.2%</p>
+          <div class="flex items-center gap-1 text-sm text-primary">
+            <span>Well below industry average</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search and Filter -->
+      <div class="bg-white p-4 rounded-xl border border-surface-variant shadow-sm mb-6">
+        <div class="flex items-center gap-4">
+          <div class="flex-1 relative">
+            <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-tertiary">search</span>
+            <input type="text" id="search-input" placeholder="Search customers..." class="w-full pl-10 pr-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+          </div>
+          <select id="filter-select" class="px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+            <option value="all">All Customers</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Customer List -->
+      <div class="bg-white rounded-xl border border-surface-variant shadow-sm overflow-hidden">
+        <div id="customer-list" class="divide-y divide-surface-variant">
+          <!-- Customers will be loaded dynamically -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add Customer Modal -->
+  <div id="add-customer-modal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl border border-surface-variant max-w-md w-full overflow-hidden shadow-xl">
+      <div class="px-6 py-4 border-b border-surface-variant flex items-center justify-between">
+        <h3 class="font-bold text-secondary">Add New Customer</h3>
+        <button onclick="closeAddCustomerModal()" class="text-tertiary hover:text-secondary">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <form id="add-customer-form" onsubmit="handleAddCustomer(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-secondary mb-2">Customer Name</label>
+          <input type="text" id="customer-name" required class="w-full px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-secondary mb-2">Phone Number</label>
+          <input type="tel" id="customer-phone" required pattern="[0-9]{10}" class="w-full px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+        </div>
+        <div class="flex gap-3 pt-4">
+          <button type="button" onclick="closeAddCustomerModal()" class="flex-1 px-4 py-2 border border-surface-variant text-tertiary rounded-lg hover:bg-background transition-all">Cancel</button>
+          <button type="submit" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all">Add Customer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Global database state
+    let database = {
+      customers: [],
+      transactions: [],
+      bills: []
+    };
+
+    // Fetch data from backend
+    async function fetchDatabase() {
+      try {
+        const response = await fetch('/api/db');
+        const data = await response.json();
+        database = data;
+        updateCustomerList();
+        updateStats();
+      } catch (error) {
+        console.error('Error fetching database:', error);
+      }
+    }
+
+    // Update customer list
+    function updateCustomerList() {
+      const container = document.getElementById('customer-list');
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      
+      const filteredCustomers = database.customers.filter(c => 
+        c.name.toLowerCase().includes(searchTerm) || 
+        c.phone.includes(searchTerm)
+      );
+
+      if (filteredCustomers.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center">
+            <span class="material-icons text-4xl text-tertiary mb-2">person_off</span>
+            <p class="text-tertiary">No customers found</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filteredCustomers.map(customer => {
+        const outstanding = getCustomerOutstanding(customer.id);
+        const lastTransaction = getLastTransaction(customer.id);
+        
+        return `
+          <div class="flex items-center gap-4 p-4 hover:bg-background transition-all cursor-pointer" onclick="viewCustomerDetail('${customer.id}')">
+            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <span class="material-icons text-primary">person</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-secondary">${customer.name}</p>
+              <p class="text-sm text-tertiary">${customer.phone}</p>
+            </div>
+            <div class="text-right">
+              <p class="font-bold ${outstanding > 0 ? 'text-red-500' : 'text-green-500'}">₹${outstanding.toLocaleString('en-IN')}</p>
+              <p class="text-xs text-tertiary">${lastTransaction}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Get customer outstanding balance
+    function getCustomerOutstanding(customerId) {
+      let balance = 0;
+      
+      // Add bill amounts
+      database.bills
+        .filter(b => b.customer_id === customerId && b.status === 'unpaid')
+        .forEach(b => balance += b.total);
+      
+      // Subtract payments
+      database.transactions
+        .filter(t => t.customer_id === customerId && t.type === 'payment')
+        .forEach(t => balance -= t.amount);
+      
+      return balance;
+    }
+
+    // Get last transaction date
+    function getLastTransaction(customerId) {
+      const customerTransactions = database.transactions.filter(t => t.customer_id === customerId);
+      if (customerTransactions.length === 0) return 'No activity';
+      
+      const lastTx = customerTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+      const date = new Date(lastTx.timestamp);
+      return date.toLocaleDateString('en-GB');
+    }
+
+    // Update stats
+    function updateStats() {
+      document.getElementById('total-customers').textContent = database.customers.length;
+      
+      // Calculate average lifetime value
+      const totalValue = database.customers.reduce((sum, c) => sum + getCustomerOutstanding(c.id), 0);
+      const avgValue = database.customers.length > 0 ? totalValue / database.customers.length : 0;
+      document.getElementById('avg-lifetime-value').textContent = '₹' + avgValue.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    }
+
+    // Modal functions
+    function openAddCustomerModal() {
+      document.getElementById('add-customer-modal').classList.remove('hidden');
+    }
+
+    function closeAddCustomerModal() {
+      document.getElementById('add-customer-modal').classList.add('hidden');
+      document.getElementById('add-customer-form').reset();
+    }
+
+    // Handle add customer
+    async function handleAddCustomer(event) {
+      event.preventDefault();
+      
+      const name = document.getElementById('customer-name').value;
+      const phone = document.getElementById('customer-phone').value;
+      
+      try {
+        const response = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create_customer',
+            name: name,
+            phone: phone
+          })
+        });
+        
+        if (response.ok) {
+          closeAddCustomerModal();
+          fetchDatabase();
+        }
+      } catch (error) {
+        console.error('Error adding customer:', error);
+      }
+    }
+
+    // View customer detail
+    function viewCustomerDetail(customerId) {
+      // Navigate to customer detail page or open modal
+      console.log('View customer:', customerId);
+    }
+
+    // Search input listener
+    document.getElementById('search-input').addEventListener('input', updateCustomerList);
+
+    // Initialize
+    fetchDatabase();
+    setInterval(fetchDatabase, 30000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create New Invoice | Sharma Store</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Font Geist and Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#25d366',
+              container: '#25d366',
+              on: '#ffffff',
+            },
+            secondary: '#0f172a',
+            tertiary: '#64748b',
+            background: '#f7f9fb',
+            surface: '#ffffff',
+            'surface-variant': '#e0e3e5',
+            outline: '#6c7b6b',
+            'outline-variant': '#bbcbb9',
+            'on-background': '#191c1e',
+            'on-surface': '#191c1e',
+            'on-surface-variant': '#3c4a3d',
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            heading: ['Geist', 'ui-sans-serif', 'system-ui'],
+          },
+          borderRadius: {
+            DEFAULT: '0.5rem',
+            lg: '0.75rem',
+            xl: '1rem',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f9fb;
+      color: #191c1e;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Geist', sans-serif;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f7f9fb;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #6c7b6b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #25d366;
+    }
+  </style>
+</head>
+<body class="flex h-full overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r border-surface-variant flex flex-col shrink-0">
+    <!-- Brand -->
+    <div class="p-6 border-b border-surface-variant">
+      <div class="flex items-center gap-3">
+        <span class="material-icons text-primary text-3xl">storefront</span>
+        <div>
+          <h1 class="font-bold text-lg text-secondary leading-tight">Sharma Store</h1>
+          <span class="text-xs text-primary font-medium">Business Portal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 p-4 space-y-1">
+      <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">shopping_cart</span>
+        <span>Orders</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">smart_toy</span>
+        <span>Bot Config</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium">
+        <span class="material-icons">receipt_long</span>
+        <span>Billing</span>
+      </a>
+      <a href="customers.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">group</span>
+        <span>Customers</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">settings</span>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <!-- User Profile -->
+    <div class="p-4 border-t border-surface-variant">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <span class="material-icons text-primary">person</span>
+        </div>
+        <div class="flex-1">
+          <p class="font-semibold text-sm text-secondary">Rajesh Sharma</p>
+          <p class="text-xs text-tertiary">Admin</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white border-b border-surface-variant px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-secondary">Create New Invoice</h2>
+          <p class="text-sm text-tertiary">Draft, customize, and dispatch business invoices instantly via WhatsApp.</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <button onclick="saveDraft()" class="px-4 py-2 border border-surface-variant text-tertiary rounded-lg font-medium hover:bg-background transition-all">
+            Save Draft
+          </button>
+          <button onclick="sendInvoice()" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all">
+            <span class="material-icons text-sm mr-1">send</span>
+            Send Invoice
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Form -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Customer Information -->
+          <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+            <h3 class="font-bold text-secondary mb-4">Customer Information</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-secondary mb-2">Select Customer</label>
+                <select id="customer-select" onchange="selectCustomer()" class="w-full px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+                  <option value="">Choose a customer...</option>
+                </select>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-secondary mb-2">Customer Name</label>
+                  <input type="text" id="customer-name" readonly class="w-full px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-secondary mb-2">Phone Number</label>
+                  <input type="tel" id="customer-phone" readonly class="w-full px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Itemized List -->
+          <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+            <h3 class="font-bold text-secondary mb-4">Itemized List</h3>
+            <div id="items-container" class="space-y-4">
+              <!-- Items will be added here -->
+            </div>
+            <button onclick="addItem()" class="mt-4 w-full px-4 py-2 border border-dashed border-surface-variant text-tertiary rounded-lg hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2">
+              <span class="material-icons">add</span>
+              <span>Add Item</span>
+            </button>
+          </div>
+
+          <!-- Invoice Details -->
+          <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+            <h3 class="font-bold text-secondary mb-4">Invoice Details</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-secondary mb-2">Invoice Number</label>
+                <input type="text" id="invoice-number" value="INV-2023-001" class="w-full px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-secondary mb-2">Issued Date</label>
+                <input type="date" id="issued-date" class="w-full px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-secondary mb-2">Due Date</label>
+                <input type="date" id="due-date" class="w-full px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-secondary mb-2">Payment Terms</label>
+                <select id="payment-terms" class="w-full px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+                  <option value="immediate">Immediate</option>
+                  <option value="7days">Net 7 Days</option>
+                  <option value="15days">Net 15 Days</option>
+                  <option value="30days">Net 30 Days</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Preview -->
+        <div class="lg:col-span-1">
+          <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm sticky top-6">
+            <h3 class="font-bold text-secondary mb-4">Invoice Preview</h3>
+            <div class="bg-background p-6 rounded-lg border border-surface-variant">
+              <div class="text-center mb-6">
+                <h4 class="text-xl font-bold text-primary">INVOICE</h4>
+                <p class="text-sm text-tertiary" id="preview-invoice-number">INV-2023-001</p>
+              </div>
+              
+              <div class="space-y-4 mb-6">
+                <div>
+                  <p class="text-xs text-tertiary uppercase font-semibold">Billed To</p>
+                  <p class="font-semibold text-secondary" id="preview-customer-name">-</p>
+                  <p class="text-sm text-tertiary" id="preview-customer-phone">-</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-xs text-tertiary uppercase font-semibold">Issued Date</p>
+                    <p class="text-sm text-secondary" id="preview-issued-date">-</p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-tertiary uppercase font-semibold">Due Date</p>
+                    <p class="text-sm text-secondary" id="preview-due-date">-</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border-t border-surface-variant pt-4 mb-4">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="text-xs text-tertiary">
+                      <th class="text-left pb-2">Item</th>
+                      <th class="text-right pb-2">Qty</th>
+                      <th class="text-right pb-2">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody id="preview-items">
+                    <!-- Preview items will be added here -->
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="border-t border-surface-variant pt-4">
+                <div class="flex justify-between items-center">
+                  <span class="font-semibold text-secondary">Total</span>
+                  <span class="text-xl font-bold text-primary" id="preview-total">₹0.00</span>
+                </div>
+              </div>
+
+              <div class="mt-6 pt-4 border-t border-surface-variant">
+                <p class="text-xs text-tertiary uppercase font-semibold mb-2">WhatsApp Preview</p>
+                <div class="bg-white p-3 rounded-lg border border-surface-variant text-sm text-tertiary" id="whatsapp-preview">
+                  "Hello, here is your invoice..."
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Global state
+    let database = {
+      customers: [],
+      transactions: [],
+      bills: []
+    };
+    
+    let invoiceItems = [];
+    let selectedCustomer = null;
+
+    // Fetch data from backend
+    async function fetchDatabase() {
+      try {
+        const response = await fetch('/api/db');
+        const data = await response.json();
+        database = data;
+        populateCustomerSelect();
+      } catch (error) {
+        console.error('Error fetching database:', error);
+      }
+    }
+
+    // Populate customer select
+    function populateCustomerSelect() {
+      const select = document.getElementById('customer-select');
+      select.innerHTML = '<option value="">Choose a customer...</option>';
+      
+      database.customers.forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer.id;
+        option.textContent = `${customer.name} (${customer.phone})`;
+        select.appendChild(option);
+      });
+    }
+
+    // Select customer
+    function selectCustomer() {
+      const customerId = document.getElementById('customer-select').value;
+      if (!customerId) {
+        selectedCustomer = null;
+        document.getElementById('customer-name').value = '';
+        document.getElementById('customer-phone').value = '';
+        updatePreview();
+        return;
+      }
+
+      selectedCustomer = database.customers.find(c => c.id === customerId);
+      if (selectedCustomer) {
+        document.getElementById('customer-name').value = selectedCustomer.name;
+        document.getElementById('customer-phone').value = selectedCustomer.phone;
+        updatePreview();
+      }
+    }
+
+    // Add item
+    function addItem() {
+      const itemId = Date.now();
+      invoiceItems.push({
+        id: itemId,
+        name: '',
+        quantity: 1,
+        price: 0
+      });
+      renderItems();
+      updatePreview();
+    }
+
+    // Remove item
+    function removeItem(itemId) {
+      invoiceItems = invoiceItems.filter(item => item.id !== itemId);
+      renderItems();
+      updatePreview();
+    }
+
+    // Update item
+    function updateItem(itemId, field, value) {
+      const item = invoiceItems.find(i => i.id === itemId);
+      if (item) {
+        if (field === 'quantity' || field === 'price') {
+          item[field] = parseFloat(value) || 0;
+        } else {
+          item[field] = value;
+        }
+        updatePreview();
+      }
+    }
+
+    // Render items
+    function renderItems() {
+      const container = document.getElementById('items-container');
+      container.innerHTML = invoiceItems.map(item => `
+        <div class="flex items-center gap-3 p-4 bg-background rounded-lg">
+          <div class="flex-1">
+            <input type="text" placeholder="Item name" value="${item.name}" onchange="updateItem(${item.id}, 'name', this.value)" class="w-full px-3 py-2 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary text-sm">
+          </div>
+          <div class="w-20">
+            <input type="number" placeholder="Qty" value="${item.quantity}" min="1" onchange="updateItem(${item.id}, 'quantity', this.value)" class="w-full px-3 py-2 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary text-sm">
+          </div>
+          <div class="w-24">
+            <input type="number" placeholder="Price" value="${item.price}" min="0" onchange="updateItem(${item.id}, 'price', this.value)" class="w-full px-3 py-2 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary text-sm">
+          </div>
+          <button onclick="removeItem(${item.id})" class="text-tertiary hover:text-red-500 transition-all">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Update preview
+    function updatePreview() {
+      // Update customer info
+      document.getElementById('preview-customer-name').textContent = selectedCustomer ? selectedCustomer.name : '-';
+      document.getElementById('preview-customer-phone').textContent = selectedCustomer ? selectedCustomer.phone : '-';
+      
+      // Update dates
+      const issuedDate = document.getElementById('issued-date').value;
+      const dueDate = document.getElementById('due-date').value;
+      document.getElementById('preview-issued-date').textContent = issuedDate || '-';
+      document.getElementById('preview-due-date').textContent = dueDate || '-';
+      
+      // Update invoice number
+      document.getElementById('preview-invoice-number').textContent = document.getElementById('invoice-number').value;
+      
+      // Update items
+      const previewItems = document.getElementById('preview-items');
+      previewItems.innerHTML = invoiceItems.map(item => `
+        <tr>
+          <td class="py-2">${item.name || '-'}</td>
+          <td class="py-2 text-right">${item.quantity}</td>
+          <td class="py-2 text-right">₹${item.price.toFixed(2)}</td>
+        </tr>
+      `).join('');
+      
+      // Calculate total
+      const total = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+      document.getElementById('preview-total').textContent = '₹' + total.toFixed(2);
+      
+      // Update WhatsApp preview
+      const whatsappText = selectedCustomer 
+        ? `Hello ${selectedCustomer.name}, here is your invoice for ₹${total.toFixed(2)}. Please review and let us know if you have any questions.`
+        : 'Hello, here is your invoice...';
+      document.getElementById('whatsapp-preview').textContent = `"${whatsappText}"`;
+    }
+
+    // Save draft
+    function saveDraft() {
+      alert('Invoice draft saved!');
+    }
+
+    // Send invoice
+    async function sendInvoice() {
+      if (!selectedCustomer) {
+        alert('Please select a customer');
+        return;
+      }
+      
+      if (invoiceItems.length === 0) {
+        alert('Please add at least one item');
+        return;
+      }
+
+      const total = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+      
+      try {
+        const response = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create_bill',
+            customer_id: selectedCustomer.id,
+            items: invoiceItems,
+            total: total,
+            status: 'unpaid'
+          })
+        });
+        
+        if (response.ok) {
+          alert('Invoice created successfully!');
+          window.location.href = 'dashboard.html';
+        }
+      } catch (error) {
+        console.error('Error creating invoice:', error);
+        alert('Error creating invoice');
+      }
+    }
+
+    // Initialize
+    document.getElementById('issued-date').valueAsDate = new Date();
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 7);
+    document.getElementById('due-date').valueAsDate = dueDate;
+    
+    fetchDatabase();
+    
+    // Add event listeners for date changes
+    document.getElementById('issued-date').addEventListener('change', updatePreview);
+    document.getElementById('due-date').addEventListener('change', updatePreview);
+    document.getElementById('invoice-number').addEventListener('input', updatePreview);
+  </script>
+</body>
+</html>

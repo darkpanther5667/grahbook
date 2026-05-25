@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing & Invoices | Sharma Store</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Font Geist and Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#25d366',
+              container: '#25d366',
+              on: '#ffffff',
+            },
+            secondary: '#0f172a',
+            tertiary: '#64748b',
+            background: '#f7f9fb',
+            surface: '#ffffff',
+            'surface-variant': '#e0e3e5',
+            outline: '#6c7b6b',
+            'outline-variant': '#bbcbb9',
+            'on-background': '#191c1e',
+            'on-surface': '#191c1e',
+            'on-surface-variant': '#3c4a3d',
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            heading: ['Geist', 'ui-sans-serif', 'system-ui'],
+          },
+          borderRadius: {
+            DEFAULT: '0.5rem',
+            lg: '0.75rem',
+            xl: '1rem',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f9fb;
+      color: #191c1e;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Geist', sans-serif;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f7f9fb;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #6c7b6b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #25d366;
+    }
+  </style>
+</head>
+<body class="flex h-full overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r border-surface-variant flex flex-col shrink-0">
+    <!-- Brand -->
+    <div class="p-6 border-b border-surface-variant">
+      <div class="flex items-center gap-3">
+        <span class="material-icons text-primary text-3xl">storefront</span>
+        <div>
+          <h1 class="font-bold text-lg text-secondary leading-tight">Sharma Store</h1>
+          <span class="text-xs text-primary font-medium">Business Portal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 p-4 space-y-1">
+      <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">shopping_cart</span>
+        <span>Orders</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">smart_toy</span>
+        <span>Bot Config</span>
+      </a>
+      <a href="billing.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-medium">
+        <span class="material-icons">receipt_long</span>
+        <span>Billing</span>
+      </a>
+      <a href="customers.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">group</span>
+        <span>Customers</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-tertiary hover:text-secondary hover:bg-background font-medium transition-all">
+        <span class="material-icons">settings</span>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <!-- User Profile -->
+    <div class="p-4 border-t border-surface-variant">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <span class="material-icons text-primary">person</span>
+        </div>
+        <div class="flex-1">
+          <p class="font-semibold text-sm text-secondary">Rajesh Sharma</p>
+          <p class="text-xs text-tertiary">Admin</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white border-b border-surface-variant px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-secondary">Billing & Invoices</h2>
+          <p class="text-sm text-tertiary">Manage your subscription and customer financial records.</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="create-invoice.html" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all">
+            <span class="material-icons text-sm mr-1">add</span>
+            New Invoice
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Subscription Plan -->
+        <div class="lg:col-span-1">
+          <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm h-full">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-secondary">Pro Merchant</h3>
+              <span class="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">Active</span>
+            </div>
+            <p class="text-3xl font-bold text-secondary mb-4">₹499.00 <span class="text-sm text-tertiary font-normal">/ month</span></p>
+            <ul class="space-y-3">
+              <li class="flex items-center gap-2 text-sm text-secondary">
+                <span class="material-icons text-primary text-sm">check_circle</span>
+                <span>Unlimited WhatsApp Bots</span>
+              </li>
+              <li class="flex items-center gap-2 text-sm text-secondary">
+                <span class="material-icons text-primary text-sm">check_circle</span>
+                <span>Advanced Analytics</span>
+              </li>
+              <li class="flex items-center gap-2 text-sm text-secondary">
+                <span class="material-icons text-primary text-sm">check_circle</span>
+                <span>Priority 24/7 Support</span>
+              </li>
+              <li class="flex items-center gap-2 text-sm text-secondary">
+                <span class="material-icons text-primary text-sm">check_circle</span>
+                <span>Unlimited Customers</span>
+              </li>
+              <li class="flex items-center gap-2 text-sm text-secondary">
+                <span class="material-icons text-primary text-sm">check_circle</span>
+                <span>PDF Invoice Generation</span>
+              </li>
+            </ul>
+            <button class="mt-6 w-full px-4 py-2 border border-surface-variant text-tertiary rounded-lg hover:bg-background transition-all">
+              Manage Subscription
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent Platform Invoices -->
+        <div class="lg:col-span-2">
+          <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm h-full">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-secondary">Recent Platform Invoices</h3>
+              <button class="text-sm text-primary hover:underline">View History</button>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-4 bg-background rounded-lg">
+                <div>
+                  <p class="font-semibold text-secondary">Pro Merchant Plan</p>
+                  <p class="text-sm text-tertiary">October 2023</p>
+                </div>
+                <div class="text-right">
+                  <p class="font-bold text-secondary">₹499.00</p>
+                  <p class="text-xs text-green-500">Paid</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between p-4 bg-background rounded-lg">
+                <div>
+                  <p class="font-semibold text-secondary">Pro Merchant Plan</p>
+                  <p class="text-sm text-tertiary">September 2023</p>
+                </div>
+                <div class="text-right">
+                  <p class="font-bold text-secondary">₹499.00</p>
+                  <p class="text-xs text-green-500">Paid</p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between p-4 bg-background rounded-lg">
+                <div>
+                  <p class="font-semibold text-secondary">Pro Merchant Plan</p>
+                  <p class="text-sm text-tertiary">August 2023</p>
+                </div>
+                <div class="text-right">
+                  <p class="font-bold text-secondary">₹499.00</p>
+                  <p class="text-xs text-green-500">Paid</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Invoicing -->
+      <div class="bg-white p-6 rounded-xl border border-surface-variant shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-secondary">Customer Invoicing</h3>
+          <p class="text-sm text-tertiary">Overview of invoices sent to WhatsApp customers</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex items-center gap-4 mb-4">
+          <div class="flex-1 relative">
+            <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-tertiary">search</span>
+            <input type="text" id="search-input" placeholder="Search invoices..." class="w-full pl-10 pr-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+          </div>
+          <select id="filter-status" onchange="filterInvoices()" class="px-4 py-2 bg-background border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+            <option value="all">All Status</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
+        </div>
+
+        <!-- Invoice Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-surface-variant text-xs text-tertiary uppercase">
+                <th class="text-left py-3 px-4">Invoice ID</th>
+                <th class="text-left py-3 px-4">Customer</th>
+                <th class="text-left py-3 px-4">Date</th>
+                <th class="text-right py-3 px-4">Amount</th>
+                <th class="text-center py-3 px-4">Status</th>
+                <th class="text-right py-3 px-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="invoice-table-body" class="divide-y divide-surface-variant">
+              <!-- Invoices will be loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Global database state
+    let database = {
+      customers: [],
+      transactions: [],
+      bills: []
+    };
+
+    // Fetch data from backend
+    async function fetchDatabase() {
+      try {
+        const response = await fetch('/api/db');
+        const data = await response.json();
+        database = data;
+        renderInvoiceTable();
+      } catch (error) {
+        console.error('Error fetching database:', error);
+      }
+    }
+
+    // Render invoice table
+    function renderInvoiceTable() {
+      const tbody = document.getElementById('invoice-table-body');
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      const statusFilter = document.getElementById('filter-status').value;
+      
+      let filteredBills = database.bills;
+      
+      // Apply search filter
+      if (searchTerm) {
+        filteredBills = filteredBills.filter(bill => {
+          const customer = database.customers.find(c => c.id === bill.customer_id);
+          const customerName = customer ? customer.name.toLowerCase() : '';
+          return bill.id.toLowerCase().includes(searchTerm) || customerName.includes(searchTerm);
+        });
+      }
+      
+      // Apply status filter
+      if (statusFilter !== 'all') {
+        filteredBills = filteredBills.filter(bill => bill.status === statusFilter);
+      }
+
+      if (filteredBills.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-8 text-center text-tertiary">
+              <span class="material-icons text-4xl mb-2">receipt_off</span>
+              <p>No invoices found</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filteredBills.map(bill => {
+        const customer = database.customers.find(c => c.id === bill.customer_id);
+        const customerName = customer ? customer.name : 'Unknown';
+        const date = new Date(bill.created_at).toLocaleDateString('en-GB');
+        const statusBadge = bill.status === 'paid' 
+          ? '<span class="px-2 py-1 bg-green-500/10 text-green-500 text-xs font-medium rounded-full">Paid</span>'
+          : '<span class="px-2 py-1 bg-amber-500/10 text-amber-500 text-xs font-medium rounded-full">Unpaid</span>';
+
+        return `
+          <tr class="hover:bg-background transition-all">
+            <td class="py-4 px-4 font-mono text-sm text-secondary">${bill.id}</td>
+            <td class="py-4 px-4">
+              <p class="font-medium text-secondary">${customerName}</p>
+            </td>
+            <td class="py-4 px-4 text-sm text-tertiary">${date}</td>
+            <td class="py-4 px-4 text-right font-mono font-bold text-secondary">₹${bill.total.toFixed(2)}</td>
+            <td class="py-4 px-4 text-center">${statusBadge}</td>
+            <td class="py-4 px-4 text-right">
+              <button onclick="viewInvoice('${bill.id}')" class="text-primary hover:underline text-sm">View</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Filter invoices
+    function filterInvoices() {
+      renderInvoiceTable();
+    }
+
+    // View invoice
+    function viewInvoice(billId) {
+      // Navigate to invoice detail page or open modal
+      console.log('View invoice:', billId);
+    }
+
+    // Search input listener
+    document.getElementById('search-input').addEventListener('input', renderInvoiceTable);
+
+    // Initialize
+    fetchDatabase();
+    setInterval(fetchDatabase, 30000);
+  </script>
+</body>
+</html>
