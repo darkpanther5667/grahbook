@@ -2068,29 +2068,6 @@ app.get('/api/report/:date/pdf', async (req, res) => {
   }
 });
 
-// ─── MANUAL TRIGGER ROUTES ─────────────────────────────────────────────────────
-
-// Root page
-app.get('/', (req, res) => {
-  res.send(`
-    <html><head><title>Store Bot</title></head>
-    <body style="font-family:sans-serif;padding:2rem;background:#f5f5f5">
-    <h1>🏪 Store WhatsApp Bot</h1>
-    <p>✅ Bot is running on port <strong>${PORT}</strong></p>
-    <h3>API Endpoints:</h3>
-    <ul>
-      <li><code>GET /webhook</code> — Meta webhook verification</li>
-      <li><code>POST /webhook</code> — Incoming WhatsApp messages</li>
-      <li><code>GET /api/db</code> — Read database</li>
-      <li><code>POST /api/db</code> — Write database</li>
-      <li><code>GET /api/report</code> — Today's report</li>
-      <li><code>POST /api/send-reminders</code> — Send payment reminders</li>
-    </ul>
-    <p><a href="/api/report">View Today's Report →</a></p>
-    </body></html>
-  `);
-});
-
 // ─── START SERVER ──────────────────────────────────────────────────────────────
 
 // Serve the dashboard HTML file
