@@ -2093,9 +2093,15 @@ app.get('/', (req, res) => {
 
 // ─── START SERVER ──────────────────────────────────────────────────────────────
 
+// Serve the dashboard HTML file
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/dashboard.html');
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Store Bot running on port ${PORT}`);
   console.log(`📱 Webhook: POST /webhook`);
+  console.log(`🌐 Dashboard: http://localhost:${PORT}`);
   console.log(`🌐 Dashboard API: GET /api/db`);
   // Start daily 9 AM report scheduler
   scheduleDaily(9, 0, sendDailyReport);
