@@ -41,6 +41,7 @@ function requiresMobileApiKey(req) {
   // Allow PDF endpoints to be fetched by WhatsApp/clients without an app key.
   if (req.method === 'GET') {
     if (req.path === '/api/test-db') return false;
+    if (req.path === '/api/test-wa') return false;
     if (/^\/api\/bill\/[^/]+\/pdf$/.test(req.path)) return false;
     if (/^\/api\/customer\/[^/]+\/statement\/pdf$/.test(req.path)) return false;
     if (/^\/api\/report\/[^/]+\/pdf$/.test(req.path)) return false;
@@ -82,6 +83,7 @@ function requiresSessionAuth(req) {
   // PDF endpoints are fetched by WhatsApp directly.
   if (req.method === 'GET') {
     if (req.path === '/api/test-db') return false;
+    if (req.path === '/api/test-wa') return false;
     if (/^\/api\/bill\/[^/]+\/pdf$/.test(req.path)) return false;
     if (/^\/api\/customer\/[^/]+\/statement\/pdf$/.test(req.path)) return false;
     if (/^\/api\/report\/[^/]+\/pdf$/.test(req.path)) return false;
@@ -1708,6 +1710,35 @@ app.post('/webhook', async (req, res) => {
   }
 
   return res.sendStatus(200);
+});
+
+// GET /api/test-wa — Diagnostic route to test WhatsApp API
+app.get('/api/test-wa', async (req, res) => {
+  const token = process.env.WHATSAPP_TOKEN;
+  const phoneId = process.env.PHONE_NUMBER_ID;
+  const target = req.query.phone || '918052402633';
+  
+  if (!token || !phoneId) return res.json({ error: 'Missing token or phoneId in env vars' });
+  
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/v19.0/${phoneId}/messages`,
+      {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: target,
+        type: 'text',
+        text: { body: 'Test message from server' }
+      },
+      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+    );
+    return res.json({ status: 'Success', data: response.data });
+  } catch (error) {
+    return res.json({ 
+      status: 'Failed', 
+      error: error.response ? error.response.data : error.message 
+    });
+  }
 });
 
 // GET /api/test-db — Diagnostic route to check DB connection and setup default store
