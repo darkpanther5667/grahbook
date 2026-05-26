@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Grahbook - The first AI-powered store bot built for Bharat. Manage billing, UPI payments, and customer chats—all without leaving WhatsApp.">
+  <meta name="keywords" content="WhatsApp bot, AI store bot, Indian merchants, UPI payments, billing automation, WhatsApp commerce">
   <title>Grahbook | Commerce at the Speed of WhatsApp</title>
   
   <!-- PWA Meta Tags -->
@@ -56,6 +58,10 @@
   </script>
 
   <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    
     body {
       font-family: 'Inter', sans-serif;
       background-color: #f7f9fb;
@@ -85,63 +91,336 @@
     .gradient-bg {
       background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
     }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .animate-pulse-slow {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .animate-slide-in-right {
+      animation: slideInRight 0.6s ease-out forwards;
+    }
+
+    /* Scroll Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s ease-out;
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Button Hover Effects */
+    .btn-hover {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .btn-hover::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn-hover:hover::before {
+      left: 100%;
+    }
+
+    /* Card Hover Effects */
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    /* Gradient Text */
+    .gradient-text {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Back to Top Button */
+    .back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .back-to-top:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(37, 211, 102, 0.5);
+    }
+
+    /* Mobile Menu */
+    .mobile-menu {
+      position: fixed;
+      top: 64px;
+      left: 0;
+      right: 0;
+      background: white;
+      border-bottom: 1px solid #e0e3e5;
+      padding: 20px;
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 49;
+    }
+
+    .mobile-menu.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Form Input Styles */
+    .form-input {
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.1);
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Feature Icon Animation */
+    .feature-icon {
+      transition: all 0.3s ease;
+    }
+
+    .card-hover:hover .feature-icon {
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    /* Pricing Card Popular Badge Animation */
+    .popular-badge {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Screen reader only class */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    .focus\:not-sr-only:focus {
+      position: static;
+      width: auto;
+      height: auto;
+      padding: 0;
+      margin: 0;
+      overflow: visible;
+      clip: auto;
+      white-space: normal;
+      border-width: 0;
+    }
   </style>
 </head>
 <body class="min-h-full">
+  <!-- Skip to main content link for accessibility -->
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-primary text-white px-4 py-2 rounded-lg z-[100]">
+    Skip to main content
+  </a>
+  
   <!-- Navigation -->
-  <nav class="bg-white border-b border-surface-variant sticky top-0 z-50">
+  <nav class="bg-white border-b border-surface-variant sticky top-0 z-50" role="navigation" aria-label="Main navigation">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
-          <span class="material-icons text-primary text-3xl">storefront</span>
+          <span class="material-icons text-primary text-3xl" aria-hidden="true">storefront</span>
           <span class="font-bold text-xl text-secondary">Grahbook</span>
         </div>
         <div class="hidden md:flex items-center gap-8">
-          <a href="#features" class="text-tertiary hover:text-secondary transition-all">Features</a>
-          <a href="#pricing" class="text-tertiary hover:text-secondary transition-all">Pricing</a>
-          <a href="#register" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all">Register Your Store</a>
+          <a href="#features" class="text-tertiary hover:text-secondary transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg px-2 py-1">Features</a>
+          <a href="#pricing" class="text-tertiary hover:text-secondary transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg px-2 py-1">Pricing</a>
+          <a href="#register" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">Register Your Store</a>
         </div>
-        <button class="md:hidden text-tertiary">
+        <button id="mobile-menu-btn" class="md:hidden text-tertiary p-2 rounded-lg hover:bg-background transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Toggle mobile menu" aria-expanded="false">
           <span class="material-icons">menu</span>
         </button>
+      </div>
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="mobile-menu md:hidden" aria-hidden="true">
+      <div class="flex flex-col gap-4">
+        <a href="#features" class="text-tertiary hover:text-secondary transition-all py-2 border-b border-surface-variant focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg px-2">Features</a>
+        <a href="#pricing" class="text-tertiary hover:text-secondary transition-all py-2 border-b border-surface-variant focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg px-2">Pricing</a>
+        <a href="#register" class="px-4 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">Register Your Store</a>
       </div>
     </div>
   </nav>
 
   <!-- Hero Section -->
-  <section class="gradient-bg text-white py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <section id="main-content" class="gradient-bg text-white py-20 relative overflow-hidden" aria-labelledby="hero-heading">
+    <!-- Floating Background Elements -->
+    <div class="absolute inset-0 overflow-hidden">
+      <div class="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-float"></div>
+      <div class="absolute top-40 right-20 w-32 h-32 bg-white/5 rounded-full animate-float" style="animation-delay: 1s;"></div>
+      <div class="absolute bottom-20 left-1/4 w-16 h-16 bg-white/10 rounded-full animate-float" style="animation-delay: 2s;"></div>
+      <div class="absolute bottom-40 right-1/3 w-24 h-24 bg-white/5 rounded-full animate-float" style="animation-delay: 1.5s;"></div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        <div>
-          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+        <div class="animate-fade-in-up">
+          <h1 id="hero-heading" class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
             Commerce at the Speed of WhatsApp.
           </h1>
           <p class="text-lg md:text-xl mb-8 text-white/90">
             The first AI-powered store bot built for Bharat. Manage billing, UPI payments, and customer chats—all without leaving WhatsApp.
           </p>
           <div class="flex items-center gap-4 mb-8">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
               <span class="material-icons text-sm">location_on</span>
               <span class="text-sm">Joined by merchants in Mumbai, Delhi & Bangalore</span>
             </div>
           </div>
-          <div class="flex items-center gap-4">
-            <a href="#register" class="px-6 py-3 bg-white text-primary font-bold rounded-lg hover:bg-white/90 transition-all">
+          <div class="flex items-center gap-4 flex-wrap">
+            <a href="#register" class="btn-hover px-6 py-3 bg-white text-primary font-bold rounded-lg hover:bg-white/90 transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent">
               Start Free Trial
             </a>
-            <a href="#features" class="px-6 py-3 border border-white text-white font-medium rounded-lg hover:bg-white/10 transition-all">
+            <a href="#features" class="btn-hover px-6 py-3 border border-white text-white font-medium rounded-lg hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent">
               Learn More
             </a>
           </div>
         </div>
-        <div class="hidden lg:block">
-          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+        <div class="hidden lg:block animate-slide-in-right">
+          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 animate-pulse-slow">
             <div class="flex items-center gap-3 mb-4">
               <span class="material-icons text-white text-3xl">payments</span>
               <span class="font-semibold text-white text-xl">UPI INSTANT SETTLE</span>
             </div>
             <p class="text-5xl font-bold text-white mb-2">₹12,450.00</p>
             <p class="text-white/80 text-lg">Today</p>
+            <div class="mt-4 pt-4 border-t border-white/20">
+              <div class="flex items-center gap-2 text-sm text-white/70">
+                <span class="material-icons text-sm">trending_up</span>
+                <span>+24.5% from yesterday</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Floating Stats Cards -->
+          <div class="absolute -bottom-4 -left-8 bg-white text-secondary p-4 rounded-xl shadow-xl animate-float" style="animation-delay: 0.5s;">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-icons text-primary text-xl">shopping_cart</span>
+              <span class="text-sm font-medium">Orders Today</span>
+            </div>
+            <p class="text-2xl font-bold">28</p>
+          </div>
+          
+          <div class="absolute -top-4 -right-8 bg-white text-secondary p-4 rounded-xl shadow-xl animate-float" style="animation-delay: 1s;">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-icons text-primary text-xl">chat</span>
+              <span class="text-sm font-medium">Active Chats</span>
+            </div>
+            <p class="text-2xl font-bold">42</p>
           </div>
         </div>
       </div>
@@ -149,32 +428,32 @@
   </section>
 
   <!-- Features Section -->
-  <section id="features" class="py-20 bg-white">
+  <section id="features" class="py-20 bg-white" aria-labelledby="features-heading">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">For Bharat</h2>
+      <div class="text-center mb-16 reveal">
+        <h2 id="features-heading" class="text-3xl md:text-4xl font-bold text-secondary mb-4">For Bharat</h2>
         <p class="text-lg text-tertiary">Built specifically for Indian merchants</p>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="p-8 bg-background rounded-xl border border-surface-variant hover:shadow-xl transition-all">
-          <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+        <div class="card-hover p-8 bg-background rounded-xl border border-surface-variant hover:shadow-xl transition-all reveal">
+          <div class="feature-icon w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
             <span class="material-icons text-primary text-3xl">chat</span>
           </div>
           <h3 class="font-bold text-2xl text-secondary mb-4">WhatsApp-First</h3>
           <p class="text-tertiary text-lg">Your customers are on WhatsApp. Now your shop is too. From catalog browsing to checkout, all in one chat.</p>
         </div>
         
-        <div class="p-8 bg-background rounded-xl border border-surface-variant hover:shadow-xl transition-all">
-          <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+        <div class="card-hover p-8 bg-background rounded-xl border border-surface-variant hover:shadow-xl transition-all reveal" style="transition-delay: 0.1s;">
+          <div class="feature-icon w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
             <span class="material-icons text-primary text-3xl">account_balance</span>
           </div>
           <h3 class="font-bold text-2xl text-secondary mb-4">UPI & Local Payments</h3>
           <p class="text-tertiary text-lg">Built for the Indian economy. Accept GPay, PhonePe, and Paytm with automated reconciliation and GST-ready invoices.</p>
         </div>
         
-        <div class="p-8 bg-background rounded-xl border border-surface-variant hover:shadow-xl transition-all">
-          <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+        <div class="card-hover p-8 bg-background rounded-xl border border-surface-variant hover:shadow-xl transition-all reveal" style="transition-delay: 0.2s;">
+          <div class="feature-icon w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
             <span class="material-icons text-primary text-3xl">inventory_2</span>
           </div>
           <h3 class="font-bold text-2xl text-secondary mb-4">Smart Inventory</h3>
@@ -185,13 +464,13 @@
   </section>
 
   <!-- Testimonial Section -->
-  <section class="py-20 bg-background">
+  <section class="py-20 bg-background" aria-labelledby="testimonial-heading">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">Empowering Bharat's Merchants</h2>
+      <div class="text-center mb-12 reveal">
+        <h2 id="testimonial-heading" class="text-3xl md:text-4xl font-bold text-secondary mb-4">Empowering Bharat's Merchants</h2>
       </div>
       
-      <div class="max-w-3xl mx-auto">
+      <div class="max-w-3xl mx-auto reveal">
         <div class="bg-white p-8 rounded-xl border border-surface-variant shadow-lg">
           <div class="flex items-center gap-4 mb-6">
             <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -209,15 +488,15 @@
   </section>
 
   <!-- How It Works Section -->
-  <section class="py-20 bg-white">
+  <section class="py-20 bg-white" aria-labelledby="how-it-works-heading">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">The Store Bot That Handles Everything</h2>
+      <div class="text-center mb-16 reveal">
+        <h2 id="how-it-works-heading" class="text-3xl md:text-4xl font-bold text-secondary mb-4">The Store Bot That Handles Everything</h2>
         <p class="text-lg text-tertiary">Focus on your craft, let Grahbook handle the commerce.</p>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="p-6 bg-background rounded-xl border border-surface-variant">
+        <div class="card-hover p-6 bg-background rounded-xl border border-surface-variant reveal">
           <div class="flex items-center gap-3 mb-4">
             <span class="material-icons text-primary text-2xl">auto_awesome</span>
             <h3 class="font-bold text-xl text-secondary">AI-Powered Catalogs</h3>
@@ -235,7 +514,7 @@
           </div>
         </div>
         
-        <div class="p-6 bg-background rounded-xl border border-surface-variant">
+        <div class="card-hover p-6 bg-background rounded-xl border border-surface-variant reveal" style="transition-delay: 0.1s;">
           <div class="flex items-center gap-3 mb-4">
             <span class="material-icons text-primary text-2xl">translate</span>
             <h3 class="font-bold text-xl text-secondary">Hinglish AI Support</h3>
@@ -243,7 +522,7 @@
           <p class="text-tertiary">Our bot understands Hindi, English, and regional dialects. It handles FAQs like a local expert.</p>
         </div>
         
-        <div class="p-6 bg-background rounded-xl border border-surface-variant">
+        <div class="card-hover p-6 bg-background rounded-xl border border-surface-variant reveal" style="transition-delay: 0.2s;">
           <div class="flex items-center gap-3 mb-4">
             <span class="material-icons text-primary text-2xl">payment</span>
             <h3 class="font-bold text-xl text-secondary">Instant UPI Settle</h3>
@@ -251,7 +530,7 @@
           <p class="text-tertiary">Money goes straight to your bank account. No middle-man delays, just pure commerce.</p>
         </div>
         
-        <div class="p-6 bg-background rounded-xl border border-surface-variant">
+        <div class="card-hover p-6 bg-background rounded-xl border border-surface-variant reveal" style="transition-delay: 0.3s;">
           <div class="flex items-center gap-3 mb-4">
             <span class="material-icons text-primary text-2xl">dashboard</span>
             <h3 class="font-bold text-xl text-secondary">Merchant HUD</h3>
@@ -263,15 +542,15 @@
   </section>
 
   <!-- Pricing Section -->
-  <section id="pricing" class="py-20 bg-background">
+  <section id="pricing" class="py-20 bg-background" aria-labelledby="pricing-heading">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">Pricing for Every Stage</h2>
+      <div class="text-center mb-16 reveal">
+        <h2 id="pricing-heading" class="text-3xl md:text-4xl font-bold text-secondary mb-4">Pricing for Every Stage</h2>
         <p class="text-lg text-tertiary">Start free, scale as your business grows across Bharat.</p>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-white p-8 rounded-xl border border-surface-variant hover:shadow-xl transition-all">
+        <div class="card-hover bg-white p-8 rounded-xl border border-surface-variant hover:shadow-xl transition-all reveal">
           <h3 class="font-bold text-2xl text-secondary mb-2">MUKHIYA (BASIC)</h3>
           <p class="text-4xl font-bold text-primary mb-6">Free</p>
           <ul class="space-y-4">
@@ -288,13 +567,13 @@
               <span class="text-lg">UPI QR Integration</span>
             </li>
           </ul>
-          <button onclick="showRegisterForm('basic')" class="mt-8 w-full px-4 py-3 border border-primary text-primary font-medium rounded-lg hover:bg-primary hover:text-white transition-all">
+          <button onclick="showRegisterForm('basic')" class="btn-hover mt-8 w-full px-4 py-3 border border-primary text-primary font-medium rounded-lg hover:bg-primary hover:text-white transition-all">
             Get Started
           </button>
         </div>
         
-        <div class="bg-white p-8 rounded-xl border-2 border-primary shadow-xl relative">
-          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-sm font-medium rounded-full">Popular</div>
+        <div class="card-hover bg-white p-8 rounded-xl border-2 border-primary shadow-xl relative reveal" style="transition-delay: 0.1s;">
+          <div class="popular-badge absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-sm font-medium rounded-full">Popular</div>
           <h3 class="font-bold text-2xl text-secondary mb-2">BHANDARI (PRO)</h3>
           <p class="text-4xl font-bold text-primary mb-6">₹499/mo</p>
           <ul class="space-y-4">
@@ -315,12 +594,12 @@
               <span class="text-lg">Multi-Store Access</span>
             </li>
           </ul>
-          <button onclick="showRegisterForm('pro')" class="mt-8 w-full px-4 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-all">
+          <button onclick="showRegisterForm('pro')" class="btn-hover mt-8 w-full px-4 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-all">
             Get Started
           </button>
         </div>
         
-        <div class="bg-white p-8 rounded-xl border border-surface-variant hover:shadow-xl transition-all">
+        <div class="card-hover bg-white p-8 rounded-xl border border-surface-variant hover:shadow-xl transition-all reveal" style="transition-delay: 0.2s;">
           <h3 class="font-bold text-2xl text-secondary mb-2">SAMRAT (ENTERPRISE)</h3>
           <p class="text-4xl font-bold text-primary mb-6">Custom</p>
           <ul class="space-y-4">
@@ -337,7 +616,7 @@
               <span class="text-lg">API & Webhook Access</span>
             </li>
           </ul>
-          <button onclick="showRegisterForm('enterprise')" class="mt-8 w-full px-4 py-3 border border-primary text-primary font-medium rounded-lg hover:bg-primary hover:text-white transition-all">
+          <button onclick="showRegisterForm('enterprise')" class="btn-hover mt-8 w-full px-4 py-3 border border-primary text-primary font-medium rounded-lg hover:bg-primary hover:text-white transition-all">
             Contact Sales
           </button>
         </div>
@@ -346,10 +625,10 @@
   </section>
 
   <!-- Register Section -->
-  <section id="register" class="py-20 bg-white">
+  <section id="register" class="py-20 bg-white" aria-labelledby="register-heading">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">Ready to grow your shop?</h2>
+      <div class="text-center mb-12 reveal">
+        <h2 id="register-heading" class="text-3xl md:text-4xl font-bold text-secondary mb-4">Ready to grow your shop?</h2>
         <p class="text-lg text-tertiary">Join thousands of Indian merchants scaling their dreams through WhatsApp automation.</p>
       </div>
       
@@ -357,29 +636,29 @@
         <form id="register-form" onsubmit="handleRegister(event)" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-medium text-secondary mb-2">Store Name</label>
-              <input type="text" id="store-name" required placeholder="e.g., Sharma Electronics" class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+              <label class="block text-sm font-medium text-secondary mb-2" for="store-name">Store Name</label>
+              <input type="text" id="store-name" required placeholder="e.g., Sharma Electronics" class="form-input w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2">
             </div>
             <div>
-              <label class="block text-sm font-medium text-secondary mb-2">Owner Name</label>
-              <input type="text" id="owner-name" required placeholder="e.g., Rajesh Sharma" class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+              <label class="block text-sm font-medium text-secondary mb-2" for="owner-name">Owner Name</label>
+              <input type="text" id="owner-name" required placeholder="e.g., Rajesh Sharma" class="form-input w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2">
             </div>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-medium text-secondary mb-2">Phone Number</label>
-              <input type="tel" id="phone" required pattern="[6-9]{1}[0-9]{9}" placeholder="e.g., 9876543210" class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+              <label class="block text-sm font-medium text-secondary mb-2" for="phone">Phone Number</label>
+              <input type="tel" id="phone" required pattern="[6-9]{1}[0-9]{9}" placeholder="e.g., 9876543210" class="form-input w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2">
             </div>
             <div>
-              <label class="block text-sm font-medium text-secondary mb-2">Email</label>
-              <input type="email" id="email" required placeholder="e.g., rajesh@example.com" class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+              <label class="block text-sm font-medium text-secondary mb-2" for="email">Email</label>
+              <input type="email" id="email" required placeholder="e.g., rajesh@example.com" class="form-input w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2">
             </div>
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-secondary mb-2">Business Type</label>
-            <select id="business-type" required class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+            <label class="block text-sm font-medium text-secondary mb-2" for="business-type">Business Type</label>
+            <select id="business-type" required class="form-input w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2">
               <option value="">Select business type...</option>
               <option value="retail">Retail Store</option>
               <option value="wholesale">Wholesale</option>
@@ -390,8 +669,8 @@
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-secondary mb-2">Plan</label>
-            <select id="plan" required class="w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary">
+            <label class="block text-sm font-medium text-secondary mb-2" for="plan">Plan</label>
+            <select id="plan" required class="form-input w-full px-4 py-3 bg-white border border-surface-variant rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2">
               <option value="basic">Mukhiya (Basic) - Free</option>
               <option value="pro">Bhandari (Pro) - ₹499/mo</option>
               <option value="enterprise">Samrat (Enterprise) - Custom</option>
@@ -399,12 +678,12 @@
           </div>
           
           <div class="flex items-start gap-2">
-            <input type="checkbox" id="terms" required class="mt-1">
+            <input type="checkbox" id="terms" required class="mt-1 focus:ring-2 focus:ring-primary focus:ring-offset-2">
             <label for="terms" class="text-sm text-tertiary">I agree to the Terms of Service and Privacy Policy</label>
           </div>
           
-          <button type="submit" class="w-full px-4 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all">
-            Register Your Store
+          <button type="submit" id="submit-btn" class="btn-hover w-full px-4 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+            <span>Register Your Store</span>
           </button>
           
           <p class="text-center text-sm text-tertiary">No credit card required. Cancel anytime.</p>
@@ -423,28 +702,90 @@
   </section>
 
   <!-- Mobile App Section -->
-  <section class="py-20 bg-background">
+  <section class="py-20 bg-background" aria-labelledby="mobile-app-heading">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        <div>
-          <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">Commerce on the Go</h2>
+        <div class="reveal">
+          <h2 id="mobile-app-heading" class="text-3xl md:text-4xl font-bold text-secondary mb-4">Commerce on the Go</h2>
           <p class="text-lg text-tertiary mb-6">Manage your entire shop, track inventory, and reply to customers from our dedicated mobile app.</p>
           <div class="flex gap-4">
-            <button class="px-6 py-3 bg-black text-white rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-all">
+            <button class="btn-hover px-6 py-3 bg-black text-white rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-all">
               <span class="material-icons">apple</span>
               <span>App Store</span>
             </button>
-            <button class="px-6 py-3 bg-black text-white rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-all">
+            <button class="btn-hover px-6 py-3 bg-black text-white rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-all">
               <span class="material-icons">android</span>
               <span>Google Play</span>
             </button>
           </div>
         </div>
-        <div class="flex justify-center">
-          <div class="w-64 h-[500px] bg-surface-variant rounded-3xl border-4 border-secondary p-4 flex items-center justify-center">
-            <div class="text-center">
-              <span class="material-icons text-6xl text-tertiary">phone_iphone</span>
-              <p class="text-tertiary mt-2">Mobile App</p>
+        <div class="flex justify-center reveal" style="transition-delay: 0.2s;">
+          <div class="w-72 h-[580px] bg-surface-variant rounded-[3rem] border-8 border-secondary p-3 flex flex-col animate-float shadow-2xl">
+            <!-- Phone Notch -->
+            <div class="w-32 h-6 bg-secondary rounded-full mx-auto mb-2"></div>
+            
+            <!-- Phone Screen -->
+            <div class="flex-1 bg-white rounded-[2rem] overflow-hidden flex flex-col">
+              <!-- Status Bar -->
+              <div class="bg-gradient-bg px-4 py-3 flex items-center justify-between">
+                <span class="text-white text-xs font-medium">9:41</span>
+                <div class="flex items-center gap-1">
+                  <span class="material-icons text-white text-sm">signal_cellular_alt</span>
+                  <span class="material-icons text-white text-sm">wifi</span>
+                  <span class="material-icons text-white text-sm">battery_full</span>
+                </div>
+              </div>
+              
+              <!-- App Content -->
+              <div class="flex-1 p-4 bg-background">
+                <div class="flex items-center gap-2 mb-4">
+                  <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span class="material-icons text-primary text-lg">storefront</span>
+                  </div>
+                  <span class="font-bold text-secondary text-sm">Grahbook</span>
+                </div>
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                  <div class="bg-white p-3 rounded-xl border border-surface-variant">
+                    <p class="text-xs text-tertiary mb-1">Today's Sales</p>
+                    <p class="text-lg font-bold text-secondary">₹4,250</p>
+                  </div>
+                  <div class="bg-white p-3 rounded-xl border border-surface-variant">
+                    <p class="text-xs text-tertiary mb-1">Orders</p>
+                    <p class="text-lg font-bold text-primary">12</p>
+                  </div>
+                </div>
+                
+                <!-- Recent Order -->
+                <div class="bg-white p-3 rounded-xl border border-surface-variant mb-2">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-medium text-secondary">New Order #1234</span>
+                    <span class="text-xs text-primary font-medium">Paid</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <span class="material-icons text-primary text-sm">person</span>
+                    </div>
+                    <div class="flex-1">
+                      <p class="text-xs font-medium text-secondary">Rahul Kumar</p>
+                      <p class="text-xs text-tertiary">2 items • ₹850</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="flex gap-2">
+                  <div class="flex-1 bg-gradient-bg p-2 rounded-xl text-center">
+                    <span class="material-icons text-white text-sm">add</span>
+                    <p class="text-xs text-white font-medium mt-1">New Order</p>
+                  </div>
+                  <div class="flex-1 bg-white p-2 rounded-xl border border-surface-variant text-center">
+                    <span class="material-icons text-primary text-sm">inventory_2</span>
+                    <p class="text-xs text-secondary font-medium mt-1">Stock</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -500,7 +841,71 @@
     </div>
   </footer>
 
+  <!-- Back to Top Button -->
+  <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+    <span class="material-icons">arrow_upward</span>
+  </button>
+
   <script>
+    // Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    mobileMenuBtn.addEventListener('click', () => {
+      const isActive = mobileMenu.classList.toggle('active');
+      const icon = mobileMenuBtn.querySelector('.material-icons');
+      icon.textContent = isActive ? 'close' : 'menu';
+      mobileMenuBtn.setAttribute('aria-expanded', isActive);
+      mobileMenu.setAttribute('aria-hidden', !isActive);
+    });
+
+    // Close mobile menu when clicking on a link
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('active');
+        const icon = mobileMenuBtn.querySelector('.material-icons');
+        icon.textContent = 'menu';
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        mobileMenu.setAttribute('aria-hidden', 'true');
+      });
+    });
+
+    // Scroll Reveal Animation
+    const revealElements = document.querySelectorAll('.reveal');
+    
+    const revealOnScroll = () => {
+      const windowHeight = window.innerHeight;
+      const elementVisible = 150;
+      
+      revealElements.forEach((element) => {
+        const elementTop = element.getBoundingClientRect().top;
+        if (elementTop < windowHeight - elementVisible) {
+          element.classList.add('active');
+        }
+      });
+    };
+
+    window.addEventListener('scroll', revealOnScroll);
+    window.addEventListener('load', revealOnScroll);
+
+    // Back to Top Button
+    const backToTopBtn = document.getElementById('back-to-top');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        backToTopBtn.classList.add('visible');
+      } else {
+        backToTopBtn.classList.remove('visible');
+      }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+
     // Register Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -521,6 +926,13 @@
 
     async function handleRegister(event) {
       event.preventDefault();
+      
+      const submitBtn = document.getElementById('submit-btn');
+      const originalText = submitBtn.innerHTML;
+      
+      // Show loading state
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span><span>Registering...</span>';
       
       const storeData = {
         store_name: document.getElementById('store-name').value,
@@ -545,10 +957,14 @@
           document.getElementById('store-id').textContent = result.store_id;
         } else {
           alert('Registration failed. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
         }
       } catch (error) {
         console.error('Error registering store:', error);
         alert('Registration failed. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
       }
     }
   </script>
