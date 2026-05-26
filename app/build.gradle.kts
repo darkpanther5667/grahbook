@@ -1,5 +1,6 @@
 plugins {
   alias(libs.plugins.android.application)
+  alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
@@ -7,17 +8,33 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
-  compileSdk = 36
+  namespace = "com.aistudio.sharmakhata.pqmzvk"
+  compileSdk = 35
 
   defaultConfig {
     applicationId = "com.aistudio.sharmakhata.pqmzvk"
     minSdk = 24
-    targetSdk = 36
+    targetSdk = 35
     versionCode = 1
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+    val mobileApiKey = run {
+      val fromGradleProp = project.findProperty("MOBILE_API_KEY") as String?
+      if (!fromGradleProp.isNullOrBlank()) return@run fromGradleProp
+
+      val fromEnv = System.getenv("MOBILE_API_KEY")
+      if (!fromEnv.isNullOrBlank()) return@run fromEnv
+
+      val envFile = rootProject.file(".env.android")
+      if (envFile.exists()) {
+        val line = envFile.readLines()
+          .firstOrNull { it.trim().startsWith("MOBILE_API_KEY=") }
+        line?.substringAfter("MOBILE_API_KEY=")?.trim()?.trim('"')
+      } else ""
+    }
+    buildConfigField("String", "MOBILE_API_KEY", "\"${mobileApiKey}\"")
   }
 
   signingConfigs {
@@ -45,6 +62,9 @@ android {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
   }
+  kotlinOptions {
+    jvmTarget = "11"
+  }
   buildFeatures {
     compose = true
     buildConfig = true
@@ -55,8 +75,10 @@ android {
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
 // to match the convention used in Web projects.
 secrets {
-  propertiesFileName = ".env"
-  defaultPropertiesFileName = ".env.example"
+  // Use Android-specific env files so server-only vars (like PUBLIC_BASE_URL)
+  // don't accidentally get compiled into BuildConfig/resources.
+  propertiesFileName = ".env.android"
+  defaultPropertiesFileName = ".env.android.example"
 }
 
 // Some unused dependencies are commented out below instead of being removed.
@@ -71,7 +93,7 @@ dependencies {
   // implementation(libs.androidx.camera.lifecycle)
   // implementation(libs.androidx.camera.view)
   implementation(libs.androidx.compose.material.icons.core)
-  // implementation(libs.androidx.compose.material.icons.extended)
+  implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.androidx.compose.material3)
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.graphics)

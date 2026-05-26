@@ -40,6 +40,7 @@ function requiresMobileApiKey(req) {
 
   // Allow PDF endpoints to be fetched by WhatsApp/clients without an app key.
   if (req.method === 'GET') {
+    if (req.path === '/api/test-db') return false;
     if (/^\/api\/bill\/[^/]+\/pdf$/.test(req.path)) return false;
     if (/^\/api\/customer\/[^/]+\/statement\/pdf$/.test(req.path)) return false;
     if (/^\/api\/report\/[^/]+\/pdf$/.test(req.path)) return false;
@@ -80,6 +81,7 @@ function requiresSessionAuth(req) {
 
   // PDF endpoints are fetched by WhatsApp directly.
   if (req.method === 'GET') {
+    if (req.path === '/api/test-db') return false;
     if (/^\/api\/bill\/[^/]+\/pdf$/.test(req.path)) return false;
     if (/^\/api\/customer\/[^/]+\/statement\/pdf$/.test(req.path)) return false;
     if (/^\/api\/report\/[^/]+\/pdf$/.test(req.path)) return false;
@@ -1706,6 +1708,19 @@ app.post('/webhook', async (req, res) => {
   }
 
   return res.sendStatus(200);
+});
+
+// GET /api/test-db — Diagnostic route to check DB connection
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const database = await connectDB();
+    if (!database) return res.json({ status: 'No DB configured (useLocalFallback)' });
+    
+    const collections = await database.listCollections().toArray();
+    return res.json({ status: 'Connected successfully!', collections: collections.map(c => c.name) });
+  } catch (error) {
+    return res.json({ status: 'Connection failed', error: error.message, stack: error.stack });
+  }
 });
 
 // ─── MOBILE APP API ENDPOINTS ─────────────────────────────────────────────────────

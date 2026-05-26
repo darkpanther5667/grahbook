@@ -35,7 +35,7 @@ async function getFullDB() {
       return JSON.parse(data);
     } catch (error) {
       console.error('Error reading local db.json:', error);
-      return { shop: {}, customers: [], transactions: [], bills: [], staff: [] };
+      return { shop: {}, customers: [], transactions: [], bills: [], staff: [], stores: [] };
     }
   }
 
@@ -45,8 +45,9 @@ async function getFullDB() {
   const transactions = await database.collection('transactions').find({}).toArray();
   const bills = await database.collection('bills').find({}).toArray();
   const staff = await database.collection('staff').find({}).toArray();
+  const stores = await database.collection('stores').find({}).toArray();
 
-  return { shop, customers, transactions, bills, staff };
+  return { shop, customers, transactions, bills, staff, stores };
 }
 
 module.exports = {
