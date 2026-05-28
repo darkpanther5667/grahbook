@@ -2007,11 +2007,14 @@ app.post('/api/bill/create', async (req, res) => {
         }))
       : [{ name: 'General Grocery Item', qty: 1, price: Number(amount) }];
 
+    // Always calculate total from items (server is source of truth)
+    const calculatedTotal = billItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
     db.bills.push({
       id: newBillId,
       customer_id: customerId,
       items: billItems,
-      total: Number(amount),
+      total: calculatedTotal,
       status: 'unpaid',
       created_at: timestampIso,
       paid_at: null,
@@ -2019,12 +2022,11 @@ app.post('/api/bill/create', async (req, res) => {
     });
 
     await writeDB(db);
-    // Invalidate cache to ensure AI gets fresh data
     cachedDB = null;
     dbCacheTimestamp = 0;
 
     const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
-    res.json({ success: true, customerName: customer.name, billId: newBillId, amount: Number(amount), netOutstanding: balance });
+    res.json({ success: true, customerName: customer.name, billId: newBillId, amount: calculatedTotal, netOutstanding: balance });
   } catch (error) {
     console.error('Error creating bill:', error);
     res.status(500).json({ success: false, message: 'Failed to create bill' });
@@ -2344,82 +2346,136 @@ app.get('/api/bill/:id/pdf', async (req, res) => {
       phone: '0000000000'
     };
 
-    // Create PDF document
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    // Colors
+    const INDIGO = '#4F46E5';
+    const INDIGO_DARK = '#312E81';
+    const INDIGO_LIGHT = '#EEF2FF';
+    const SLATE_50 = '#F8FAFC';
+    const SLATE_100 = '#F1F5F9';
+    const SLATE_200 = '#E2E8F0';
+    const SLATE_400 = '#94A3B8';
+    const SLATE_600 = '#475569';
+    const SLATE_800 = '#1E293B';
+    const SLATE_900 = '#0F172A';
+    const GREEN = '#10B981';
+    const RED = '#EF4444';
 
-    // Set response headers for PDF download
+    const doc = new PDFDocument({ size: 'A4', margin: 0 });
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=invoice-${bill.id}.pdf`);
-
-    // Pipe PDF directly to response
     doc.pipe(res);
 
-    // Header
-    doc.fontSize(20).text(shop.name || 'GENERAL STORE', { align: 'center' });
-    doc.fontSize(12).text(shop.address || '', { align: 'center' });
+    const pageWidth = 595; // A4 width
+    const margin = 40;
+    const contentWidth = pageWidth - (margin * 2);
+
+    // ── HEADER BANNER ────────────────────────────────────────
+    doc.rect(0, 0, pageWidth, 110).fill(INDIGO);
+    doc.fontSize(24).fillColor('#FFFFFF')
+       .text(shop.name || 'GENERAL STORE', margin, 25, { width: contentWidth, align: 'center' });
+    doc.fontSize(10).fillColor('#C7D2FE')
+       .text(shop.address || '', margin, 55, { width: contentWidth, align: 'center' });
     if (shop.phone) {
-      doc.text(`WhatsApp Contact: +91 ${shop.phone}`, { align: 'center' });
+      doc.text(`WhatsApp: +91 ${shop.phone}`, margin, 70, { width: contentWidth, align: 'center' });
     }
-    doc.moveDown(2);
+    doc.fontSize(9).fillColor('#A5B4FC')
+       .text('TAX INVOICE', margin, 90, { width: contentWidth, align: 'center' });
 
-    // Invoice details
-    doc.fontSize(14).text(`Invoice ID: ${bill.id}`, { align: 'right' });
-    doc.text(`Date: ${new Date(bill.created_at).toLocaleDateString('en-GB')}`, { align: 'right' });
-    doc.moveDown(2);
+    // ── INVOICE META (right-aligned) ─────────────────────────
+    let y = 130;
+    doc.fontSize(10).fillColor(SLATE_400).text('Invoice #', margin, y);
+    doc.fontSize(11).fillColor(SLATE_900).text(bill.id, margin, y + 14);
 
-    // Customer info
-    doc.fontSize(12).text('Bill To:', { underline: true });
-    doc.text(`${customer.name}`);
-    doc.text(`Phone: +91 ${customer.phone}`);
-    doc.moveDown(2);
+    doc.fontSize(10).fillColor(SLATE_400).text('Date', margin + 200, y);
+    doc.fontSize(11).fillColor(SLATE_900).text(new Date(bill.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), margin + 200, y + 14);
 
-    // Items table header
-    doc.fontSize(12).text('Description', 50, doc.y, { width: 200, align: 'left' });
-    doc.text('Qty', 300, doc.y, { width: 50, align: 'center' });
-    doc.text('Price (₹)', 380, doc.y, { width: 80, align: 'right' });
-    doc.text('Total (₹)', 480, doc.y, { width: 80, align: 'right' });
-    doc.moveDown(0.5);
-    doc.strokeColor('#cccccc').lineWidth(1).lineCap('butt').moveTo(50, doc.y).lineTo(580, doc.y).stroke();
-    doc.moveDown(0.5);
+    const statusLabel = bill.status === 'paid' ? 'PAID' : 'UNPAID';
+    const statusBg = bill.status === 'paid' ? GREEN : RED;
+    doc.roundedRect(margin + 400, y, 80, 22, 4).fill(statusBg);
+    doc.fontSize(9).fillColor('#FFFFFF')
+       .text(statusLabel, margin + 400, y + 6, { width: 80, align: 'center' });
 
-    // Items table rows
+    y += 40;
+
+    // ── BILL TO ──────────────────────────────────────────────
+    doc.roundedRect(margin, y, contentWidth, 55, 6).fill(INDIGO_LIGHT);
+    doc.fontSize(8).fillColor(INDIGO).text('BILL TO', margin + 12, y + 8);
+    doc.fontSize(13).fillColor(SLATE_900).text(customer.name, margin + 12, y + 22, { continued: false });
+    doc.fontSize(10).fillColor(SLATE_600).text(`+91 ${customer.phone}`, margin + 12, y + 38);
+
+    y += 70;
+
+    // ── ITEMS TABLE HEADER ───────────────────────────────────
+    const colX = { sno: margin, desc: margin + 35, qty: margin + 280, price: margin + 350, total: margin + 435 };
+    const colW = { sno: 35, desc: 245, qty: 70, price: 85, total: 80 };
+
+    doc.roundedRect(margin, y, contentWidth, 28, 4).fill(INDIGO);
+    doc.fontSize(9).fillColor('#FFFFFF');
+    doc.text('#', colX.sno + 8, y + 9, { width: colW.sno, align: 'center' });
+    doc.text('Item', colX.desc, y + 9, { width: colW.desc, align: 'left' });
+    doc.text('Qty', colX.qty, y + 9, { width: colW.qty, align: 'center' });
+    doc.text('Price', colX.price, y + 9, { width: colW.price, align: 'right' });
+    doc.text('Amount', colX.total, y + 9, { width: colW.total, align: 'right' });
+
+    y += 32;
+
+    // ── ITEMS TABLE ROWS ─────────────────────────────────────
     bill.items.forEach((item, index) => {
       const itemTotal = item.price * item.qty;
-      doc.fontSize(11).text(`${index + 1}. ${item.name}`, 50, doc.y, { width: 200, align: 'left' });
-      doc.text(item.qty.toString(), 300, doc.y, { width: 50, align: 'center' });
-      doc.text(`₹${item.price.toFixed(2)}`, 380, doc.y, { width: 80, align: 'right' });
-      doc.text(`₹${itemTotal.toFixed(2)}`, 480, doc.y, { width: 80, align: 'right' });
-      doc.moveDown(1.2);
+      const rowBg = index % 2 === 0 ? '#FFFFFF' : SLATE_50;
+
+      // Row background
+      doc.rect(margin, y, contentWidth, 26).fill(rowBg);
+
+      doc.fontSize(9).fillColor(SLATE_400).text(`${index + 1}`, colX.sno + 8, y + 8, { width: colW.sno, align: 'center' });
+      doc.fontSize(10).fillColor(SLATE_800).text(item.name, colX.desc, y + 8, { width: colW.desc, align: 'left' });
+      doc.fontSize(10).fillColor(SLATE_600).text(`${item.qty}`, colX.qty, y + 8, { width: colW.qty, align: 'center' });
+      doc.fontSize(10).fillColor(SLATE_600).text(`₹${item.price.toLocaleString('en-IN')}`, colX.price, y + 8, { width: colW.price, align: 'right' });
+      doc.fontSize(10).fillColor(SLATE_900).text(`₹${itemTotal.toLocaleString('en-IN')}`, colX.total, y + 8, { width: colW.total, align: 'right' });
+
+      y += 26;
     });
 
-    doc.moveDown(1);
-    doc.strokeColor('#cccccc').lineWidth(1).lineCap('butt').moveTo(50, doc.y).lineTo(580, doc.y).stroke();
-    doc.moveDown(1);
+    // Bottom border
+    doc.strokeColor(SLATE_200).lineWidth(0.5).moveTo(margin, y).lineTo(margin + contentWidth, y).stroke();
+    y += 15;
 
-    // Totals
-    doc.fontSize(12).text('Subtotal:', 400, doc.y, { width: 100, align: 'right' });
-    doc.text(`₹${bill.total.toFixed(2)}`, 500, doc.y, { width: 80, align: 'right' });
-    doc.moveDown(0.8);
-    doc.text('Discount/Tax:', 400, doc.y, { width: 100, align: 'right' });
-    doc.text('₹0.00', 500, doc.y, { width: 80, align: 'right' });
-    doc.moveDown(0.8);
-    doc.fontSize(14).text('Grand Total:', 400, doc.y, { width: 100, align: 'right' });
-    doc.text(`₹${bill.total.toFixed(2)}`, 500, doc.y, { width: 80, align: 'right' });
-    doc.moveDown(2);
+    // ── TOTALS SECTION ───────────────────────────────────────
+    const totalsX = margin + 300;
+    const totalsW = 215;
 
-    // Status
-    const statusText = bill.status === 'paid' ? 'PAID (जमा)' : 'UNPAID (बाकी)';
-    const statusColor = bill.status === 'paid' ? 'green' : 'red';
-    doc.fontSize(12).fillColor(statusColor).text(`Status: ${statusText}`, { align: 'right' });
-    doc.fillColor('black'); // Reset color
+    // Subtotal
+    doc.fontSize(10).fillColor(SLATE_600).text('Subtotal', totalsX, y, { width: 120, align: 'left' });
+    doc.fontSize(10).fillColor(SLATE_800).text(`₹${bill.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, totalsX + 120, y, { width: 95, align: 'right' });
+    y += 22;
 
-    // Footer
-    doc.moveDown(3);
-    doc.fontSize(10).text('Thank you for shopping! 🙏', { align: 'center' });
-    doc.text('This is a digital system generated invoice.', { align: 'center' });
-    doc.text('For any query, refer to our WhatsApp store bot message verification.', { align: 'center' });
+    // Grand Total box
+    doc.roundedRect(totalsX - 10, y, totalsW + 20, 36, 6).fill(INDIGO_LIGHT);
+    doc.fontSize(12).fillColor(INDIGO_DARK).text('Grand Total', totalsX, y + 10, { width: 120, align: 'left' });
+    doc.fontSize(16).fillColor(INDIGO).text(`₹${bill.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, totalsX + 100, y + 8, { width: 115, align: 'right' });
 
-    // Finalize PDF
+    y += 55;
+
+    // ── OUTSTANDING ──────────────────────────────────────────
+    const outstanding = getCustomerOutstanding(customer.id, db.transactions || [], db.bills || []);
+    if (outstanding !== bill.total || bill.status === 'paid') {
+      doc.fontSize(9).fillColor(SLATE_400).text('Total Outstanding (incl. previous):', margin, y);
+      const outColor = outstanding > 0 ? RED : GREEN;
+      doc.fontSize(11).fillColor(outColor).text(`₹${Math.abs(outstanding).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, margin, y + 14);
+      y += 35;
+    }
+
+    // ── FOOTER ───────────────────────────────────────────────
+    const footerY = 760;
+    doc.rect(0, footerY, pageWidth, 82).fill(SLATE_100);
+    doc.fontSize(10).fillColor(SLATE_600)
+       .text('Thank you for your purchase!', margin, footerY + 15, { width: contentWidth, align: 'center' });
+    doc.fontSize(8).fillColor(SLATE_400)
+       .text('This is a computer-generated invoice. No signature required.', margin, footerY + 32, { width: contentWidth, align: 'center' });
+    doc.text(`Generated by ${(shop.name || 'Grahbook Pro')} — Digital Khata & Billing`, margin, footerY + 45, { width: contentWidth, align: 'center' });
+    doc.text(`Powered by Grahbook`, margin, footerY + 58, { width: contentWidth, align: 'center' });
+
     doc.end();
 
   } catch (error) {
@@ -2443,96 +2499,144 @@ app.get('/api/customer/:id/statement/pdf', async (req, res) => {
     const customerBills = db.bills.filter(b => b.customer_id === customer.id);
     const balance = getCustomerOutstanding(customer.id, db.transactions, db.bills);
 
-    // Create PDF document
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    // Colors
+    const INDIGO = '#4F46E5';
+    const INDIGO_DARK = '#312E81';
+    const INDIGO_LIGHT = '#EEF2FF';
+    const SLATE_50 = '#F8FAFC';
+    const SLATE_100 = '#F1F5F9';
+    const SLATE_200 = '#E2E8F0';
+    const SLATE_400 = '#94A3B8';
+    const SLATE_600 = '#475569';
+    const SLATE_800 = '#1E293B';
+    const SLATE_900 = '#0F172A';
+    const GREEN = '#10B981';
+    const RED = '#EF4444';
 
-    // Set response headers for PDF download
+    const doc = new PDFDocument({ size: 'A4', margin: 0 });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=statement-${customer.name.replace(/\s+/g, '_')}.pdf`);
-
-    // Pipe PDF directly to response
     doc.pipe(res);
 
-    // Header
-    doc.fontSize(20).text(shop.name || 'GENERAL STORE', { align: 'center' });
-    doc.fontSize(12).text(shop.address || '', { align: 'center' });
+    const pageWidth = 595;
+    const margin = 40;
+    const contentWidth = pageWidth - (margin * 2);
+
+    // ── HEADER BANNER ────────────────────────────────────────
+    doc.rect(0, 0, pageWidth, 100).fill(INDIGO);
+    doc.fontSize(22).fillColor('#FFFFFF')
+       .text(shop.name || 'GENERAL STORE', margin, 22, { width: contentWidth, align: 'center' });
+    doc.fontSize(10).fillColor('#C7D2FE')
+       .text(shop.address || '', margin, 50, { width: contentWidth, align: 'center' });
     if (shop.phone) {
-      doc.text(`WhatsApp Contact: +91 ${shop.phone}`, { align: 'center' });
+      doc.text(`WhatsApp: +91 ${shop.phone}`, margin, 64, { width: contentWidth, align: 'center' });
     }
-    doc.moveDown(2);
+    doc.fontSize(9).fillColor('#A5B4FC')
+       .text('CUSTOMER ACCOUNT STATEMENT', margin, 82, { width: contentWidth, align: 'center' });
 
-    // Statement title
-    doc.fontSize(16).text('CUSTOMER STATEMENT', { align: 'center' });
-    doc.moveDown(1);
+    let y = 118;
 
-    // Customer info
-    doc.fontSize(12).text('Customer Details:', { underline: true });
-    doc.text(`Name: ${customer.name}`);
-    doc.text(`Phone: +91 ${customer.phone}`);
-    doc.text(`Customer ID: ${customer.id}`);
-    doc.moveDown(1);
+    // ── CUSTOMER INFO ────────────────────────────────────────
+    doc.roundedRect(margin, y, contentWidth, 50, 6).fill(INDIGO_LIGHT);
+    doc.fontSize(8).fillColor(INDIGO).text('CUSTOMER', margin + 12, y + 8);
+    doc.fontSize(13).fillColor(SLATE_900).text(customer.name, margin + 12, y + 20);
+    doc.fontSize(10).fillColor(SLATE_600).text(`+91 ${customer.phone}   |   ID: ${customer.id}`, margin + 12, y + 36);
+    y += 62;
 
-    // Balance summary
-    doc.fontSize(12).text('Account Summary:', { underline: true });
-    const balanceColor = balance > 0 ? 'red' : (balance < 0 ? 'green' : 'black');
-    doc.fillColor(balanceColor).text(`Current Outstanding: ${fmtRs(balance)}`);
-    doc.fillColor('black');
-    doc.text(`Total Transactions: ${customerTransactions.length}`);
-    doc.text(`Total Bills: ${customerBills.length}`);
-    doc.moveDown(2);
+    // ── BALANCE SUMMARY CARDS ────────────────────────────────
+    const cardW = (contentWidth - 10) / 3;
+    const balColor = balance > 0 ? RED : (balance < 0 ? GREEN : SLATE_800);
+    const balLabel = balance > 0 ? 'Amount Due' : (balance < 0 ? 'Advance' : 'Settled');
 
-    // Transactions section
+    // Card 1: Outstanding
+    doc.roundedRect(margin, y, cardW, 55, 6).fill('#FFFFFF');
+    doc.strokeColor(SLATE_200).roundedRect(margin, y, cardW, 55, 6).stroke();
+    doc.fontSize(8).fillColor(SLATE_400).text('OUTSTANDING', margin + 10, y + 8);
+    doc.fontSize(16).fillColor(balColor).text(fmtRs(balance), margin + 10, y + 24);
+    doc.fontSize(8).fillColor(balColor).text(balLabel, margin + 10, y + 42);
+
+    // Card 2: Transactions
+    doc.roundedRect(margin + cardW + 5, y, cardW, 55, 6).fill('#FFFFFF');
+    doc.strokeColor(SLATE_200).roundedRect(margin + cardW + 5, y, cardW, 55, 6).stroke();
+    doc.fontSize(8).fillColor(SLATE_400).text('TRANSACTIONS', margin + cardW + 15, y + 8);
+    doc.fontSize(16).fillColor(SLATE_800).text(`${customerTransactions.length}`, margin + cardW + 15, y + 24);
+    doc.fontSize(8).fillColor(SLATE_400).text('total entries', margin + cardW + 15, y + 42);
+
+    // Card 3: Bills
+    doc.roundedRect(margin + (cardW + 5) * 2, y, cardW, 55, 6).fill('#FFFFFF');
+    doc.strokeColor(SLATE_200).roundedRect(margin + (cardW + 5) * 2, y, cardW, 55, 6).stroke();
+    doc.fontSize(8).fillColor(SLATE_400).text('BILLS', margin + (cardW + 5) * 2 + 10, y + 8);
+    doc.fontSize(16).fillColor(SLATE_800).text(`${customerBills.length}`, margin + (cardW + 5) * 2 + 10, y + 24);
+    doc.fontSize(8).fillColor(SLATE_400).text('total invoices', margin + (cardW + 5) * 2 + 10, y + 42);
+
+    y += 68;
+
+    // ── TRANSACTION HISTORY ──────────────────────────────────
     if (customerTransactions.length > 0) {
-      doc.fontSize(14).text('Transaction History', { underline: true });
-      doc.moveDown(0.5);
+      doc.fontSize(11).fillColor(SLATE_900).text('Transaction History', margin, y);
+      y += 18;
 
       // Table header
-      doc.fontSize(10).text('Date', 50, doc.y, { width: 80, align: 'left' });
-      doc.text('Type', 150, doc.y, { width: 60, align: 'left' });
-      doc.text('Amount (₹)', 230, doc.y, { width: 80, align: 'right' });
-      doc.text('Note', 330, doc.y, { width: 200, align: 'left' });
-      doc.moveDown(0.5);
-      doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(580, doc.y).stroke();
-      doc.moveDown(0.5);
+      doc.roundedRect(margin, y, contentWidth, 24, 4).fill(INDIGO);
+      doc.fontSize(8).fillColor('#FFFFFF');
+      doc.text('Date', margin + 10, y + 8, { width: 80, align: 'left' });
+      doc.text('Type', margin + 100, y + 8, { width: 70, align: 'center' });
+      doc.text('Amount', margin + 180, y + 8, { width: 80, align: 'right' });
+      doc.text('Note', margin + 270, y + 8, { width: 240, align: 'left' });
+      y += 28;
 
-      // Transaction rows
       customerTransactions.forEach((tx, index) => {
-        const typeColor = tx.type === 'payment' ? 'green' : 'red';
-        doc.fillColor('black').text(fmtDate(tx.timestamp), 50, doc.y, { width: 80, align: 'left' });
-        doc.fillColor(typeColor).text(tx.type.toUpperCase(), 150, doc.y, { width: 60, align: 'left' });
-        doc.fillColor('black').text(`₹${tx.amount.toFixed(2)}`, 230, doc.y, { width: 80, align: 'right' });
-        doc.text(tx.note || '-', 330, doc.y, { width: 200, align: 'left' });
-        doc.fillColor('black');
-        doc.moveDown(0.8);
+        const rowBg = index % 2 === 0 ? '#FFFFFF' : SLATE_50;
+        doc.rect(margin, y, contentWidth, 22).fill(rowBg);
+
+        const typeColor = tx.type === 'payment' ? GREEN : RED;
+        doc.fontSize(9).fillColor(SLATE_600).text(fmtDate(tx.timestamp), margin + 10, y + 6, { width: 80, align: 'left' });
+        doc.fillColor(typeColor).text(tx.type.toUpperCase(), margin + 100, y + 6, { width: 70, align: 'center' });
+        doc.fillColor(SLATE_800).text(`₹${tx.amount.toLocaleString('en-IN')}`, margin + 180, y + 6, { width: 80, align: 'right' });
+        doc.fillColor(SLATE_600).text((tx.note || '-').substring(0, 40), margin + 270, y + 6, { width: 240, align: 'left' });
+        y += 22;
       });
 
-      doc.moveDown(1);
-      doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(580, doc.y).stroke();
-      doc.moveDown(1);
+      doc.strokeColor(SLATE_200).lineWidth(0.5).moveTo(margin, y).lineTo(margin + contentWidth, y).stroke();
+      y += 15;
     }
 
-    // Bills section
+    // ── BILL HISTORY ─────────────────────────────────────────
     if (customerBills.length > 0) {
-      doc.fontSize(14).text('Bill History', { underline: true });
-      doc.moveDown(0.5);
+      doc.fontSize(11).fillColor(SLATE_900).text('Bill History', margin, y);
+      y += 18;
+
+      doc.roundedRect(margin, y, contentWidth, 24, 4).fill(INDIGO);
+      doc.fontSize(8).fillColor('#FFFFFF');
+      doc.text('Bill #', margin + 10, y + 8, { width: 100, align: 'left' });
+      doc.text('Date', margin + 120, y + 8, { width: 80, align: 'left' });
+      doc.text('Status', margin + 260, y + 8, { width: 70, align: 'center' });
+      doc.text('Total', margin + 400, y + 8, { width: 110, align: 'right' });
+      y += 28;
 
       customerBills.forEach((bill, index) => {
-        const statusColor = bill.status === 'paid' ? 'green' : 'red';
-        doc.fontSize(10).fillColor('black').text(`Bill #${bill.id}`, 50, doc.y);
-        doc.text(`Date: ${fmtDate(bill.created_at)}`, 150, doc.y);
-        doc.fillColor(statusColor).text(`Status: ${bill.status.toUpperCase()}`, 350, doc.y);
-        doc.fillColor('black').text(`Total: ${fmtRs(bill.total)}`, 480, doc.y);
-        doc.moveDown(0.8);
+        const rowBg = index % 2 === 0 ? '#FFFFFF' : SLATE_50;
+        doc.rect(margin, y, contentWidth, 22).fill(rowBg);
+
+        const statusColor = bill.status === 'paid' ? GREEN : RED;
+        doc.fontSize(9).fillColor(SLATE_800).text(bill.id, margin + 10, y + 6, { width: 100, align: 'left' });
+        doc.fillColor(SLATE_600).text(fmtDate(bill.created_at), margin + 120, y + 6, { width: 80, align: 'left' });
+        doc.fillColor(statusColor).text(bill.status.toUpperCase(), margin + 260, y + 6, { width: 70, align: 'center' });
+        doc.fillColor(SLATE_800).text(fmtRs(bill.total), margin + 400, y + 6, { width: 110, align: 'right' });
+        y += 22;
       });
     }
 
-    // Footer
-    doc.moveDown(3);
-    doc.fontSize(10).text('This is a computer-generated statement.', { align: 'center' });
-    doc.text('For any discrepancies, please contact the store.', { align: 'center' });
-    doc.text('Generated on: ' + new Date().toLocaleString('en-IN'), { align: 'center' });
+    // ── FOOTER ───────────────────────────────────────────────
+    const footerY = 760;
+    doc.rect(0, footerY, pageWidth, 82).fill(SLATE_100);
+    doc.fontSize(9).fillColor(SLATE_600)
+       .text('This is a computer-generated account statement.', margin, footerY + 18, { width: contentWidth, align: 'center' });
+    doc.fontSize(8).fillColor(SLATE_400)
+       .text('For any discrepancies, please contact the store.', margin, footerY + 33, { width: contentWidth, align: 'center' });
+    doc.text(`Generated: ${new Date().toLocaleString('en-IN')} | ${shop.name || 'Grahbook Pro'}`, margin, footerY + 48, { width: contentWidth, align: 'center' });
+    doc.text('Powered by Grahbook', margin, footerY + 61, { width: contentWidth, align: 'center' });
 
-    // Finalize PDF
     doc.end();
 
   } catch (error) {
@@ -2555,89 +2659,225 @@ app.get('/api/report/:date/pdf', async (req, res) => {
     const creditsToday = db.transactions.filter(t => t.type === 'credit' && t.timestamp.startsWith(targetDate));
     const creditTotal = creditsToday.reduce((sum, t) => sum + t.amount, 0);
     const paidBills = billsToday.filter(b => b.status === 'paid').length;
+    const unpaidBills = billsToday.length - paidBills;
+    const netCollection = paymentTotal - creditTotal;
 
-    // Create PDF document
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
-
-    // Set response headers for PDF download
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=daily-report-${targetDate}.pdf`);
-
-    // Pipe PDF directly to response
-    doc.pipe(res);
-
-    // Header
-    doc.fontSize(20).text(shop.name || 'GENERAL STORE', { align: 'center' });
-    doc.fontSize(12).text(shop.address || '', { align: 'center' });
-    if (shop.phone) {
-      doc.text(`WhatsApp Contact: +91 ${shop.phone}`, { align: 'center' });
-    }
-    doc.moveDown(2);
-
-    // Report title
-    doc.fontSize(16).text('DAILY SALES REPORT', { align: 'center' });
-    doc.moveDown(1);
-
-    // Date
-    doc.fontSize(12).text(`Report Date: ${fmtDate(targetDate)}`, { align: 'center' });
-    doc.moveDown(2);
-
-    // Summary section
-    doc.fontSize(14).text('Summary', { underline: true });
-    doc.moveDown(1);
-
-    doc.fontSize(12).text('Total Sales (Bills):', 50, doc.y);
-    doc.text(fmtRs(billsTotal), 400, doc.y, { width: 100, align: 'right' });
-    doc.moveDown(0.8);
-
-    doc.text('Total Collections:', 50, doc.y);
-    doc.text(fmtRs(paymentTotal), 400, doc.y, { width: 100, align: 'right' });
-    doc.moveDown(0.8);
-
-    doc.text('Total Credits Given:', 50, doc.y);
-    doc.text(fmtRs(creditTotal), 400, doc.y, { width: 100, align: 'right' });
-    doc.moveDown(0.8);
-
-    doc.text('Net Collection:', 50, doc.y);
-    doc.text(fmtRs(paymentTotal - creditTotal), 400, doc.y, { width: 100, align: 'right' });
-    doc.moveDown(1.5);
-
-    // Bills section
-    doc.fontSize(14).text('Bills Summary', { underline: true });
-    doc.moveDown(0.8);
-
-    doc.fontSize(12).text('Total Bills Created:', 50, doc.y);
-    doc.text(billsToday.length.toString(), 400, doc.y, { width: 100, align: 'right' });
-    doc.moveDown(0.8);
-
-    doc.text('Bills Paid:', 50, doc.y);
-    doc.text(paidBills.toString(), 400, doc.y, { width: 100, align: 'right' });
-    doc.moveDown(0.8);
-
-    doc.text('Bills Unpaid:', 50, doc.y);
-    doc.text((billsToday.length - paidBills).toString(), 400, doc.y, { width: 100, align: 'right' });
-    doc.moveDown(1.5);
-
-    // Outstanding summary
+    // Overall outstanding
     const totalOutstanding = db.customers.reduce((sum, c) => {
       const bal = getCustomerOutstanding(c.id, db.transactions, db.bills);
       return sum + (bal > 0 ? bal : 0);
     }, 0);
 
-    doc.fontSize(14).text('Overall Outstanding', { underline: true });
-    doc.moveDown(0.8);
+    // Colors
+    const INDIGO = '#4F46E5';
+    const INDIGO_LIGHT = '#EEF2FF';
+    const EMERALD = '#059669';
+    const AMBER = '#D97706';
+    const RED = '#DC2626';
+    const SLATE_900 = '#0F172A';
+    const SLATE_600 = '#475569';
+    const SLATE_400 = '#94A3B8';
+    const WHITE = '#FFFFFF';
+    const ROW_ALT = '#F8FAFC';
+    const PAGE_W = 595.28;
+    const PAGE_H = 841.89;
 
-    doc.fontSize(12).text('Total Outstanding (All Customers):', 50, doc.y);
-    doc.text(fmtRs(totalOutstanding), 400, doc.y, { width: 100, align: 'right' });
-    doc.moveDown(0.8);
+    // Create PDF — margin 0 for full-width banner
+    const doc = new PDFDocument({ size: 'A4', margin: 0 });
 
-    doc.text('Total Customers:', 50, doc.y);
-    doc.text(db.customers.length.toString(), 400, doc.y, { width: 100, align: 'right' });
-    doc.moveDown(2);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=daily-report-${targetDate}.pdf`);
+    doc.pipe(res);
 
-    // Footer
-    doc.fontSize(10).text('This is a computer-generated report.', { align: 'center' });
-    doc.text('Generated on: ' + new Date().toLocaleString('en-IN'), { align: 'center' });
+    // ── Indigo header banner ────────────────────────────────────────────────────
+    doc.save();
+    doc.rect(0, 0, PAGE_W, 100).fill(INDIGO);
+    doc.fontSize(24).font('Helvetica-Bold').fillColor(WHITE)
+       .text(shop.name || 'GENERAL STORE', 40, 28, { width: PAGE_W - 80, align: 'center' });
+    doc.fontSize(10).font('Helvetica').fillColor('#C7D2FE')
+       .text((shop.address || '') + (shop.phone ? `  •  +91 ${shop.phone}` : ''), 40, 58, { width: PAGE_W - 80, align: 'center' });
+    doc.restore();
+
+    // ── Report title ────────────────────────────────────────────────────────────
+    let y = 125;
+    doc.fontSize(18).font('Helvetica-Bold').fillColor(SLATE_900)
+       .text('DAILY SALES REPORT', 40, y, { width: PAGE_W - 80, align: 'center' });
+    y += 28;
+    doc.fontSize(11).font('Helvetica').fillColor(SLATE_600)
+       .text(`Report Date: ${fmtDate(targetDate)}`, 40, y, { width: PAGE_W - 80, align: 'center' });
+    y += 35;
+
+    // ── 4-column summary cards ──────────────────────────────────────────────────
+    const cardW = (PAGE_W - 80 - 18) / 4;  // 4 cards with 6px gaps
+    const cardH = 62;
+    const cards = [
+      { label: 'Total Sales',     value: fmtRs(billsTotal),    color: INDIGO },
+      { label: 'Collections',     value: fmtRs(paymentTotal),  color: EMERALD },
+      { label: 'Credits Given',   value: fmtRs(creditTotal),   color: AMBER },
+      { label: 'Net Collection',  value: fmtRs(netCollection), color: netCollection >= 0 ? EMERALD : RED },
+    ];
+
+    cards.forEach((card, i) => {
+      const cx = 40 + i * (cardW + 6);
+      // Card background
+      doc.save();
+      doc.roundedRect(cx, y, cardW, cardH, 8).fill(WHITE);
+      doc.roundedRect(cx, y, cardW, cardH, 8).strokeColor('#E2E8F0').lineWidth(1).stroke();
+      doc.restore();
+      // Color accent bar
+      doc.save();
+      doc.rect(cx, y, cardW, 4).fill(card.color);
+      doc.restore();
+      // Label
+      doc.fontSize(8).font('Helvetica').fillColor(SLATE_400)
+         .text(card.label.toUpperCase(), cx + 8, y + 12, { width: cardW - 16 });
+      // Value
+      doc.fontSize(14).font('Helvetica-Bold').fillColor(card.color)
+         .text(card.value, cx + 8, y + 28, { width: cardW - 16 });
+    });
+    y += cardH + 30;
+
+    // ── Bills summary section ───────────────────────────────────────────────────
+    doc.save();
+    doc.roundedRect(40, y, PAGE_W - 80, 24, 6).fill(INDIGO);
+    doc.fontSize(11).font('Helvetica-Bold').fillColor(WHITE)
+       .text('BILLS SUMMARY', 55, y + 6, { width: PAGE_W - 110 });
+    doc.restore();
+    y += 30;
+
+    // Table header
+    const colX = [50, 300, 500];
+    doc.save();
+    doc.rect(40, y, PAGE_W - 80, 22).fill(INDIGO_LIGHT);
+    doc.fontSize(9).font('Helvetica-Bold').fillColor(SLATE_900);
+    doc.text('METRIC', colX[0], y + 6);
+    doc.text('VALUE', colX[2], y + 6, { width: PAGE_W - 80 - (colX[2] - 40), align: 'right' });
+    doc.restore();
+    y += 22;
+
+    const billRows = [
+      ['Total Bills Created', billsToday.length.toString()],
+      ['Bills Paid',          paidBills.toString()],
+      ['Bills Unpaid',        unpaidBills.toString()],
+      ['Total Bill Amount',   fmtRs(billsTotal)],
+    ];
+
+    billRows.forEach((row, i) => {
+      const bg = i % 2 === 0 ? WHITE : ROW_ALT;
+      doc.save();
+      doc.rect(40, y, PAGE_W - 80, 22).fill(bg);
+      doc.fontSize(10).font('Helvetica').fillColor(SLATE_600)
+         .text(row[0], colX[0], y + 5);
+      doc.font('Helvetica-Bold').fillColor(SLATE_900)
+         .text(row[1], colX[2], y + 5, { width: PAGE_W - 80 - (colX[2] - 40), align: 'right' });
+      doc.restore();
+      y += 22;
+    });
+    y += 25;
+
+    // ── Financial summary section ───────────────────────────────────────────────
+    doc.save();
+    doc.roundedRect(40, y, PAGE_W - 80, 24, 6).fill(INDIGO);
+    doc.fontSize(11).font('Helvetica-Bold').fillColor(WHITE)
+       .text('FINANCIAL SUMMARY', 55, y + 6, { width: PAGE_W - 110 });
+    doc.restore();
+    y += 30;
+
+    // Table header
+    doc.save();
+    doc.rect(40, y, PAGE_W - 80, 22).fill(INDIGO_LIGHT);
+    doc.fontSize(9).font('Helvetica-Bold').fillColor(SLATE_900);
+    doc.text('METRIC', colX[0], y + 6);
+    doc.text('AMOUNT', colX[2], y + 6, { width: PAGE_W - 80 - (colX[2] - 40), align: 'right' });
+    doc.restore();
+    y += 22;
+
+    const finRows = [
+      ['Total Sales',           fmtRs(billsTotal),     INDIGO],
+      ['Total Collections',     fmtRs(paymentTotal),   EMERALD],
+      ['Total Credits Given',   fmtRs(creditTotal),    AMBER],
+      ['Net Collection',        fmtRs(netCollection),  netCollection >= 0 ? EMERALD : RED],
+    ];
+
+    finRows.forEach((row, i) => {
+      const bg = i % 2 === 0 ? WHITE : ROW_ALT;
+      doc.save();
+      doc.rect(40, y, PAGE_W - 80, 22).fill(bg);
+      doc.fontSize(10).font('Helvetica').fillColor(SLATE_600)
+         .text(row[0], colX[0], y + 5);
+      doc.font('Helvetica-Bold').fillColor(row[2])
+         .text(row[1], colX[2], y + 5, { width: PAGE_W - 80 - (colX[2] - 40), align: 'right' });
+      doc.restore();
+      y += 22;
+    });
+    y += 25;
+
+    // ── Overall outstanding card ────────────────────────────────────────────────
+    doc.save();
+    doc.roundedRect(40, y, PAGE_W - 80, 60, 8).fill(INDIGO_LIGHT);
+    doc.roundedRect(40, y, PAGE_W - 80, 60, 8).strokeColor(INDIGO).lineWidth(1.5).stroke();
+    doc.restore();
+    doc.fontSize(9).font('Helvetica-Bold').fillColor(INDIGO)
+       .text('OVERALL OUTSTANDING', 55, y + 12, { width: PAGE_W - 110 });
+    doc.fontSize(22).font('Helvetica-Bold').fillColor(INDIGO)
+       .text(fmtRs(totalOutstanding), 55, y + 30, { width: PAGE_W - 110 });
+    doc.fontSize(9).font('Helvetica').fillColor(SLATE_600)
+       .text(`Across ${db.customers.length} customers`, 350, y + 36, { width: PAGE_W - 80 - 310, align: 'right' });
+    y += 80;
+
+    // ── Today's bills detail table ──────────────────────────────────────────────
+    if (billsToday.length > 0) {
+      doc.save();
+      doc.roundedRect(40, y, PAGE_W - 80, 24, 6).fill(INDIGO);
+      doc.fontSize(11).font('Helvetica-Bold').fillColor(WHITE)
+         .text("TODAY'S BILLS", 55, y + 6, { width: PAGE_W - 110 });
+      doc.restore();
+      y += 30;
+
+      // Table header
+      const detailCols = [50, 80, 260, 370, 470];
+      doc.save();
+      doc.rect(40, y, PAGE_W - 80, 22).fill(INDIGO_LIGHT);
+      doc.fontSize(8).font('Helvetica-Bold').fillColor(SLATE_900);
+      doc.text('#',       detailCols[0], y + 6);
+      doc.text('ID',      detailCols[1], y + 6);
+      doc.text('CUSTOMER', detailCols[2], y + 6);
+      doc.text('AMOUNT',  detailCols[3], y + 6, { width: 90, align: 'right' });
+      doc.text('STATUS',  detailCols[4], y + 6, { width: PAGE_W - 80 - (detailCols[4] - 40), align: 'right' });
+      doc.restore();
+      y += 22;
+
+      billsToday.slice(0, 20).forEach((bill, i) => {
+        if (y > PAGE_H - 80) return; // avoid overflow
+        const bg = i % 2 === 0 ? WHITE : ROW_ALT;
+        doc.save();
+        doc.rect(40, y, PAGE_W - 80, 22).fill(bg);
+        const cust = db.customers.find(c => c.id === bill.customerId);
+        const isPaid = bill.status === 'paid';
+        doc.fontSize(9).font('Helvetica').fillColor(SLATE_400)
+           .text((i + 1).toString(), detailCols[0], y + 5);
+        doc.font('Helvetica').fillColor(SLATE_600)
+           .text(bill.id ? bill.id.toString().slice(0, 8) : '-', detailCols[1], y + 5);
+        doc.font('Helvetica').fillColor(SLATE_900)
+           .text(cust ? cust.name : 'Unknown', detailCols[2], y + 5, { width: 100 });
+        doc.font('Helvetica-Bold').fillColor(SLATE_900)
+           .text(fmtRs(bill.total), detailCols[3], y + 5, { width: 90, align: 'right' });
+        doc.font('Helvetica-Bold').fillColor(isPaid ? EMERALD : RED)
+           .text(isPaid ? 'PAID' : 'UNPAID', detailCols[4], y + 5, { width: PAGE_W - 80 - (detailCols[4] - 40), align: 'right' });
+        doc.restore();
+        y += 22;
+      });
+      y += 10;
+    }
+
+    // ── Footer ──────────────────────────────────────────────────────────────────
+    doc.save();
+    doc.rect(0, 760, PAGE_W, 82).fill('#F1F5F9');
+    doc.fontSize(9).font('Helvetica-Bold').fillColor(INDIGO)
+       .text(shop.name || 'GENERAL STORE', 40, 775, { width: PAGE_W - 80, align: 'center' });
+    doc.fontSize(8).font('Helvetica').fillColor(SLATE_400)
+       .text('This is a computer-generated report  •  Generated on ' + new Date().toLocaleString('en-IN'), 40, 790, { width: PAGE_W - 80, align: 'center' });
+    doc.restore();
 
     // Finalize PDF
     doc.end();
