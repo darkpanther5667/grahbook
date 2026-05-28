@@ -1,49 +1,35 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.aistudio.sharmakhata.pqmzvk.data.model.Bill
+import com.aistudio.sharmakhata.pqmzvk.ui.components.EmptyState
+import com.aistudio.sharmakhata.pqmzvk.ui.components.ShimmerLoading
+import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
+import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.OperationState
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.UiState
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.Locale
+import com.aistudio.sharmakhata.pqmzvk.util.FormatUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,63 +40,208 @@ fun BillsScreen(
     onOpenPdf: (String) -> Unit,
 ) {
     val dbState by viewModel.dbState.collectAsState()
+    val operationState by viewModel.operationState.collectAsState()
+    var selectedFilter by remember { mutableStateOf("All") }
+    var showConfirmDialog by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    LaunchedEffect(operationState) {
+        when (operationState) {
+            is OperationState.Success -> {
+                snackbarHostState.showSnackbar((operationState as OperationState.Success).message)
+                viewModel.resetOperationState()
+            }
+            is OperationState.Error -> {
+                snackbarHostState.showSnackbar((operationState as OperationState.Error).message)
+                viewModel.resetOperationState()
+            }
+            else -> {}
+        }
+    }
+
+    // Confirmation Dialog
+    if (showConfirmDialog != null) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = null },
+            title = { Text("Mark as Paid?") },
+            text = { Text("This will mark the bill as paid. Continue?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showConfirmDialog?.let { viewModel.markBillPaid(context, it) }
+                        showConfirmDialog = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                ) { Text("Yes, Mark Paid") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = null }) { Text("Cancel") }
+            },
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Bills") },
+                title = { Text("Bills", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(
+        val pullToRefreshState = rememberPullToRefreshState()
+
+        PullToRefreshBox(
+            state = pullToRefreshState,
+            isRefreshing = dbState is UiState.Loading,
+            onRefresh = { viewModel.fetchData(context) },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             when (dbState) {
-                is UiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is UiState.Error -> Text(
-                    text = "Error: ${(dbState as UiState.Error).message}",
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                is UiState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) { ShimmerLoading() }
+                }
+                is UiState.Error -> {
+                    EmptyState(
+                        message = "Error loading bills",
+                        description = (dbState as UiState.Error).message,
+                        icon = Icons.Default.Error,
+                        actionLabel = "Retry",
+                        onAction = { viewModel.fetchData(context) }
+                    )
+                }
                 is UiState.Success -> {
                     val db = (dbState as UiState.Success).data
-                    val bills = db.bills
+                    val allBills = db.bills
                         .filter { it.customerId == customerId }
                         .sortedByDescending { it.createdAt }
 
-                    if (bills.isEmpty()) {
-                        Column(
+                    val filteredBills = when (selectedFilter) {
+                        "Paid" -> allBills.filter { it.status == "paid" }
+                        "Unpaid" -> allBills.filter { it.status != "paid" }
+                        else -> allBills
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
+                    ) {
+                        // Filter Chips
+                        LazyRow(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text("No bills found", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    } else {
-                        LazyColumn(
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(bills) { bill ->
-                                BillCard(
-                                    bill = bill,
-                                    onSendWhatsApp = { viewModel.sendInvoiceOnWhatsApp(bill.id) },
-                                    onMarkPaid = { viewModel.markBillPaid(bill.id) },
-                                    onOpenPdf = { onOpenPdf(bill.id) }
+                            item {
+                                FilterChip(
+                                    selected = selectedFilter == "All",
+                                    onClick = { selectedFilter = "All" },
+                                    label = { Text("All") },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = IndigoPrimary,
+                                        selectedLabelColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(10.dp)
                                 )
+                            }
+                            item {
+                                FilterChip(
+                                    selected = selectedFilter == "Paid",
+                                    onClick = { selectedFilter = "Paid" },
+                                    label = { Text("Paid") },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = SuccessGreen,
+                                        selectedLabelColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                            }
+                            item {
+                                FilterChip(
+                                    selected = selectedFilter == "Unpaid",
+                                    onClick = { selectedFilter = "Unpaid" },
+                                    label = { Text("Unpaid") },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = ErrorRed,
+                                        selectedLabelColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                            }
+                            item {
+                                FilterChip(
+                                    selected = selectedFilter == "Overdue",
+                                    onClick = { selectedFilter = "Overdue" },
+                                    label = { Text("Overdue") },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = AmberWarning,
+                                        selectedLabelColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                            }
+                        }
+
+                        if (filteredBills.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.ReceiptLong,
+                                        contentDescription = null,
+                                        tint = TextSecondaryLight,
+                                        modifier = Modifier.size(72.dp)
+                                    )
+                                    Text(
+                                        text = if (allBills.isEmpty()) "No bills found for this customer"
+                                        else "No ${selectedFilter.lowercase()} bills",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(14.dp)
+                            ) {
+                                items(filteredBills) { bill ->
+                                    val customerName = db.customers.find { it.id == bill.customerId }?.name ?: "Unknown"
+                                    InvoiceCard(
+                                        bill = bill,
+                                        customerName = customerName,
+                                        onSendWhatsApp = { viewModel.sendInvoiceOnWhatsApp(context, bill.id) },
+                                        onMarkPaid = { showConfirmDialog = bill.id },
+                                        onOpenPdf = { onOpenPdf(bill.id) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -121,89 +252,173 @@ fun BillsScreen(
 }
 
 @Composable
-private fun BillCard(
+private fun InvoiceCard(
     bill: Bill,
+    customerName: String,
     onSendWhatsApp: () -> Unit,
     onMarkPaid: () -> Unit,
     onOpenPdf: () -> Unit,
 ) {
-    val statusColor = if (bill.status == "paid") Color(0xFF1B5E20) else Color(0xFFB71C1C)
-    val statusText = bill.status.uppercase(Locale.getDefault())
-    val dateText = formatDateSafe(bill.createdAt)
-    val totalText = formatRs(bill.total)
+    val isPaid = bill.status == "paid"
+    val statusColor = when {
+        isPaid -> SuccessGreen
+        bill.status == "overdue" -> AmberWarning
+        else -> ErrorRed
+    }
+    val statusBgColor = when {
+        isPaid -> SuccessGreen.copy(alpha = 0.1f)
+        bill.status == "overdue" -> AmberWarning.copy(alpha = 0.1f)
+        else -> ErrorRed.copy(alpha = 0.1f)
+    }
+    val statusText = when {
+        isPaid -> "Paid"
+        bill.status == "overdue" -> "Overdue"
+        else -> "Unpaid"
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Top row: Invoice # and Status Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column {
                     Text(
-                        text = totalText,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        text = "Invoice #${bill.id.take(8).uppercase()}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Created: $dateText",
+                        text = FormatUtils.formatDate(bill.createdAt),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = TextSecondaryLight
                     )
                 }
+
+                // Status Badge
+                Box(
+                    modifier = Modifier
+                        .background(statusBgColor, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = statusText,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = statusColor
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Customer name
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    tint = IndigoPrimary.copy(alpha = 0.7f),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = statusText,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = statusColor,
-                    fontWeight = FontWeight.Bold
+                    text = customerName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondaryLight,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Total Amount
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Total Amount",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondaryLight
+                )
+                Text(
+                    text = FormatUtils.formatCurrency(bill.total),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Items count if any
+            if (bill.items.isNotEmpty()) {
+                Text(
+                    text = "${bill.items.size} item(s)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondaryLight
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(onClick = onOpenPdf, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Default.PictureAsPdf, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("PDF")
-                }
-                OutlinedButton(onClick = onSendWhatsApp, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("WhatsApp")
-                }
-            }
+            Divider(color = CardBorder)
 
-            if (bill.status != "paid") {
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedButton(onClick = onMarkPaid, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Mark Paid")
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Action buttons row
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // PDF
+                OutlinedButton(
+                    onClick = onOpenPdf,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = IndigoPrimary),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("PDF", fontSize = 12.sp)
+                }
+
+                // WhatsApp
+                OutlinedButton(
+                    onClick = onSendWhatsApp,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF25D366)),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("WhatsApp", fontSize = 12.sp)
+                }
+
+                // Mark Paid (only if unpaid)
+                if (!isPaid) {
+                    Button(
+                        onClick = onMarkPaid,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Paid", fontSize = 12.sp)
+                    }
                 }
             }
         }
     }
-}
-
-private fun formatDateSafe(iso: String): String {
-    return try {
-        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-        val dt = parser.parse(iso)
-        if (dt != null) SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(dt) else iso.take(10)
-    } catch (_: Exception) {
-        iso.take(10)
-    }
-}
-
-private fun formatRs(amount: Double): String {
-    val format = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-    format.maximumFractionDigits = 0
-    return format.format(amount)
 }

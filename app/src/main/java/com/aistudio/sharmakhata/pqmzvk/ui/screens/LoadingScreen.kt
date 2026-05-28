@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,14 +42,15 @@ fun LoadingScreen(
     val syncError by viewModel.syncError.collectAsState()
     var hasTimedOut by remember { mutableStateOf(false) }
     var showSkeleton by remember { mutableStateOf(true) }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.fetchData()
+        viewModel.fetchData(context)
         // Show skeleton for 2 seconds, then show actual loading
         kotlinx.coroutines.delay(2000)
         showSkeleton = false
-        // Add timeout: if no success after 30 seconds, show error
-        kotlinx.coroutines.delay(28000)
+        // Add timeout: if no success after 120 seconds, show error (account for Render cold start)
+        kotlinx.coroutines.delay(118000)
         if (dbState !is UiState.Success || reportState !is UiState.Success) {
             hasTimedOut = true
         }
@@ -95,12 +97,12 @@ fun LoadingScreen(
                                 (dbState as? UiState.Error)?.message,
                                 (reportState as? UiState.Error)?.message,
                                 syncError,
-                                if (hasTimedOut) "Sync timed out. Please check your internet connection." else null
+                                if (hasTimedOut) "Sync timed out. The server may be waking up (cold start). Please try again." else null
                             ).joinToString("\n"),
                             onRetry = {
                                 hasTimedOut = false
                                 showSkeleton = true
-                                viewModel.fetchData()
+                                viewModel.fetchData(context)
                             },
                             onBackToLogin = {
                                 viewModel.resetOperationState()
@@ -237,7 +239,7 @@ fun SyncingAnimation() {
                 animationSpec = infiniteRepeatable(
                     animation = tween(600, easing = EaseInOutCubic),
                     repeatMode = RepeatMode.Reverse,
-                    initialStartOffset = index * 200
+                    initialStartOffset = StartOffset(index * 200)
                 ),
                 label = "dot_$index"
             )

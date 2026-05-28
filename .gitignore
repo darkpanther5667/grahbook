@@ -15,5 +15,15 @@
 .cxx
 local.properties
 .env
+.env.android
 debug.keystore
 db.json
+.aider*
+node_modules/
+hs_err_pid*.log
+.idea/
+*.pdf
+scratch/
+stitch_assets/
+stitch_ui/
+.kiro/

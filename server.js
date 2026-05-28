@@ -1790,12 +1790,19 @@ app.get('/api/test-db', async (req, res) => {
 app.post('/api/auth/request-code', async (req, res) => {
   try {
     const { storeId, phone } = req.body || {};
-    const sid = String(storeId || '').trim();
+    let sid = String(storeId || '').trim();
     const p = normalizePhone(phone);
-    if (!sid || !p) return res.status(400).json({ success: false, message: 'storeId and phone are required' });
+    if (!p) return res.status(400).json({ success: false, message: 'phone is required' });
 
     const database = await connectDB();
     if (!database) return res.status(500).json({ success: false, message: 'Server DB not configured' });
+
+    // If no storeId provided, look up store by phone via staff collection
+    if (!sid) {
+      const staffEntry = await database.collection('staff').findOne({ phone: p, status: { $ne: 'disabled' } });
+      if (!staffEntry) return res.status(404).json({ success: false, message: 'No store found for this phone number. Please register first.' });
+      sid = staffEntry.store_id;
+    }
 
     const store = await database.collection('stores').findOne({ id: sid, status: { $ne: 'disabled' } });
     if (!store) return res.status(404).json({ success: false, message: 'Store not found' });
@@ -1835,13 +1842,20 @@ app.post('/api/auth/request-code', async (req, res) => {
 app.post('/api/auth/verify-code', async (req, res) => {
   try {
     const { storeId, phone, code } = req.body || {};
-    const sid = String(storeId || '').trim();
+    let sid = String(storeId || '').trim();
     const p = normalizePhone(phone);
     const c = String(code || '').trim();
-    if (!sid || !p || !c) return res.status(400).json({ success: false, message: 'storeId, phone, code are required' });
+    if (!p || !c) return res.status(400).json({ success: false, message: 'phone and code are required' });
 
     const database = await connectDB();
     if (!database) return res.status(500).json({ success: false, message: 'Server DB not configured' });
+
+    // If no storeId, look up from login_codes by phone
+    if (!sid) {
+      const codeEntry = await database.collection('login_codes').findOne({ phone: p, expires_at: { $gt: new Date() } });
+      if (codeEntry) sid = codeEntry.store_id;
+      if (!sid) return res.status(400).json({ success: false, message: 'No pending login found. Please request a code first.' });
+    }
 
     const row = await database.collection('login_codes').findOne({ store_id: sid, phone: p, expires_at: { $gt: new Date() } });
     if (!row) return res.status(401).json({ success: false, message: 'Invalid/expired code' });
@@ -2047,8 +2061,8 @@ app.post('/api/register-store', async (req, res) => {
   try {
     const { store_name, owner_name, phone, email, business_type, plan, address } = req.body;
     
-    if (!store_name || !owner_name || !phone || !email) {
-      return res.status(400).json({ status: 'error', message: 'Missing required fields' });
+    if (!store_name || !owner_name || !phone) {
+      return res.status(400).json({ status: 'error', message: 'store_name, owner_name, and phone are required' });
     }
 
     // Generate unique store ID
@@ -2063,7 +2077,7 @@ app.post('/api/register-store', async (req, res) => {
     }
     
     // Check if store already exists
-    const existingStore = db.stores.find(s => s.phone === phone || s.email === email);
+    const existingStore = db.stores.find(s => s.phone === normalizePhone(phone) || (email && s.email === email));
     if (existingStore) {
       return res.status(400).json({ status: 'error', message: 'Store already registered with this phone or email' });
     }
@@ -2074,7 +2088,7 @@ app.post('/api/register-store', async (req, res) => {
       store_name: store_name,
       owner_name: owner_name,
       phone: normalizePhone(phone),
-      email: email,
+      email: email || '',
       business_type: business_type || 'retail',
       plan: plan || 'basic',
       address: address || '',

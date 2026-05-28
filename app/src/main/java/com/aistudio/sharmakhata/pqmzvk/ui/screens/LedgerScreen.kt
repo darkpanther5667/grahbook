@@ -21,8 +21,7 @@ import com.aistudio.sharmakhata.pqmzvk.data.model.Bill
 import com.aistudio.sharmakhata.pqmzvk.data.model.Transaction
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.UiState
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
+import com.aistudio.sharmakhata.pqmzvk.util.FormatUtils
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -151,7 +150,7 @@ fun LedgerEventCard(event: LedgerEvent) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = formatDate(event.dateIso),
+                    text = FormatUtils.formatDateTime(event.dateIso),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -165,7 +164,7 @@ fun LedgerEventCard(event: LedgerEvent) {
                 }
             }
             Text(
-                text = "$sign${formatRs(event.amount)}",
+                text = "$sign${FormatUtils.formatCurrency(event.amount)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = color
@@ -181,19 +180,3 @@ data class LedgerEvent(
     val description: String
 )
 
-fun formatDate(isoString: String): String {
-    return try {
-        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-        val formatter = SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault())
-        val date = parser.parse(isoString)
-        if (date != null) formatter.format(date) else isoString.take(10)
-    } catch (e: Exception) {
-        isoString.take(10)
-    }
-}
-
-private fun formatRs(amount: Double): String {
-    val format = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-    format.maximumFractionDigits = 0
-    return format.format(amount)
-}

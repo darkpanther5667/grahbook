@@ -1,10 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- Brand Primary — Indigo -->
+    <color name="indigo_primary">#FF4F46E5</color>
+    <color name="indigo_light">#FF818CF8</color>
+    <color name="indigo_dark">#FF312E81</color>
+    <color name="indigo_container">#FFEEF2FF</color>
+
+    <!-- Brand Secondary — Emerald -->
+    <color name="emerald_secondary">#FF10B981</color>
+    <color name="emerald_light">#FF34D399</color>
+    <color name="emerald_dark">#FF065F46</color>
+
+    <!-- Amber — Warning/Pending -->
+    <color name="amber_warning">#FFF59E0B</color>
+    <color name="amber_dark">#FFB45309</color>
+
+    <!-- Error/Overdue -->
+    <color name="error_red">#FFEF4444</color>
+    <color name="error_dark">#FFB91C1C</color>
+
+    <!-- Success/Paid -->
+    <color name="success_green">#FF22C55E</color>
+
+    <!-- Neutrals — Slate -->
+    <color name="slate_50">#FFF8FAFC</color>
+    <color name="slate_100">#FFF1F5F9</color>
+    <color name="slate_200">#FFE2E8F0</color>
+    <color name="slate_300">#FFCBD5E1</color>
+    <color name="slate_400">#FF94A3B8</color>
+    <color name="slate_500">#FF64748B</color>
+    <color name="slate_700">#FF334155</color>
+    <color name="slate_800">#FF1E293B</color>
+    <color name="slate_900">#FF0F172A</color>
+
+    <!-- WhatsApp -->
+    <color name="whatsapp_green">#FF25D366</color>
+
+    <!-- Standard -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="transparent">#00000000</color>
 </resources>

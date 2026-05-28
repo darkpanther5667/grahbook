@@ -5,16 +5,16 @@ coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.8.7"
-lifecycleViewmodelCompose = "2.8.7"
-lifecycleRuntimeCompose = "2.8.7"
-activityCompose = "1.9.3"
-composeBom = "2024.12.01"
+lifecycleRuntimeKtx = "2.9.0"
+lifecycleViewmodelCompose = "2.9.0"
+lifecycleRuntimeCompose = "2.9.0"
+activityCompose = "1.10.1"
+composeBom = "2025.05.00"
 googleDevtoolsKsp = "2.1.0-1.0.29"
-navigationCompose = "2.8.5"
-roomRuntime = "2.6.1"
-roomKtx = "2.6.1"
-roomCompiler = "2.6.1"
+navigationCompose = "2.9.0"
+roomRuntime = "2.7.1"
+roomKtx = "2.7.1"
+roomCompiler = "2.7.1"
 kotlinxCoroutinesTest = "1.9.0"
 core = "1.6.1"
 runner = "1.6.2"
@@ -33,11 +33,13 @@ loggingInterceptor = "4.12.0"
 okhttp = "4.12.0"
 moshiKotlin = "1.15.0"
 moshiKotlinCodegen = "1.15.0"
-datastorePreferences = "1.1.1"
+datastorePreferences = "1.1.4"
+security = "1.1.0-alpha06"
 robolectric = "4.14.1"
 roborazzi = "1.30.1"
-firebaseBom = "33.7.0"
+firebaseBom = "33.14.0"
 secretsGradlePlugin = "2.0.1"
+shimmer = "0.5.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -81,12 +83,14 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshiKotlin" }
 moshi-kotlin-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshiKotlinCodegen" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "security" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
 roborazzi-junit-rule = { group = "io.github.takahirom.roborazzi", name = "roborazzi-junit-rule", version.ref = "roborazzi" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-ai = { group = "com.google.firebase", name = "firebase-ai" }
+shimmer = { group = "com.facebook.shimmer", name = "shimmer-compose", version.ref = "shimmer" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

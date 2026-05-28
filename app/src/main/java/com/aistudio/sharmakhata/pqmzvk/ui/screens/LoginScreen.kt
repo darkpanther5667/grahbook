@@ -1,105 +1,67 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.screens
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Message
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Store
-import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
+import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
+import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.OperationState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     viewModel: MainViewModel,
     onLoggedIn: () -> Unit,
-    onRegisterStore: () -> Unit,
+    onRegisterStore: () -> Unit = {}
 ) {
     val operationState by viewModel.operationState.collectAsState()
-    val authToken by viewModel.authToken.collectAsState()
-
-    var storeId by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var code by remember { mutableStateOf("") }
-    var stage by remember { mutableStateOf(1) } // 1=request, 2=verify
-
-    val scroll = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
     val context = androidx.compose.ui.platform.LocalContext.current
-    
-    // Logo animation
-    val infiniteTransition = rememberInfiniteTransition(label = "logo")
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOutCubic),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale"
-    )
 
-    LaunchedEffect(authToken) {
-        val token = viewModel.consumeAuthToken()
-        if (!token.isNullOrBlank()) {
-            SessionManager.setToken(context, token)
-            onLoggedIn()
-        }
-    }
+    var phoneNumber by remember { mutableStateOf("") }
+    var otp by remember { mutableStateOf("") }
+    var isOtpStage by remember { mutableStateOf(false) }
 
     LaunchedEffect(operationState) {
-        val msg = (operationState as? OperationState.Success)?.message ?: return@LaunchedEffect
-        if (msg.contains("Code sent")) stage = 2
+        when (val state = operationState) {
+            is OperationState.Success -> {
+                val msg = state.message
+                if (msg == "Logged in") {
+                    onLoggedIn()
+                } else if (msg == "Code sent on WhatsApp") {
+                    isOtpStage = true
+                }
+            }
+            is OperationState.Error -> {
+                snackbarHostState.showSnackbar(
+                    message = state.message,
+                    withDismissAction = true
+                )
+                viewModel.resetOperationState()
+            }
+            else -> {}
+        }
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Grahbook", fontWeight = FontWeight.ExtraBold, color = Color(0xFF25d366))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color(0xFF191c1e)
-                ),
-                modifier = Modifier.drawBehind {
-                    drawLine(
-                        color = Color(0xFFe0e3e5),
-                        start = Offset(0f, size.height),
-                        end = Offset(size.width, size.height),
-                        strokeWidth = 1.dp.toPx()
-                    )
-                }
-            )
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -108,248 +70,251 @@ fun LoginScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.White,
-                            Color(0xFF25d366).copy(alpha = 0.03f)
+                            IndigoPrimary,
+                            IndigoDark,
+                            Color(0xFF1E1B4B)
                         )
                     )
-                ),
-            contentAlignment = Alignment.Center
+                )
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(scroll)
-                    .padding(24.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    .fillMaxSize()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                // Logo with animation
+                // App Logo
                 Box(
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(90.dp)
                         .clip(RoundedCornerShape(24.dp))
-                        .scale(scale)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(Color(0xFF25d366), Color(0xFF128c7e))
-                            )
-                        )
-                        .align(Alignment.CenterHorizontally),
+                        .background(Color.White.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        Icons.Default.Storefront,
-                        contentDescription = "Grahbook Logo",
-                        tint = Color.White,
-                        modifier = Modifier.size(50.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color.White.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "G",
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = IndigoPrimary
+                            )
+                        }
+                    }
                 }
 
-                // Welcome text
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Welcome Back!",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF191c1e)
-                    )
-                    Text(
-                        text = "Login to manage your business",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF3c4a3d)
-                    )
-                }
+                Spacer(modifier = Modifier.height(20.dp))
 
-                // Instructions card
+                Text(
+                    text = "Grahbook",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    letterSpacing = (-1).sp
+                )
+                Text(
+                    text = "Smart Billing for Your Business",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                // Login Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF25d366).copy(alpha = 0.08f)
-                    ),
-                    border = BorderStroke(1.dp, Color(0xFF25d366).copy(alpha = 0.2f))
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        if (!isOtpStage) {
+                            // Phone Input Stage
                             Icon(
                                 Icons.Default.Phone,
                                 contentDescription = null,
-                                tint = Color(0xFF25d366),
-                                modifier = Modifier.size(24.dp)
+                                tint = IndigoPrimary,
+                                modifier = Modifier.size(40.dp)
                             )
                             Text(
-                                text = "Enter your Store ID and WhatsApp number. We'll send a login code on WhatsApp.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF191c1e),
-                                fontWeight = FontWeight.Medium
+                                "Welcome!",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimaryLight
                             )
-                        }
-                    }
-                }
+                            Text(
+                                "Enter your phone number to continue",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondaryLight,
+                                textAlign = TextAlign.Center
+                            )
 
-                // Input fields
-                OutlinedTextField(
-                    value = storeId,
-                    onValueChange = { storeId = it.trim() },
-                    label = { Text("Store ID") },
-                    placeholder = { Text("Enter your store ID") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = Color(0xFF25d366),
-                        unfocusedBorderColor = Color(0xFFe0e3e5),
-                        focusedLabelColor = Color(0xFF25d366)
-                    ),
-                    leadingIcon = {
-                        Icon(Icons.Default.Store, contentDescription = null, tint = Color(0xFF25d366))
-                    }
-                )
+                            OutlinedTextField(
+                                value = phoneNumber,
+                                onValueChange = { newVal ->
+                                    if (newVal.length <= 10 && newVal.all { it.isDigit() }) {
+                                        phoneNumber = newVal
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Phone Number") },
+                                placeholder = { Text("9876543210") },
+                                leadingIcon = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("+91", fontWeight = FontWeight.Bold, color = IndigoPrimary)
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Box(modifier = Modifier.width(1.dp).height(20.dp).background(CardBorder))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Icon(Icons.Default.Phone, contentDescription = null, tint = IndigoPrimary, modifier = Modifier.size(18.dp))
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Phone,
+                                    imeAction = ImeAction.Done
+                                ),
+                                singleLine = true,
+                                shape = RoundedCornerShape(14.dp),
+                                colors = TextFieldDefaults.colors(
+                                    focusedIndicatorColor = IndigoPrimary,
+                                    unfocusedIndicatorColor = CardBorder,
+                                    focusedContainerColor = BackgroundLight,
+                                    unfocusedContainerColor = BackgroundLight
+                                )
+                            )
 
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it.filter { ch -> ch.isDigit() || ch == '+' } },
-                    label = { Text("WhatsApp number") },
-                    placeholder = { Text("Enter WhatsApp number") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = Color(0xFF25d366),
-                        unfocusedBorderColor = Color(0xFFe0e3e5),
-                        focusedLabelColor = Color(0xFF25d366)
-                    ),
-                    leadingIcon = {
-                        Icon(Icons.Default.Phone, contentDescription = null, tint = Color(0xFF25d366))
-                    }
-                )
+                            Button(
+                                onClick = { viewModel.requestLoginCode("", phoneNumber) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                enabled = phoneNumber.length == 10 && operationState !is OperationState.Loading,
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+                            ) {
+                                if (operationState is OperationState.Loading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text("Send OTP", fontWeight = FontWeight.Bold)
+                                }
+                            }
 
-                if (stage == 2) {
-                    OutlinedTextField(
-                        value = code,
-                        onValueChange = { code = it.filter { ch -> ch.isDigit() }.take(6) },
-                        label = { Text("6-digit code") },
-                        placeholder = { Text("Enter verification code") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = Color(0xFF25d366),
-                            unfocusedBorderColor = Color(0xFFe0e3e5),
-                            focusedLabelColor = Color(0xFF25d366)
-                        ),
-                        leadingIcon = {
-                            Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF25d366))
-                        }
-                    )
-                }
-
-                // Main action button
-                Button(
-                    onClick = {
-                        if (stage == 1) {
-                            viewModel.requestLoginCode(storeId, phone)
+                            // Register link
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("New here?", color = TextSecondaryLight, fontSize = 13.sp)
+                                TextButton(onClick = onRegisterStore) {
+                                    Text("Register your store", color = IndigoPrimary, fontWeight = FontWeight.SemiBold)
+                                }
+                            }
                         } else {
-                            viewModel.verifyLoginCode(storeId, phone, code, context)
+                            // OTP Stage
+                            Icon(
+                                Icons.Default.Shield,
+                                contentDescription = null,
+                                tint = IndigoPrimary,
+                                modifier = Modifier.size(40.dp)
+                            )
+                            Text(
+                                "Verify OTP",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimaryLight
+                            )
+                            Text(
+                                "Enter the 6-digit code sent to\n+91 $phoneNumber",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondaryLight,
+                                textAlign = TextAlign.Center
+                            )
+
+                            OutlinedTextField(
+                                value = otp,
+                                onValueChange = { newVal ->
+                                    if (newVal.length <= 6 && newVal.all { it.isDigit() }) {
+                                        otp = newVal
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("OTP") },
+                                placeholder = { Text("_ _ _ _ _ _") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Lock, contentDescription = null, tint = IndigoPrimary)
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                singleLine = true,
+                                shape = RoundedCornerShape(14.dp),
+                                colors = TextFieldDefaults.colors(
+                                    focusedIndicatorColor = IndigoPrimary,
+                                    unfocusedIndicatorColor = CardBorder,
+                                    focusedContainerColor = BackgroundLight,
+                                    unfocusedContainerColor = BackgroundLight
+                                ),
+                                textStyle = MaterialTheme.typography.headlineSmall.copy(
+                                    textAlign = TextAlign.Center,
+                                    letterSpacing = 8.sp
+                                )
+                            )
+
+                            Button(
+                                onClick = { viewModel.verifyLoginCode("", phoneNumber, otp, context) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                enabled = otp.length == 6 && operationState !is OperationState.Loading,
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+                            ) {
+                                if (operationState is OperationState.Loading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text("Verify & Login", fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                            TextButton(onClick = {
+                                isOtpStage = false
+                                otp = ""
+                                viewModel.requestLoginCode("", phoneNumber)
+                            }) {
+                                Text("Resend OTP", color = IndigoPrimary, fontWeight = FontWeight.SemiBold)
+                            }
                         }
-                    },
-                    enabled = operationState !is OperationState.Loading &&
-                        storeId.isNotBlank() &&
-                        phone.length >= 8 &&
-                        (stage == 1 || code.length == 6),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25d366)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    if (operationState is OperationState.Loading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .width(24.dp)
-                                .height(24.dp),
-                            strokeWidth = 2.dp,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                    }
-                    Icon(
-                        if (stage == 1) Icons.AutoMirrored.Filled.Message else Icons.Default.Lock,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(if (stage == 1) "Send Code" else "Verify & Login", fontWeight = FontWeight.Bold)
-                }
-
-                if (stage == 2) {
-                    TextButton(
-                        onClick = { stage = 1; code = "" },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Change number / resend", color = Color(0xFF25d366))
                     }
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Divider(color = Color(0xFFe0e3e5))
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                TextButton(
-                    onClick = onRegisterStore,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Register new store", color = Color(0xFF3c4a3d), fontWeight = FontWeight.Medium)
-                }
-
-                // Version info
-                Text(
-                    text = "Version 1.0.0",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF3c4a3d),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                )
-            }
-
-            when (operationState) {
-                is OperationState.Success -> {
-                    val msg = (operationState as OperationState.Success).message
-                    Snackbar(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(16.dp),
-                        action = {
-                            TextButton(onClick = { viewModel.resetOperationState() }) { 
-                                Text("OK", color = Color.White) 
-                            }
-                        },
-                        containerColor = Color(0xFF25d366),
-                        contentColor = Color.White
-                    ) { Text(msg) }
-                }
-                is OperationState.Error -> {
-                    Snackbar(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(16.dp),
-                        action = {
-                            TextButton(onClick = { viewModel.resetOperationState() }) { 
-                                Text("Dismiss", color = Color.White) 
-                            }
-                        },
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = Color.White
-                    ) { Text((operationState as OperationState.Error).message) }
-                }
-                else -> Unit
             }
         }
     }

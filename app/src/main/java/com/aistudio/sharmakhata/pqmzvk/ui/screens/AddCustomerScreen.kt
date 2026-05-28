@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
@@ -47,6 +48,7 @@ fun AddCustomerScreen(
     onBack: () -> Unit,
 ) {
     val operationState by viewModel.operationState.collectAsState()
+    val context = LocalContext.current
 
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
@@ -99,7 +101,7 @@ fun AddCustomerScreen(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Button(
-                    onClick = { viewModel.addCustomer(name.trim(), phone.trim()) },
+                    onClick = { viewModel.addCustomer(context, name.trim(), phone.trim()) },
                     enabled = isValid && operationState !is OperationState.Loading,
                     modifier = Modifier.fillMaxWidth()
                 ) {

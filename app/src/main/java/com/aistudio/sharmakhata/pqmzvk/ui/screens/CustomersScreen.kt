@@ -1,7 +1,5 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.screens
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,37 +9,31 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Whatsapp
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.aistudio.sharmakhata.pqmzvk.data.model.Customer
 import com.aistudio.sharmakhata.pqmzvk.data.model.FullDatabase
+import com.aistudio.sharmakhata.pqmzvk.ui.components.EmptyState
+import com.aistudio.sharmakhata.pqmzvk.ui.components.ShimmerListItem
+import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.UiState
-import java.text.NumberFormat
-import java.util.*
+import com.aistudio.sharmakhata.pqmzvk.util.FormatUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,101 +42,102 @@ fun CustomersScreen(
     onBack: () -> Unit,
     onCustomerClick: (String) -> Unit,
     onAddCustomer: () -> Unit,
+    onNavigateToSearch: () -> Unit = {},
 ) {
     val dbState by viewModel.dbState.collectAsState()
-    var searchQuery by androidx.compose.runtime remember { mutableStateOf("") }
+    val context = LocalContext.current
+    var searchQuery by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Customers") },
+                title = { Text("Customers", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    IconButton(onClick = onNavigateToSearch) {
+                        Icon(Icons.Default.Search, contentDescription = "Search")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color(0xFF191c1e)
-                ),
-                modifier = Modifier.drawBehind {
-                    drawLine(
-                        color = Color(0xFFe0e3e5),
-                        start = Offset(0f, size.height),
-                        end = Offset(size.width, size.height),
-                        strokeWidth = 1.dp.toPx()
-                    )
-                }
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddCustomer,
-                containerColor = Color(0xFF25d366),
+                containerColor = IndigoPrimary,
                 contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.PersonAdd, contentDescription = "Add customer")
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         val pullToRefreshState = rememberPullToRefreshState()
-        
+
         PullToRefreshBox(
             state = pullToRefreshState,
             isRefreshing = dbState is UiState.Loading,
-            onRefresh = { viewModel.fetchData() },
+            onRefresh = { viewModel.fetchData(context) },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFf7f9fb))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             when (dbState) {
                 is UiState.Loading -> {
                     Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
                     ) {
-                        CircularProgressIndicator(color = Color(0xFF25d366))
-                        Text(
-                            text = "Loading customers...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF3c4a3d)
-                        )
+                        repeat(6) {
+                            ShimmerListItem()
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
                 is UiState.Error -> {
                     Column(
                         modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(24.dp),
+                            .fillMaxSize()
+                            .padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = "Error",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(48.dp)
-                        )
+                        Icon(Icons.Default.Person, contentDescription = null, tint = ErrorRed, modifier = Modifier.size(48.dp))
                         Text(
-                            text = "Error: ${(dbState as UiState.Error).message}",
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyMedium
+                            "Error: ${(dbState as UiState.Error).message}",
+                            color = ErrorRed,
+                            textAlign = TextAlign.Center
                         )
                         Button(
-                            onClick = { viewModel.fetchData() },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25d366))
-                        ) {
-                            Text("Retry")
-                        }
+                            onClick = { viewModel.fetchData(context) },
+                            colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+                        ) { Text("Retry") }
                     }
                 }
                 is UiState.Success -> {
                     val db = (dbState as UiState.Success).data
-                    CustomersList(db, onCustomerClick, searchQuery) { searchQuery = it }
+                    if (db.customers.isEmpty()) {
+                        EmptyState(
+                            icon = Icons.Default.Person,
+                            message = "No customers yet",
+                            description = "Add your first customer to get started",
+                            actionLabel = "Add Customer",
+                            onAction = onAddCustomer
+                        )
+                    } else {
+                        CustomersList(db, onCustomerClick, onAddCustomer, searchQuery) { searchQuery = it }
+                    }
                 }
             }
         }
@@ -155,6 +148,7 @@ fun CustomersScreen(
 fun CustomersList(
     db: FullDatabase,
     onCustomerClick: (String) -> Unit,
+    onAddCustomer: () -> Unit,
     searchQuery: String,
     onSearchChange: (String) -> Unit
 ) {
@@ -170,27 +164,70 @@ fun CustomersList(
             onValueChange = onSearchChange,
             placeholder = { Text("Search customers...") },
             leadingIcon = {
-                Icon(Icons.Default.Person, contentDescription = null)
+                Icon(Icons.Default.Search, contentDescription = null, tint = IndigoPrimary)
             },
+            trailingIcon = if (searchQuery.isNotEmpty()) {
+                {
+                    IconButton(onClick = { onSearchChange("") }) {
+                        Icon(Icons.Default.Clear, contentDescription = "Clear")
+                    }
+                }
+            } else null,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color(0xFF25d366),
-                unfocusedBorderColor = Color(0xFFe0e3e5)
-            )
+            shape = RoundedCornerShape(14.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = IndigoPrimary,
+                unfocusedIndicatorColor = CardBorder,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            ),
+            singleLine = true
         )
 
         if (customers.isEmpty()) {
-            EmptyCustomersState(onAddCustomer = onCustomerClick)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.PersonSearch,
+                        contentDescription = null,
+                        tint = TextSecondaryLight,
+                        modifier = Modifier.size(72.dp)
+                    )
+                    Text(
+                        text = if (searchQuery.isNotEmpty()) "No customers found matching \"$searchQuery\"" else "No customers yet",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center
+                    )
+                    if (searchQuery.isNotEmpty()) {
+                        TextButton(onClick = { onSearchChange("") }) {
+                            Text("Clear search", color = IndigoPrimary)
+                        }
+                    }
+                }
+            }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 80.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(customers, key = { it.id }) { customer ->
-                    EnhancedCustomerCard(customer = customer, onClick = { onCustomerClick(customer.id) })
+                    CustomerCard(
+                        customer = customer,
+                        db = db,
+                        onClick = { onCustomerClick(customer.id) }
+                    )
                 }
             }
         }
@@ -198,94 +235,52 @@ fun CustomersList(
 }
 
 @Composable
-fun EmptyCustomersState(onAddCustomer: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFF25d366).copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Default.Person,
-                contentDescription = null,
-                tint = Color(0xFF25d366),
-                modifier = Modifier.size(60.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        Text(
-            text = "No Customers Yet",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF191c1e)
-        )
-        
-        Text(
-            text = "Add your first customer to get started",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF3c4a3d),
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        Button(
-            onClick = onAddCustomer,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25d366)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Icon(Icons.Default.PersonAdd, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Add First Customer")
-        }
-    }
-}
+fun CustomerCard(
+    customer: Customer,
+    db: FullDatabase,
+    onClick: () -> Unit
+) {
+    // Calculate balance
+    val transactions = db.transactions.filter { it.customerId == customer.id }
+    val bills = db.bills.filter { it.customerId == customer.id }
+    val payments = transactions.filter { it.type == "payment" }.sumOf { it.amount }
+    val credits = transactions.filter { it.type == "credit" }.sumOf { it.amount }
+    val billTotal = bills.sumOf { it.total }
+    val balance = credits + billTotal - payments
 
-@Composable
-fun EnhancedCustomerCard(customer: Customer, onClick: () -> Unit) {
-    val infiniteTransition = rememberInfiniteTransition(label = "card")
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.02f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOutCubic),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale"
-    )
+    val balanceColor = when {
+        balance > 0 -> ErrorRed
+        balance < 0 -> SuccessGreen
+        else -> TextSecondaryLight
+    }
+    val balancePrefix = when {
+        balance > 0 -> "₹"
+        balance < 0 -> "+₹"
+        else -> "₹"
+    }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .scale(scale),
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, Color(0xFFe0e3e5))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar with gradient
+            // Avatar - first letter in gradient circle
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(50.dp)
+                    .clip(CircleShape)
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFF25d366), Color(0xFF128c7e))
+                            colors = listOf(IndigoPrimary, IndigoDark)
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -297,19 +292,19 @@ fun EnhancedCustomerCard(customer: Customer, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
             }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
+
+            Spacer(modifier = Modifier.width(14.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = customer.name,
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color(0xFF191c1e),
-                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -317,42 +312,45 @@ fun EnhancedCustomerCard(customer: Customer, onClick: () -> Unit) {
                     Icon(
                         Icons.Default.Phone,
                         contentDescription = null,
-                        tint = Color(0xFF25d366),
-                        modifier = Modifier.size(16.dp)
+                        tint = IndigoPrimary.copy(alpha = 0.7f),
+                        modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = customer.phone ?: "No phone",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF3c4a3d),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondaryLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                
-                // WhatsApp action indicator
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.Whatsapp,
-                        contentDescription = null,
-                        tint = Color(0xFF25d366),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Text(
-                        text = "Active on WhatsApp",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF25d366)
-                    )
-                }
             }
-            
-            // Action arrow
+
+            // Balance amount
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "${balancePrefix}${FormatUtils.formatCurrency(kotlin.math.abs(balance))}",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = balanceColor
+                )
+                Text(
+                    text = when {
+                        balance > 0 -> "Due"
+                        balance < 0 -> "You Get"
+                        else -> "Settled"
+                    },
+                    fontSize = 10.sp,
+                    color = balanceColor,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
+                Icons.Default.ChevronRight,
                 contentDescription = "View details",
-                tint = Color(0xFF3c4a3d),
+                tint = TextSecondaryLight,
                 modifier = Modifier.size(20.dp)
             )
         }
