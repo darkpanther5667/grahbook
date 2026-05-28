@@ -306,12 +306,14 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = ApiClient.apiService.requestLoginCode(RequestLoginCodeRequest(storeId, phone))
-                val ok = response.isSuccessful && response.body()?.success == true
-                _operationState.value =
-                    if (ok) OperationState.Success("Code sent on WhatsApp")
-                    else OperationState.Error("Failed to request code")
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _operationState.value = OperationState.Success("Code sent on WhatsApp")
+                } else {
+                    val serverMsg = response.body()?.message ?: "Failed to send OTP"
+                    _operationState.value = OperationState.Error(serverMsg)
+                }
             } catch (e: Exception) {
-                _operationState.value = OperationState.Error("Failed to request code: ${e.message}")
+                _operationState.value = OperationState.Error("Network error: ${e.message}")
             }
         }
     }
@@ -322,21 +324,18 @@ class MainViewModel : ViewModel() {
             try {
                 val response = ApiClient.apiService.verifyLoginCode(VerifyLoginCodeRequest(storeId, phone, code))
                 val token = response.body()?.token
-                val ok = response.isSuccessful && !token.isNullOrBlank()
-                if (ok) {
+                if (response.isSuccessful && !token.isNullOrBlank()) {
                     _authToken.value = token
-                    // Save token to SessionManager immediately before starting sync
                     com.aistudio.sharmakhata.pqmzvk.util.SessionManager.setToken(context, token)
-                    // Reset LiveSyncManager to ensure fresh start
                     LiveSyncManager.stop()
-                    // Start live sync now that we have a token
                     LiveSyncManager.start()
                     _operationState.value = OperationState.Success("Logged in")
                 } else {
-                    _operationState.value = OperationState.Error("Invalid code")
+                    val serverMsg = response.body()?.message ?: "Invalid or expired OTP"
+                    _operationState.value = OperationState.Error(serverMsg)
                 }
             } catch (e: Exception) {
-                _operationState.value = OperationState.Error("Login failed: ${e.message}")
+                _operationState.value = OperationState.Error("Network error: ${e.message}")
             }
         }
     }

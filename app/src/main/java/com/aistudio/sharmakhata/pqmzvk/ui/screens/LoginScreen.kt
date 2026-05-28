@@ -39,6 +39,11 @@ fun LoginScreen(
     var otp by remember { mutableStateOf("") }
     var isOtpStage by remember { mutableStateOf(false) }
 
+    // Clear any stale operation state from previous screens (e.g. registration success)
+    LaunchedEffect(Unit) {
+        viewModel.resetOperationState()
+    }
+
     LaunchedEffect(operationState) {
         when (val state = operationState) {
             is OperationState.Success -> {
@@ -47,6 +52,7 @@ fun LoginScreen(
                     onLoggedIn()
                 } else if (msg == "Code sent on WhatsApp") {
                     isOtpStage = true
+                    viewModel.resetOperationState()
                 }
             }
             is OperationState.Error -> {
@@ -196,10 +202,15 @@ fun LoginScreen(
                                 singleLine = true,
                                 shape = RoundedCornerShape(14.dp),
                                 colors = TextFieldDefaults.colors(
+                                    focusedTextColor = TextPrimaryLight,
+                                    unfocusedTextColor = TextPrimaryLight,
                                     focusedIndicatorColor = IndigoPrimary,
                                     unfocusedIndicatorColor = CardBorder,
                                     focusedContainerColor = BackgroundLight,
-                                    unfocusedContainerColor = BackgroundLight
+                                    unfocusedContainerColor = BackgroundLight,
+                                    focusedLabelColor = IndigoPrimary,
+                                    unfocusedLabelColor = TextSecondaryLight,
+                                    cursorColor = IndigoPrimary
                                 )
                             )
 
@@ -274,10 +285,15 @@ fun LoginScreen(
                                 singleLine = true,
                                 shape = RoundedCornerShape(14.dp),
                                 colors = TextFieldDefaults.colors(
+                                    focusedTextColor = TextPrimaryLight,
+                                    unfocusedTextColor = TextPrimaryLight,
                                     focusedIndicatorColor = IndigoPrimary,
                                     unfocusedIndicatorColor = CardBorder,
                                     focusedContainerColor = BackgroundLight,
-                                    unfocusedContainerColor = BackgroundLight
+                                    unfocusedContainerColor = BackgroundLight,
+                                    focusedLabelColor = IndigoPrimary,
+                                    unfocusedLabelColor = TextSecondaryLight,
+                                    cursorColor = IndigoPrimary
                                 ),
                                 textStyle = MaterialTheme.typography.headlineSmall.copy(
                                     textAlign = TextAlign.Center,
