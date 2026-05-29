@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.UiState
 
@@ -70,9 +71,9 @@ fun LoadingScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF25d366).copy(alpha = 0.05f),
+                            StitchTeal.copy(alpha = 0.05f),
                             Color.White,
-                            Color(0xFF25d366).copy(alpha = 0.02f)
+                            StitchTeal.copy(alpha = 0.02f)
                         )
                     )
                 ),
@@ -141,7 +142,7 @@ fun AnimatedLogo() {
             .clip(RoundedCornerShape(24.dp))
             .background(
                 Brush.linearGradient(
-                    colors = listOf(Color(0xFF25d366), Color(0xFF128c7e))
+                    colors = listOf(StitchTeal, StitchTealDark)
                 )
             )
             .scale(scale),
@@ -168,7 +169,7 @@ fun LoadingSkeleton() {
                 .width(150.dp)
                 .height(24.dp)
                 .clip(RoundedCornerShape(4.dp))
-                .background(Color(0xFFe0e3e5))
+                .background(Slate200)
         )
         
         // Subtitle Skeleton
@@ -177,14 +178,14 @@ fun LoadingSkeleton() {
                 .width(200.dp)
                 .height(16.dp)
                 .clip(RoundedCornerShape(4.dp))
-                .background(Color(0xFFe0e3e5))
+                .background(Slate200)
         )
         
         Spacer(modifier = Modifier.height(32.dp))
         
         // Progress indicator
         CircularProgressIndicator(
-            color = Color(0xFF25d366),
+            color = StitchTeal,
             strokeWidth = 3.dp
         )
         
@@ -193,7 +194,7 @@ fun LoadingSkeleton() {
         Text(
             text = "Loading your workspace...",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF3c4a3d)
+            color = TextSecondaryLight
         )
     }
 }
@@ -212,7 +213,7 @@ fun SyncingAnimation() {
     )
     
     CircularProgressIndicator(
-        color = Color(0xFF25d366),
+        color = StitchTeal,
         strokeWidth = 4.dp,
         modifier = Modifier.size(48.dp)
     )
@@ -222,7 +223,7 @@ fun SyncingAnimation() {
     Text(
         text = "Syncing your data…",
         style = MaterialTheme.typography.bodyLarge,
-        color = Color(0xFF3c4a3d),
+        color = TextSecondaryLight,
         fontWeight = FontWeight.Medium
     )
     
@@ -247,7 +248,7 @@ fun SyncingAnimation() {
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF25d366).copy(alpha = alpha))
+                    .background(StitchTeal.copy(alpha = alpha))
             )
         }
     }
@@ -303,7 +304,7 @@ fun ErrorState(
                     onClick = onRetry,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF25d366)
+                        containerColor = StitchTeal
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -316,7 +317,7 @@ fun ErrorState(
                     onClick = onBackToLogin,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color(0xFF25d366))
+                    border = BorderStroke(1.dp, StitchTeal)
                 ) {
                     Text("Back to Login")
                 }

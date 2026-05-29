@@ -339,15 +339,16 @@ function findCustomer(text, customers) {
 // ─── DATABASE OPERATION TOOLS FOR GEMINI AI ───────────────────────────────────
 
 async function addCustomerTool(name, phone) {
+  const np = normalizePhone(phone);
   const db = await readDB();
-  const existing = db.customers.find(c => c.phone === phone || c.name.toLowerCase() === name.toLowerCase());
+  const existing = db.customers.find(c => normalizePhone(c.phone) === np || c.name.toLowerCase() === name.toLowerCase());
   if (existing) {
     return { error: `Customer '${name}' or phone '${phone}' is already registered.` };
   }
   const newCustomer = {
     id: genId('c'),
     name: name.replace(/\b\w/g, c => c.toUpperCase()),
-    phone,
+    phone: np,
     created_at: new Date().toISOString().substring(0, 10)
   };
   db.customers.push(newCustomer);
@@ -1465,14 +1466,15 @@ app.post('/webhook', async (req, res) => {
     // ── ADD NEW CUSTOMER ─────────────────────────────────────────────────────────
     } else if (action.type === 'add_customer') {
       const { name, phone } = action;
-      const existing = db.customers.find(c => c.phone === phone || c.name.toLowerCase() === name.toLowerCase());
+      const np = normalizePhone(phone);
+      const existing = db.customers.find(c => normalizePhone(c.phone) === np || c.name.toLowerCase() === name.toLowerCase());
       if (existing) {
         replyText = `⚠️ *${name}* ya phone *${phone}* se ek customer pehle se registered hai.`;
       } else {
         const newCustomer = {
           id: genId('c'),
           name,
-          phone,
+          phone: np,
           created_at: timestampIso.substring(0, 10)
         };
         db.customers.push(newCustomer);
@@ -1484,7 +1486,7 @@ app.post('/webhook', async (req, res) => {
           `✅ *Naya Customer Add Ho Gaya!*\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
           `👤 Naam: *${name}*\n` +
-          `📱 Phone: ${phone}\n` +
+          `📱 Phone: ${np}\n` +
           `🆔 ID: ${newCustomer.id}\n` +
           `📅 Registered: ${fmtDate(timestampIso)}\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -1918,11 +1920,12 @@ app.post('/api/customer/add', async (req, res) => {
     if (!name || !phone) {
       return res.status(400).json({ success: false, message: 'Name and phone are required' });
     }
+    const np = normalizePhone(phone);
 
     const db = await readStoreDB(req.storeId);
-    
+
     // Check if customer already exists
-    const existingCustomer = db.customers.find(c => c.name.toLowerCase() === name.toLowerCase() || c.phone === phone);
+    const existingCustomer = db.customers.find(c => c.name.toLowerCase() === name.toLowerCase() || normalizePhone(c.phone) === np);
     if (existingCustomer) {
       return res.status(400).json({ success: false, message: 'Customer already exists' });
     }
@@ -1930,7 +1933,7 @@ app.post('/api/customer/add', async (req, res) => {
     const newCustomer = {
       id: genId('c'),
       name: name.replace(/\b\w/g, c => c.toUpperCase()),
-      phone,
+      phone: np,
       created_at: new Date().toISOString().substring(0, 10),
       store_id: req.storeId || 'default',
     };
@@ -2926,11 +2929,57 @@ app.get('/sw.js', (req, res) => {
   res.sendFile(__dirname + '/sw.js');
 });
 
-app.listen(PORT, () => {
+// ─── ONE-TIME MIGRATION: Normalize all existing phone numbers ────────────────
+async function migratePhoneNumbers() {
+  try {
+    const db = await readDB();
+    let changed = false;
+
+    if (db.customers) {
+      for (const c of db.customers) {
+        const normalized = normalizePhone(c.phone);
+        if (c.phone !== normalized) {
+          c.phone = normalized;
+          changed = true;
+        }
+      }
+    }
+    if (db.staff) {
+      for (const s of db.staff) {
+        const normalized = normalizePhone(s.phone);
+        if (s.phone !== normalized) {
+          s.phone = normalized;
+          changed = true;
+        }
+      }
+    }
+    if (db.stores) {
+      for (const s of db.stores) {
+        const normalized = normalizePhone(s.phone);
+        if (s.phone !== normalized) {
+          s.phone = normalized;
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      await writeDB(db);
+      console.log('✅ Phone number migration completed — all phones normalized');
+    } else {
+      console.log('✓ Phone numbers already normalized');
+    }
+  } catch (e) {
+    console.error('Phone migration error (non-fatal):', e.message);
+  }
+}
+
+app.listen(PORT, async () => {
   console.log(`🚀 Store Bot running on port ${PORT}`);
   console.log(`📱 Webhook: POST /webhook`);
   console.log(`🌐 Dashboard: http://localhost:${PORT}`);
   console.log(`🌐 Dashboard API: GET /api/db`);
+  await migratePhoneNumbers();
   // Start daily 9 AM report scheduler
   scheduleDaily(9, 0, sendDailyReport);
 });

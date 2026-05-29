@@ -51,6 +51,7 @@ import com.aistudio.sharmakhata.pqmzvk.ui.components.ShimmerLoading
 import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.UiState
+import com.aistudio.sharmakhata.pqmzvk.util.FormatUtils
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -332,7 +333,7 @@ private fun BillSearchResult(
             }
             // Bill total
             Text(
-                text = "\u20B9${"%,.0f".format(bill.total)}",
+                text = FormatUtils.formatCurrency(bill.total),
                 style = AmountSmallStyle,
                 color = if (isPaid) AmountCredit else AmountDue
             )

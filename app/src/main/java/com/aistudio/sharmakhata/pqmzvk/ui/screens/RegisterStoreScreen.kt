@@ -44,6 +44,7 @@ fun RegisterStoreScreen(
     var email by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var gstin by remember { mutableStateOf("") }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(operationState) {
         when (val state = operationState) {
@@ -86,9 +87,9 @@ fun RegisterStoreScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            IndigoPrimary,
-                            IndigoDark,
-                            Color(0xFF1E1B4B)
+                            StitchTeal,
+                            StitchTealDark,
+                            Color(0xFF134E4A)
                         )
                     )
                 )
@@ -122,7 +123,7 @@ fun RegisterStoreScreen(
                             "G",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
-                            color = IndigoPrimary
+                            color = StitchTeal
                         )
                     }
                 }
@@ -164,11 +165,11 @@ fun RegisterStoreScreen(
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Business Name *") },
                             placeholder = { Text("e.g. Sharma Electronics") },
-                            leadingIcon = { Icon(Icons.Outlined.Store, contentDescription = null, tint = IndigoPrimary) },
+                            leadingIcon = { Icon(Icons.Outlined.Store, contentDescription = null, tint = StitchTeal) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = IndigoPrimary,
+                                focusedIndicatorColor = StitchTeal,
                                 unfocusedIndicatorColor = CardBorder,
                                 focusedContainerColor = BackgroundLight,
                                 unfocusedContainerColor = BackgroundLight
@@ -182,11 +183,11 @@ fun RegisterStoreScreen(
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Owner Name *") },
                             placeholder = { Text("e.g. Ram Sharma") },
-                            leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null, tint = IndigoPrimary) },
+                            leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null, tint = StitchTeal) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = IndigoPrimary,
+                                focusedIndicatorColor = StitchTeal,
                                 unfocusedIndicatorColor = CardBorder,
                                 focusedContainerColor = BackgroundLight,
                                 unfocusedContainerColor = BackgroundLight
@@ -208,7 +209,7 @@ fun RegisterStoreScreen(
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("+91", fontWeight = FontWeight.Bold, color = IndigoPrimary, fontSize = 14.sp)
+                                    Text("+91", fontWeight = FontWeight.Bold, color = StitchTeal, fontSize = 14.sp)
                                     Spacer(modifier = Modifier.width(6.dp))
                                     HorizontalDivider(
                                         modifier = Modifier
@@ -217,14 +218,14 @@ fun RegisterStoreScreen(
                                         color = CardBorder
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Icon(Icons.Outlined.Phone, contentDescription = null, tint = IndigoPrimary, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Outlined.Phone, contentDescription = null, tint = StitchTeal, modifier = Modifier.size(18.dp))
                                 }
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = IndigoPrimary,
+                                focusedIndicatorColor = StitchTeal,
                                 unfocusedIndicatorColor = CardBorder,
                                 focusedContainerColor = BackgroundLight,
                                 unfocusedContainerColor = BackgroundLight
@@ -238,12 +239,12 @@ fun RegisterStoreScreen(
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Email (optional)") },
                             placeholder = { Text("your@email.com") },
-                            leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null, tint = IndigoPrimary) },
+                            leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null, tint = StitchTeal) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = IndigoPrimary,
+                                focusedIndicatorColor = StitchTeal,
                                 unfocusedIndicatorColor = CardBorder,
                                 focusedContainerColor = BackgroundLight,
                                 unfocusedContainerColor = BackgroundLight
@@ -257,12 +258,12 @@ fun RegisterStoreScreen(
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Address (optional)") },
                             placeholder = { Text("Your business address") },
-                            leadingIcon = { Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = IndigoPrimary) },
+                            leadingIcon = { Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = StitchTeal) },
                             minLines = 2,
                             maxLines = 3,
                             shape = RoundedCornerShape(12.dp),
                             colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = IndigoPrimary,
+                                focusedIndicatorColor = StitchTeal,
                                 unfocusedIndicatorColor = CardBorder,
                                 focusedContainerColor = BackgroundLight,
                                 unfocusedContainerColor = BackgroundLight
@@ -280,11 +281,11 @@ fun RegisterStoreScreen(
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("GSTIN (optional)") },
                             placeholder = { Text("22AAAAA0000A1Z5") },
-                            leadingIcon = { Icon(Icons.Outlined.Badge, contentDescription = null, tint = IndigoPrimary) },
+                            leadingIcon = { Icon(Icons.Outlined.Badge, contentDescription = null, tint = StitchTeal) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = IndigoPrimary,
+                                focusedIndicatorColor = StitchTeal,
                                 unfocusedIndicatorColor = CardBorder,
                                 focusedContainerColor = BackgroundLight,
                                 unfocusedContainerColor = BackgroundLight
@@ -299,9 +300,11 @@ fun RegisterStoreScreen(
                                 viewModel.registerStore(
                                     storeName = businessName,
                                     ownerName = ownerName,
-                                    phone = phone,
+                                    phone = "+91$phone",
                                     email = email.ifBlank { "" },
-                                    address = address.ifBlank { null }
+                                    address = address.ifBlank { null },
+                                    gstin = gstin.ifBlank { null },
+                                    context = context
                                 )
                             },
                             modifier = Modifier
@@ -309,7 +312,7 @@ fun RegisterStoreScreen(
                                 .height(52.dp),
                             enabled = isValid && operationState !is OperationState.Loading,
                             shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+                            colors = ButtonDefaults.buttonColors(containerColor = StitchTeal)
                         ) {
                             if (operationState is OperationState.Loading) {
                                 CircularProgressIndicator(

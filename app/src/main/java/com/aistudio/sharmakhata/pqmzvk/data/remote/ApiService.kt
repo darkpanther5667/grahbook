@@ -136,6 +136,7 @@ data class RegisterStoreRequest(
     val business_type: String? = "retail",
     val plan: String? = "basic",
     val address: String? = null,
+    val gstin: String? = null,
 )
 
 data class RegisterStoreResponse(

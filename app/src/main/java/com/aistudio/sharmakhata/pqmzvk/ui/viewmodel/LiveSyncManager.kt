@@ -50,7 +50,7 @@ object LiveSyncManager {
                     println("LiveSyncManager: Daily report fetched successfully")
                     val db = ApiClient.apiService.getFullDatabase()
                     println("LiveSyncManager: Full database fetched successfully")
-                    _dailyReport.value = report
+                                        _dailyReport.value = report
                     _fullDatabase.value = db
                     _lastSynced.value = Instant.now()
                     _syncError.value = null // Clear error on successful sync

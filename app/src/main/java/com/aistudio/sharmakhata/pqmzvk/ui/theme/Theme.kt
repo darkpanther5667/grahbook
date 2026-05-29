@@ -25,11 +25,11 @@ private val LightColorScheme = lightColorScheme(
     primaryContainer = IndigoContainer,
     onPrimaryContainer = IndigoOnContainer,
 
-    // Secondary — Emerald for positive actions
-    secondary = EmeraldSecondary,
+    // Secondary — Stitch Teal for positive actions
+    secondary = StitchTeal,
     onSecondary = Color.White,
-    secondaryContainer = EmeraldContainer,
-    onSecondaryContainer = EmeraldOnContainer,
+    secondaryContainer = StitchTealContainer,
+    onSecondaryContainer = StitchTealOnContainer,
 
     // Tertiary — Amber for pending/warning
     tertiary = AmberWarning,
@@ -68,52 +68,52 @@ private val LightColorScheme = lightColorScheme(
 )
 
 // ============================================================
-// DARK COLOR SCHEME
+// DARK COLOR SCHEME (WhatsApp Green primary — Stitch design)
 // ============================================================
 private val DarkColorScheme = darkColorScheme(
-    // Primary
-    primary = IndigoLight,
-    onPrimary = IndigoDark,
-    primaryContainer = IndigoDark,
-    onPrimaryContainer = IndigoLight,
+    // Primary — WhatsApp Green
+    primary = WhatsAppPrimary,
+    onPrimary = Color(0xFF00331A),
+    primaryContainer = PrimaryContainer,
+    onPrimaryContainer = OnPrimaryContainer,
 
-    // Secondary
-    secondary = EmeraldLight,
-    onSecondary = EmeraldDark,
-    secondaryContainer = EmeraldDark,
-    onSecondaryContainer = EmeraldLight,
+    // Secondary — Blue accent
+    secondary = AccentBlue,
+    onSecondary = Color(0xFF001A40),
+    secondaryContainer = AccentBlueContainer,
+    onSecondaryContainer = AccentBlueOnContainer,
 
-    // Tertiary
-    tertiary = AmberLight,
-    onTertiary = AmberDark,
+    // Tertiary — Amber for pending/warning
+    tertiary = AmberWarning,
+    onTertiary = Color(0xFF331A00),
     tertiaryContainer = AmberDark,
     onTertiaryContainer = AmberLight,
 
     // Error
-    error = ErrorRedLight,
-    onError = ErrorRedDark,
+    error = ErrorRed,
+    onError = Color(0xFF330000),
     errorContainer = ErrorRedDark,
     onErrorContainer = ErrorRedLight,
 
-    // Background
-    background = BackgroundDark,
-    onBackground = TextPrimaryDark,
+    // Background — Stitch dark
+    background = StitchBg,
+    onBackground = StitchTextPrimary,
 
     // Surface
-    surface = SurfaceDark,
-    onSurface = TextPrimaryDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = TextSecondaryDark,
-    surfaceTint = IndigoLight,
+    surface = StitchSurface,
+    onSurface = StitchTextPrimary,
+    surfaceVariant = StitchSurfaceVariant,
+    onSurfaceVariant = StitchTextSecondary,
+    surfaceTint = WhatsAppPrimary,
 
     // Outline
-    outline = OutlineDark,
-    outlineVariant = DividerDark,
+    outline = StitchBorder,
+    outlineVariant = StitchBorder,
 
     // Inverse
-    inverseSurface = Slate100,
-    inverseOnSurface = Slate900,
-    inversePrimary = IndigoPrimary,
+    inverseSurface = Color(0xFFE8E8E8),
+    inverseOnSurface = Color(0xFF1C1C1E),
+    inversePrimary = WhatsAppPrimaryDark,
 
     // Scrim
     scrim = Color.Black.copy(alpha = 0.6f)
@@ -121,7 +121,7 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun GrahbookTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {

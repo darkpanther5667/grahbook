@@ -1,9 +1,15 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.viewmodel
 
-import android.content.Context
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.aistudio.sharmakhata.pqmzvk.GrahbookApp
 import com.aistudio.sharmakhata.pqmzvk.data.exception.NetworkException
+import com.aistudio.sharmakhata.pqmzvk.data.local.CacheEntry
+import com.aistudio.sharmakhata.pqmzvk.data.local.ExpenseEntity
+import com.aistudio.sharmakhata.pqmzvk.data.local.ItemEntity
+import com.aistudio.sharmakhata.pqmzvk.data.local.PendingOperation
+import com.aistudio.sharmakhata.pqmzvk.data.remote.StoredItem
 import com.aistudio.sharmakhata.pqmzvk.data.model.DailyReport
 import com.aistudio.sharmakhata.pqmzvk.data.model.FullDatabase
 import com.aistudio.sharmakhata.pqmzvk.data.remote.AddCustomerRequest
@@ -19,16 +25,18 @@ import com.aistudio.sharmakhata.pqmzvk.data.remote.RequestLoginCodeRequest
 import com.aistudio.sharmakhata.pqmzvk.data.remote.VerifyLoginCodeRequest
 import com.aistudio.sharmakhata.pqmzvk.data.remote.RegisterStoreRequest
 import com.aistudio.sharmakhata.pqmzvk.util.NetworkUtils
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.LiveSyncManager
+import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 sealed class UiState<out T> {
     object Loading : UiState<Nothing>()
@@ -43,7 +51,21 @@ sealed class OperationState {
     data class Error(val message: String) : OperationState()
 }
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val db = try {
+        (application as GrahbookApp).database
+    } catch (e: ClassCastException) {
+        throw IllegalStateException("MainViewModel requires GrahbookApp as Application class", e)
+    }
+    private val cacheDao = db.cacheDao()
+    private val pendingDao = db.pendingDao()
+    private val itemDao = db.itemDao()
+    private val expenseDao = db.expenseDao()
+
+    private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    private val dbAdapter = moshi.adapter(FullDatabase::class.java)
+    private val reportAdapter = moshi.adapter(DailyReport::class.java)
 
     private val _dbState = MutableStateFlow<UiState<FullDatabase>>(UiState.Loading)
     val dbState: StateFlow<UiState<FullDatabase>> = _dbState.asStateFlow()
@@ -66,8 +88,32 @@ class MainViewModel : ViewModel() {
     private val _syncError = MutableStateFlow<String?>(null)
     val syncError: StateFlow<String?> = _syncError.asStateFlow()
 
+    private val _isOffline = MutableStateFlow(false)
+    val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
+
+    private val _pendingCount = MutableStateFlow(0)
+    val pendingCount: StateFlow<Int> = _pendingCount.asStateFlow()
+
     private val _logoutEvent = MutableStateFlow(false)
     val logoutEvent: StateFlow<Boolean> = _logoutEvent.asStateFlow()
+
+    // Items
+    private val _items = MutableStateFlow<List<ItemEntity>>(emptyList())
+    val items: StateFlow<List<ItemEntity>> = _items.asStateFlow()
+
+    private val _storedItems = MutableStateFlow<List<StoredItem>>(emptyList())
+    val storedItems: StateFlow<List<StoredItem>> = _storedItems.asStateFlow()
+
+    private var itemsJob: Job? = null
+
+    // Expenses
+    private val _expenses = MutableStateFlow<List<ExpenseEntity>>(emptyList())
+    val expenses: StateFlow<List<ExpenseEntity>> = _expenses.asStateFlow()
+
+    private val _todayTotal = MutableStateFlow(0.0)
+    val todayTotal: StateFlow<Double> = _todayTotal.asStateFlow()
+
+    private var expensesJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -81,30 +127,39 @@ class MainViewModel : ViewModel() {
         _logoutEvent.value = false
     }
 
-    // Don't fetch data automatically on init to prevent crashes
-    // init { fetchData() }
+    // ── Cache-first data loading ────────────────────────────────────────────────
 
-    fun fetchData(context: Context? = null) {
-        println("MainViewModel: fetchData() called - starting sync")
+    fun fetchData(context: android.content.Context? = null) {
         _syncError.value = null
 
-        // Check network before starting sync
-        if (context != null && !NetworkUtils.isNetworkAvailable(context)) {
-            val errorMsg = "No internet connection. Please check your network and try again."
-            _syncError.value = errorMsg
-            _dbState.value = UiState.Error(errorMsg)
-            _reportState.value = UiState.Error(errorMsg)
-            return
+        // Step 1: Load from cache immediately (instant, no network needed)
+        viewModelScope.launch(Dispatchers.IO) {
+            loadFromCache()
         }
 
-        // Ensure LiveSyncManager is running for continuous polling
+        // Step 2: Check network — if offline, we're done (cache is shown)
+        val isOnline = context == null || NetworkUtils.isNetworkAvailable(context)
+        if (!isOnline) {
+            _isOffline.value = true
+            _syncError.value = "You're offline — showing saved data"
+            return
+        }
+        _isOffline.value = false
+
+        // Step 3: Sync pending offline operations first
+        viewModelScope.launch(Dispatchers.IO) {
+            syncPendingOperations()
+        }
+
+        // Step 4: Ensure LiveSyncManager is running for continuous polling
         LiveSyncManager.start()
 
-        // Collect ongoing LiveSyncManager updates (idempotent — safe to call multiple times)
+        // Collect ongoing LiveSyncManager updates (idempotent)
         viewModelScope.launch {
-            LiveSyncManager.fullDatabase.collect { db ->
-                if (db != null) {
-                    _dbState.value = UiState.Success(db)
+            LiveSyncManager.fullDatabase.collect { data ->
+                if (data != null) {
+                    _dbState.value = UiState.Success(data)
+                    saveDbToCache(data)
                 }
             }
         }
@@ -112,6 +167,7 @@ class MainViewModel : ViewModel() {
             LiveSyncManager.dailyReport.collect { report ->
                 if (report != null) {
                     _reportState.value = UiState.Success(report)
+                    saveReportToCache(report)
                 }
             }
         }
@@ -119,36 +175,137 @@ class MainViewModel : ViewModel() {
             LiveSyncManager.syncError.collect { error ->
                 if (error != null) {
                     _syncError.value = error
-                    _dbState.value = UiState.Error(error)
-                    _reportState.value = UiState.Error(error)
+                    // Don't override cached data with error — keep showing cache
                 }
             }
         }
 
-        // IMMEDIATE one-shot fetch — critical after mutations (createBill, addCustomer, etc.)
-        // LiveSyncManager polls every 30s which is too slow for post-mutation refresh
-        viewModelScope.launch {
+        // Step 5: Immediate one-shot fetch — critical after mutations
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                println("MainViewModel: Immediate fetch started")
-                val db = ApiClient.apiService.getFullDatabase()
-                println("MainViewModel: Immediate DB received — customers: ${db.customers.size}, bills: ${db.bills.size}")
-                _dbState.value = UiState.Success(db)
+                val freshDb = ApiClient.apiService.getFullDatabase()
+                _dbState.value = UiState.Success(freshDb)
+                saveDbToCache(freshDb)
             } catch (e: Exception) {
                 println("MainViewModel: Immediate DB fetch failed: ${e.message}")
-                // Don't override existing good state — LiveSyncManager will retry
             }
         }
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                val report = ApiClient.apiService.getDailyReport()
-                _reportState.value = UiState.Success(report)
+                val freshReport = ApiClient.apiService.getDailyReport()
+                _reportState.value = UiState.Success(freshReport)
+                saveReportToCache(freshReport)
             } catch (e: Exception) {
                 println("MainViewModel: Immediate report fetch failed: ${e.message}")
             }
         }
     }
 
-    // Start live sync after successful authentication
+    // ── Cache helpers ───────────────────────────────────────────────────────────
+
+    private suspend fun loadFromCache() {
+        try {
+            val cachedDb = cacheDao.getJson(CACHE_KEY_DB)
+            if (cachedDb != null) {
+                val parsed = dbAdapter.fromJson(cachedDb)
+                if (parsed != null) {
+                    _dbState.value = UiState.Success(parsed)
+                }
+            }
+            val cachedReport = cacheDao.getJson(CACHE_KEY_REPORT)
+            if (cachedReport != null) {
+                val parsed = reportAdapter.fromJson(cachedReport)
+                if (parsed != null) {
+                    _reportState.value = UiState.Success(parsed)
+                }
+            }
+            _pendingCount.value = pendingDao.count()
+        } catch (e: Exception) {
+            println("MainViewModel: Cache load failed: ${e.message}")
+        }
+    }
+
+    private suspend fun saveDbToCache(data: FullDatabase) {
+        try {
+            val json = dbAdapter.toJson(data)
+            cacheDao.put(CacheEntry(CACHE_KEY_DB, json, System.currentTimeMillis()))
+        } catch (e: Exception) {
+            println("MainViewModel: Cache save failed: ${e.message}")
+        }
+    }
+
+    private suspend fun saveReportToCache(data: DailyReport) {
+        try {
+            val json = reportAdapter.toJson(data)
+            cacheDao.put(CacheEntry(CACHE_KEY_REPORT, json, System.currentTimeMillis()))
+        } catch (e: Exception) {
+            println("MainViewModel: Report cache save failed: ${e.message}")
+        }
+    }
+
+    // ── Offline operation queue ─────────────────────────────────────────────────
+
+    private suspend fun queueOperation(type: String, payload: String) {
+        pendingDao.insert(PendingOperation(type = type, payload = payload))
+        _pendingCount.value = pendingDao.count()
+    }
+
+    private suspend fun syncPendingOperations() {
+        val pending = pendingDao.getAll()
+        if (pending.isEmpty()) return
+
+        for (op in pending) {
+            try {
+                val success = when (op.type) {
+                    "add_customer" -> {
+                        val req = moshi.adapter(AddCustomerRequest::class.java).fromJson(op.payload)
+                        if (req != null) {
+                            val response = ApiClient.apiService.addCustomer(req)
+                            response.isSuccessful && response.body()?.success == true
+                        } else false
+                    }
+                    "create_bill" -> {
+                        val req = moshi.adapter(CreateBillRequest::class.java).fromJson(op.payload)
+                        if (req != null) {
+                            val response = ApiClient.apiService.createBill(req)
+                            response.isSuccessful && response.body()?.success == true
+                        } else false
+                    }
+                    "add_payment" -> {
+                        val req = moshi.adapter(AddPaymentRequest::class.java).fromJson(op.payload)
+                        if (req != null) {
+                            val response = ApiClient.apiService.addPayment(req)
+                            response.isSuccessful
+                        } else false
+                    }
+                    "mark_paid" -> {
+                        val req = moshi.adapter(MarkBillPaidRequest::class.java).fromJson(op.payload)
+                        if (req != null) {
+                            val response = ApiClient.apiService.markBillPaid(req)
+                            response.isSuccessful && response.body()?.success == true
+                        } else false
+                    }
+                    else -> false
+                }
+                
+                if (success) {
+                    pendingDao.delete(op.id)
+                } else {
+                    println("SyncManager: Operation ${op.type} failed, keeping for retry")
+                }
+            } catch (e: Exception) {
+                pendingDao.incrementRetries(op.id)
+                if (op.retries >= MAX_RETRIES) {
+                    pendingDao.delete(op.id) // Drop after max retries
+                }
+                break // Stop syncing on first failure — network may be flaky
+            }
+        }
+        _pendingCount.value = pendingDao.count()
+    }
+
+    // ── LiveSync ────────────────────────────────────────────────────────────────
+
     fun startLiveSyncIfNeeded() {
         if (_authToken.value != null) {
             LiveSyncManager.start()
@@ -159,69 +316,92 @@ class MainViewModel : ViewModel() {
         LiveSyncManager.intervalMillis = millis
     }
 
-    fun addCustomer(context: Context, name: String, phone: String) {
+    // ── Mutations (with offline queue) ──────────────────────────────────────────
+
+    fun addCustomer(context: android.content.Context, name: String, phone: String) {
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
-                // Check network before API call
                 if (!NetworkUtils.isNetworkAvailable(context)) {
-                    _operationState.value = OperationState.Error("No internet connection. Please check your network and try again.")
+                    // Queue for later
+                    val payload = moshi.adapter(AddCustomerRequest::class.java)
+                        .toJson(AddCustomerRequest(name, phone))
+                    queueOperation("add_customer", payload)
+                    _operationState.value = OperationState.Success("Customer saved — will sync when online")
                     return@launch
                 }
-                
+
                 val response = ApiClient.apiService.addCustomer(AddCustomerRequest(name, phone))
                 if (response.isSuccessful && response.body()?.success == true) {
                     _operationState.value = OperationState.Success("Customer added successfully")
-                    fetchData(context) // Refresh data
+                    fetchData(context)
                 } else {
                     _operationState.value = OperationState.Error(response.body()?.message ?: "Failed to add customer")
                 }
             } catch (e: Exception) {
-                _operationState.value = OperationState.Error("Failed to add customer: ${e.message}")
+                // Queue on failure too
+                val payload = moshi.adapter(AddCustomerRequest::class.java)
+                    .toJson(AddCustomerRequest(name, phone))
+                queueOperation("add_customer", payload)
+                _operationState.value = OperationState.Success("Customer saved offline — will sync later")
             }
         }
     }
 
-    fun addPayment(context: Context, customerId: String, amount: Double, note: String?) {
+    fun addPayment(context: android.content.Context, customerId: String, amount: Double, note: String?) {
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
                 if (!NetworkUtils.isNetworkAvailable(context)) {
-                    _operationState.value = OperationState.Error("No internet connection. Please check your network and try again.")
+                    val payload = moshi.adapter(AddPaymentRequest::class.java)
+                        .toJson(AddPaymentRequest(customerId, amount, note))
+                    queueOperation("add_payment", payload)
+                    _operationState.value = OperationState.Success("Payment saved — will sync when online")
                     return@launch
                 }
+
                 val response = ApiClient.apiService.addPayment(AddPaymentRequest(customerId, amount, note))
                 if (response.isSuccessful) {
                     _operationState.value = OperationState.Success("Payment recorded successfully")
-                    fetchData(context) // Refresh data
+                    fetchData(context)
                 } else {
                     _operationState.value = OperationState.Error("Failed to record payment")
                 }
             } catch (e: Exception) {
-                _operationState.value = OperationState.Error("Failed to record payment: ${e.message}")
+                val payload = moshi.adapter(AddPaymentRequest::class.java)
+                    .toJson(AddPaymentRequest(customerId, amount, note))
+                queueOperation("add_payment", payload)
+                _operationState.value = OperationState.Success("Payment saved offline — will sync later")
             }
         }
     }
 
-    fun createBill(context: Context, customerId: String, amount: Double, items: List<BillItemRequest>?) {
+    fun createBill(context: android.content.Context, customerId: String, amount: Double, items: List<BillItemRequest>?) {
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
                 if (!NetworkUtils.isNetworkAvailable(context)) {
-                    _operationState.value = OperationState.Error("No internet connection. Please check your network and try again.")
+                    val payload = moshi.adapter(CreateBillRequest::class.java)
+                        .toJson(CreateBillRequest(customerId, amount, items))
+                    queueOperation("create_bill", payload)
+                    _operationState.value = OperationState.Success("Bill saved — will sync when online")
                     return@launch
                 }
+
                 val response = ApiClient.apiService.createBill(CreateBillRequest(customerId, amount, items))
                 val billId = response.body()?.billId
                 if (response.isSuccessful && !billId.isNullOrBlank()) {
                     _lastCreatedBillId.value = billId
                     _operationState.value = OperationState.Success("Bill created (ID: $billId)")
-                    fetchData(context) // Refresh data
+                    fetchData(context)
                 } else {
                     _operationState.value = OperationState.Error("Failed to create bill")
                 }
             } catch (e: Exception) {
-                _operationState.value = OperationState.Error("Failed to create bill: ${e.message}")
+                val payload = moshi.adapter(CreateBillRequest::class.java)
+                    .toJson(CreateBillRequest(customerId, amount, items))
+                queueOperation("create_bill", payload)
+                _operationState.value = OperationState.Success("Bill saved offline — will sync later")
             }
         }
     }
@@ -231,12 +411,12 @@ class MainViewModel : ViewModel() {
         _lastCreatedBillId.value = null
     }
 
-    fun sendInvoiceOnWhatsApp(context: Context, billId: String) {
+    fun sendInvoiceOnWhatsApp(context: android.content.Context, billId: String) {
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
                 if (!NetworkUtils.isNetworkAvailable(context)) {
-                    _operationState.value = OperationState.Error("No internet connection. Please check your network and try again.")
+                    _operationState.value = OperationState.Error("No internet connection")
                     return@launch
                 }
                 val response = ApiClient.apiService.sendInvoice(SendInvoiceRequest(billId))
@@ -250,12 +430,12 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun sendStatementOnWhatsApp(context: Context, customerId: String) {
+    fun sendStatementOnWhatsApp(context: android.content.Context, customerId: String) {
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
                 if (!NetworkUtils.isNetworkAvailable(context)) {
-                    _operationState.value = OperationState.Error("No internet connection. Please check your network and try again.")
+                    _operationState.value = OperationState.Error("No internet connection")
                     return@launch
                 }
                 val response = ApiClient.apiService.sendStatement(SendStatementRequest(customerId))
@@ -269,12 +449,12 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun sendReminderOnWhatsApp(context: Context, customerId: String, message: String? = null) {
+    fun sendReminderOnWhatsApp(context: android.content.Context, customerId: String, message: String? = null) {
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
                 if (!NetworkUtils.isNetworkAvailable(context)) {
-                    _operationState.value = OperationState.Error("No internet connection. Please check your network and try again.")
+                    _operationState.value = OperationState.Error("No internet connection")
                     return@launch
                 }
                 val response = ApiClient.apiService.sendReminder(SendReminderRequest(customerId, message))
@@ -288,14 +468,18 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun markBillPaid(context: Context, billId: String) {
+    fun markBillPaid(context: android.content.Context, billId: String) {
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
                 if (!NetworkUtils.isNetworkAvailable(context)) {
-                    _operationState.value = OperationState.Error("No internet connection. Please check your network and try again.")
+                    val payload = moshi.adapter(MarkBillPaidRequest::class.java)
+                        .toJson(MarkBillPaidRequest(billId))
+                    queueOperation("mark_paid", payload)
+                    _operationState.value = OperationState.Success("Saved offline — will sync when online")
                     return@launch
                 }
+
                 val response = ApiClient.apiService.markBillPaid(MarkBillPaidRequest(billId))
                 val ok = response.isSuccessful && response.body()?.success == true
                 _operationState.value =
@@ -303,12 +487,17 @@ class MainViewModel : ViewModel() {
                     else OperationState.Error("Failed to mark bill paid")
                 if (ok) fetchData(context)
             } catch (e: Exception) {
-                _operationState.value = OperationState.Error("Failed to mark bill paid: ${e.message}")
+                val payload = moshi.adapter(MarkBillPaidRequest::class.java)
+                    .toJson(MarkBillPaidRequest(billId))
+                queueOperation("mark_paid", payload)
+                _operationState.value = OperationState.Success("Saved offline — will sync later")
             }
         }
     }
 
-    fun requestLoginCode(storeId: String, phone: String) {
+    // ── Auth ────────────────────────────────────────────────────────────────────
+
+    fun requestLoginCode(storeId: String, phone: String, retryCount: Int = 0) {
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
@@ -320,7 +509,28 @@ class MainViewModel : ViewModel() {
                     _operationState.value = OperationState.Error(serverMsg)
                 }
             } catch (e: Exception) {
-                _operationState.value = OperationState.Error("Network error: ${e.message}")
+                val errorMessage = when (e) {
+                    is java.net.SocketTimeoutException -> {
+                        if (retryCount < 2) {
+                            // Retry with exponential backoff
+                            kotlinx.coroutines.delay((1000L * (retryCount + 1)))
+                            requestLoginCode(storeId, phone, retryCount + 1)
+                            return@launch
+                        } else {
+                            "Connection timed out. Please check your internet connection and try again."
+                        }
+                    }
+                    is java.net.UnknownHostException -> {
+                        "No internet connection. Please check your network and try again."
+                    }
+                    is java.net.ConnectException -> {
+                        "Unable to connect to server. Please try again."
+                    }
+                    else -> {
+                        "Failed to send OTP: ${e.message}"
+                    }
+                }
+                _operationState.value = OperationState.Error(errorMessage)
             }
         }
     }
@@ -365,6 +575,8 @@ class MainViewModel : ViewModel() {
         phone: String,
         email: String,
         address: String?,
+        gstin: String? = null,
+        context: android.content.Context? = null,
     ) {
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
@@ -376,12 +588,17 @@ class MainViewModel : ViewModel() {
                         phone = phone,
                         email = email,
                         address = address,
+                        gstin = gstin,
                     )
                 )
                 val storeId = response.body()?.store_id
                 val ok = response.isSuccessful && !storeId.isNullOrBlank()
                 if (ok) {
                     _registeredStoreId.value = storeId
+                    // Save store ID and phone for login
+                    if (context != null) {
+                        com.aistudio.sharmakhata.pqmzvk.util.SessionManager.saveStoreInfo(context, storeId, phone)
+                    }
                     _operationState.value = OperationState.Success("Store registered (ID: $storeId)")
                 } else {
                     _operationState.value = OperationState.Error(response.body()?.message ?: "Failed to register store")
@@ -390,5 +607,111 @@ class MainViewModel : ViewModel() {
                 _operationState.value = OperationState.Error("Failed to register store: ${e.message}")
             }
         }
+    }
+
+    // ── Items ─────────────────────────────────────────────────────────────────
+
+    fun loadItems() {
+        itemsJob?.cancel()
+        itemsJob = viewModelScope.launch {
+            itemDao.getAllItems().collect { _items.value = it }
+        }
+    }
+
+    fun saveItem(name: String, price: Double, stock: Int, lowStockAlert: Int, itemId: Long? = null) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (itemId != null) {
+                itemDao.update(ItemEntity(id = itemId, name = name, price = price, stock = stock, lowStockAlert = lowStockAlert))
+            } else {
+                itemDao.insert(ItemEntity(name = name, price = price, stock = stock, lowStockAlert = lowStockAlert))
+            }
+        }
+    }
+
+    fun deleteItem(id: Long) {
+        viewModelScope.launch(Dispatchers.IO) { itemDao.deleteById(id) }
+    }
+
+    fun refreshItems() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = ApiClient.apiService.getStoredItems()
+                response.items.forEach { serverItem ->
+                    val existing = itemDao.getAllItemsList().find { it.name == serverItem.name }
+                    if (existing != null) {
+                        itemDao.update(existing.copy(price = serverItem.lastPrice, lastPrice = serverItem.lastPrice))
+                    } else {
+                        itemDao.insert(ItemEntity(name = serverItem.name, price = serverItem.lastPrice, lastPrice = serverItem.lastPrice))
+                    }
+                }
+            } catch (e: Exception) { println("refreshItems error: ${e.message}") }
+        }
+    }
+
+    fun loadStoredItems() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = ApiClient.apiService.getStoredItems()
+                _storedItems.value = response.items
+            } catch (e: Exception) { println("loadStoredItems error: ${e.message}") }
+        }
+    }
+
+    // ── Expenses ──────────────────────────────────────────────────────────────
+
+    fun loadExpenses() {
+        expensesJob?.cancel()
+        expensesJob = viewModelScope.launch {
+            expenseDao.getAllExpenses().collect { _expenses.value = it }
+        }
+    }
+
+    fun loadTodayTotal() {
+        viewModelScope.launch {
+            val cal = Calendar.getInstance()
+            cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+            val startOfDay = cal.timeInMillis
+            cal.set(Calendar.HOUR_OF_DAY, 23); cal.set(Calendar.MINUTE, 59); cal.set(Calendar.SECOND, 59); cal.set(Calendar.MILLISECOND, 999)
+            val endOfDay = cal.timeInMillis
+            expenseDao.getTotalExpensesBetween(startOfDay, endOfDay).collect { _todayTotal.value = it ?: 0.0 }
+        }
+    }
+
+    fun saveExpense(title: String, amount: Double, category: String, note: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            expenseDao.insert(ExpenseEntity(title = title, amount = amount, category = category, note = note))
+            _operationState.value = OperationState.Success("Expense added")
+        }
+    }
+
+    fun deleteExpense(id: Long) {
+        viewModelScope.launch(Dispatchers.IO) { expenseDao.deleteById(id) }
+    }
+
+    // ── Quick Bill ────────────────────────────────────────────────────────────
+
+    fun quickBill(customerName: String?, customerPhone: String?, total: Double, items: List<BillItemRequest>?) {
+        _operationState.value = OperationState.Loading
+        viewModelScope.launch {
+            try {
+                val response = ApiClient.apiService.createBill(CreateBillRequest(customerId = "walk-in", amount = total, items = items))
+                val billId = response.body()?.billId
+                if (response.isSuccessful && !billId.isNullOrBlank()) {
+                    _lastCreatedBillId.value = billId
+                    _operationState.value = OperationState.Success("Bill created (ID: $billId)")
+                    fetchData()
+                } else {
+                    _operationState.value = OperationState.Error("Failed to create bill")
+                }
+            } catch (e: Exception) {
+                _operationState.value = OperationState.Error("Failed: ${e.message}")
+            }
+        }
+    }
+
+    companion object {
+        private const val CACHE_KEY_DB = "full_database"
+        private const val CACHE_KEY_REPORT = "daily_report"
+        private const val MAX_RETRIES = 3
     }
 }

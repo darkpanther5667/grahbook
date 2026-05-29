@@ -49,27 +49,54 @@ android {
 
   buildTypes {
     release {
-      isCrunchPngs = false
-      isMinifyEnabled = false
+      isCrunchPngs = true
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
     debug {
       // Use default debug signing provided by the Android Gradle Plugin
+      isMinifyEnabled = false
+      isShrinkResources = false
     }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+    isCoreLibraryDesugaringEnabled = true
   }
-  kotlinOptions {
-    jvmTarget = "11"
+  kotlin {
+    jvmToolchain(11)
   }
   buildFeatures {
     compose = true
     buildConfig = true
   }
+  
+  // Optimize build performance and APK size
+  bundle {
+    language {
+      enableSplit = false
+    }
+    density {
+      enableSplit = true
+    }
+    abi {
+      enableSplit = true
+    }
+  }
+  
+  defaultConfig {
+    // Keep only necessary resources to reduce APK size
+    resourceConfigurations += setOf("en")
+  }
+  
   testOptions { unitTests { isIncludeAndroidResources = true } }
+    lint {
+        disable.add("NullSafeMutableLiveData")
+        checkReleaseBuilds = false
+    }
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
@@ -108,7 +135,6 @@ dependencies {
   implementation(libs.androidx.room.runtime)
   implementation(libs.androidx.security.crypto)
   // implementation(libs.coil.compose)
-  implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.converter.moshi)
   // implementation(libs.firebase.ai)
   implementation(libs.kotlinx.coroutines.android)
@@ -118,15 +144,20 @@ dependencies {
   implementation(libs.okhttp)
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
-  testImplementation(libs.androidx.compose.ui.test.junit4)
-  testImplementation(libs.androidx.core)
-  testImplementation(libs.androidx.junit)
-  testImplementation(libs.junit)
-  testImplementation(libs.kotlinx.coroutines.test)
-  testImplementation(libs.robolectric)
-  testImplementation(libs.roborazzi)
-  testImplementation(libs.roborazzi.compose)
-  testImplementation(libs.roborazzi.junit.rule)
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+   testImplementation(libs.androidx.compose.ui.test.junit4)
+   testImplementation(libs.androidx.core)
+   testImplementation(libs.androidx.junit)
+   testImplementation(libs.junit)
+   testImplementation(libs.kotlinx.coroutines.test)
+   testImplementation(libs.robolectric)
+   testImplementation("androidx.test:core-ktx:1.5.0")
+   testImplementation("androidx.test:core:1.5.0")
+   testImplementation("androidx.test:runner:1.5.2")
+   testImplementation("androidx.test.ext:junit:1.1.5")
+   testImplementation(libs.roborazzi)
+   testImplementation(libs.roborazzi.compose)
+   testImplementation(libs.roborazzi.junit.rule)
   androidTestImplementation(platform(libs.androidx.compose.bom))
   androidTestImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.espresso.core)

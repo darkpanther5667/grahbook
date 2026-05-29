@@ -1,7 +1,6 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -24,50 +23,33 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.aistudio.sharmakhata.pqmzvk.data.remote.ApiClient
 import com.aistudio.sharmakhata.pqmzvk.data.remote.BillItemRequest
+import com.aistudio.sharmakhata.pqmzvk.ui.screens.BillItemEntry
 import com.aistudio.sharmakhata.pqmzvk.data.remote.StoredItem
 import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
-import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.OperationState
 import com.aistudio.sharmakhata.pqmzvk.util.FormatUtils
 
-data class BillItemEntry(
-    val name: String = "",
-    val price: String = "",
-    val qty: String = "1"
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BillCreationScreen(
-    viewModel: MainViewModel,
-    customerId: String,
-    customerName: String,
-    onBack: () -> Unit
+fun QuickBillScreen(
+    onBack: () -> Unit,
+    onCreateBill: (customerName: String?, customerPhone: String?, total: Double, items: List<BillItemRequest>) -> Unit,
+    operationState: OperationState,
+    lastBillId: String?,
+    storedItems: List<StoredItem>,
+    onResetOperation: () -> Unit,
+    onSendWhatsApp: (String) -> Unit
 ) {
-    val operationState by viewModel.operationState.collectAsState()
-    val lastBillId by viewModel.lastCreatedBillId.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = androidx.compose.ui.platform.LocalContext.current
 
     var items by remember { mutableStateOf(listOf(BillItemEntry())) }
+    var customerName by remember { mutableStateOf("") }
+    var customerPhone by remember { mutableStateOf("") }
     var showSuccessDialog by remember { mutableStateOf(false) }
-
-    // Stored items from server
-    var storedItems by remember { mutableStateOf<List<StoredItem>>(emptyList()) }
     var showStoredItems by remember { mutableStateOf(true) }
 
-    // Fetch stored items on launch
-    LaunchedEffect(Unit) {
-        try {
-            val response = ApiClient.apiService.getStoredItems()
-            storedItems = response.items
-        } catch (_: Exception) {
-            // Silently fail — stored items are optional
-        }
-    }
-
+    // Watch operation state for snackbar and success dialog
     LaunchedEffect(operationState) {
         when (operationState) {
             is OperationState.Success -> {
@@ -78,7 +60,7 @@ fun BillCreationScreen(
             }
             is OperationState.Error -> {
                 snackbarHostState.showSnackbar((operationState as OperationState.Error).message)
-                viewModel.resetOperationState()
+                onResetOperation()
             }
             else -> {}
         }
@@ -87,7 +69,7 @@ fun BillCreationScreen(
     // Success Dialog
     if (showSuccessDialog) {
         AlertDialog(
-            onDismissRequest = { showSuccessDialog = false; viewModel.resetOperationState(); onBack() },
+            onDismissRequest = { showSuccessDialog = false; onResetOperation(); onBack() },
             title = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -106,10 +88,10 @@ fun BillCreationScreen(
                         Button(
                             onClick = {
                                 lastBillId?.let { billId ->
-                                    viewModel.sendInvoiceOnWhatsApp(context, billId)
+                                    onSendWhatsApp(billId)
                                 }
                                 showSuccessDialog = false
-                                viewModel.resetOperationState()
+                                onResetOperation()
                                 onBack()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
@@ -119,7 +101,7 @@ fun BillCreationScreen(
                             Text("WhatsApp")
                         }
                     }
-                    TextButton(onClick = { showSuccessDialog = false; viewModel.resetOperationState(); onBack() }) {
+                    TextButton(onClick = { showSuccessDialog = false; onResetOperation(); onBack() }) {
                         Text("Done")
                     }
                 }
@@ -163,7 +145,7 @@ fun BillCreationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create Invoice", fontWeight = FontWeight.SemiBold) },
+                title = { Text("Quick Bill", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -190,7 +172,7 @@ fun BillCreationScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Customer info card
+                // Walk-in customer fields card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = CardShape,
@@ -199,45 +181,100 @@ fun BillCreationScreen(
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = Elevation.low)
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(Spacing.cardPadding),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Gradient icon container (matching ModernStatCard style)
-                        Box(
-                            modifier = Modifier
-                                .size(ComponentSize.iconContainerMedium)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Brush.linearGradient(GradientIndigo.map { it.copy(alpha = 0.15f) })),
-                            contentAlignment = Alignment.Center
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
                         ) {
-                            Icon(
-                                Icons.Default.Person,
-                                contentDescription = null,
-                                tint = IndigoPrimary,
-                                modifier = Modifier.size(IconSize.small)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(ComponentSize.iconContainerMedium)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Brush.linearGradient(GradientIndigo.map { it.copy(alpha = 0.15f) })),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = IndigoPrimary,
+                                    modifier = Modifier.size(IconSize.small)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "Walk-in Customer",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Optional details for the invoice",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextSecondaryLight
+                                )
+                            }
                         }
-                        Column {
-                            Text(
-                                text = "Billing for",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondaryLight
+
+                        OutlinedTextField(
+                            value = customerName,
+                            onValueChange = { customerName = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Customer Name (optional)") },
+                            singleLine = true,
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.PersonOutline,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(IconSize.small),
+                                    tint = TextSecondaryLight
+                                )
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = IndigoPrimary,
+                                unfocusedIndicatorColor = CardBorder,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = BackgroundLight
                             )
-                            Text(
-                                text = customerName,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground
+                        )
+
+                        OutlinedTextField(
+                            value = customerPhone,
+                            onValueChange = { newValue ->
+                                // Allow only digits, +, and -
+                                if (newValue.all { it.isDigit() || it == '+' || it == '-' }) {
+                                    customerPhone = newValue
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Phone Number (optional)") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Phone,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(IconSize.small),
+                                    tint = TextSecondaryLight
+                                )
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = IndigoPrimary,
+                                unfocusedIndicatorColor = CardBorder,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = BackgroundLight
                             )
-                        }
+                        )
                     }
                 }
 
-                // Stored items section (from server catalog)
+                // Quick Add Items section (from stored catalog)
                 if (storedItems.isNotEmpty() && showStoredItems) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -291,7 +328,7 @@ fun BillCreationScreen(
                                         onClick = { addStoredItem(stored) },
                                         label = {
                                             Text(
-                                                text = "${stored.name} \u20B9${stored.lastPrice.toInt()}",
+                                                text = "${stored.name} ₹${stored.lastPrice.toInt()}",
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
                                                 style = MaterialTheme.typography.labelSmall
@@ -336,7 +373,7 @@ fun BillCreationScreen(
                     }
                 }
 
-                // Items Table Header
+                // Items Table
                 if (items.isNotEmpty()) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -459,7 +496,7 @@ fun BillCreationScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .height(48.dp),
-                                        placeholder = { Text("\u20B90", fontSize = 12.sp, textAlign = TextAlign.End) },
+                                        placeholder = { Text("₹0", fontSize = 12.sp, textAlign = TextAlign.End) },
                                         textStyle = MaterialTheme.typography.bodySmall.copy(textAlign = TextAlign.End),
                                         singleLine = true,
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -562,7 +599,7 @@ fun BillCreationScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Generate Invoice Button
+                // Generate Bill Button
                 Button(
                     onClick = {
                         val billItems = items
@@ -574,7 +611,7 @@ fun BillCreationScreen(
                             }
                         if (billItems.isNotEmpty()) {
                             val total = calculateTotal()
-                            viewModel.createBill(context, customerId, total, billItems)
+                            onCreateBill(customerName.ifBlank { null }, customerPhone.ifBlank { null }, total, billItems)
                         }
                     },
                     modifier = Modifier
@@ -593,7 +630,7 @@ fun BillCreationScreen(
                     } else {
                         Icon(Icons.Default.Receipt, contentDescription = null, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Generate Invoice", fontWeight = FontWeight.Bold)
+                        Text("Generate Bill", fontWeight = FontWeight.Bold)
                     }
                 }
 

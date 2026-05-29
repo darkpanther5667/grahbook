@@ -56,7 +56,7 @@ fun CustomersScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Khata Book", fontWeight = FontWeight.Bold) },
+                title = { Text("Customers", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -76,7 +76,7 @@ fun CustomersScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddCustomer,
-                containerColor = IndigoPrimary,
+                containerColor = StitchTeal,
                 contentColor = Color.White,
                 shape = FabShape
             ) {
@@ -170,8 +170,8 @@ fun CustomersList(
             (customer.phone?.contains(searchQuery, ignoreCase = true) == true)
         val balance = getBalance(customer)
         val matchesFilter = when (selectedFilter) {
-            "High Balance" -> balance > 0
-            "Cleared" -> balance <= 0
+            "With Outstanding" -> balance > 0
+            "Paid" -> balance <= 0
             else -> true
         }
         matchesSearch && matchesFilter
@@ -184,7 +184,7 @@ fun CustomersList(
             onValueChange = onSearchChange,
             placeholder = { Text("Search by name or phone...", color = TextTertiaryLight) },
             leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = null, tint = IndigoPrimary)
+                Icon(Icons.Default.Search, contentDescription = null, tint = StitchTeal)
             },
             trailingIcon = if (searchQuery.isNotEmpty()) {
                 {
@@ -221,7 +221,7 @@ fun CustomersList(
                     onClick = { onFilterChange("All") },
                     label = { Text("All (${db.customers.size})") },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = IndigoPrimary,
+                        selectedContainerColor = StitchTeal,
                         selectedLabelColor = Color.White,
                         containerColor = MaterialTheme.colorScheme.surface,
                         labelColor = TextSecondaryLight
@@ -231,10 +231,10 @@ fun CustomersList(
             }
             item {
                 FilterChip(
-                    selected = selectedFilter == "High Balance",
-                    onClick = { onFilterChange("High Balance") },
-                    label = { Text("High Balance") },
-                    leadingIcon = if (selectedFilter == "High Balance") {
+                    selected = selectedFilter == "With Outstanding",
+                    onClick = { onFilterChange("With Outstanding") },
+                    label = { Text("With Outstanding") },
+                    leadingIcon = if (selectedFilter == "With Outstanding") {
                         { Icon(Icons.Default.TrendingUp, contentDescription = null, modifier = Modifier.size(16.dp)) }
                     } else null,
                     colors = FilterChipDefaults.filterChipColors(
@@ -248,10 +248,10 @@ fun CustomersList(
             }
             item {
                 FilterChip(
-                    selected = selectedFilter == "Cleared",
-                    onClick = { onFilterChange("Cleared") },
-                    label = { Text("Cleared") },
-                    leadingIcon = if (selectedFilter == "Cleared") {
+                    selected = selectedFilter == "Paid",
+                    onClick = { onFilterChange("Paid") },
+                    label = { Text("Paid") },
+                    leadingIcon = if (selectedFilter == "Paid") {
                         { Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp)) }
                     } else null,
                     colors = FilterChipDefaults.filterChipColors(
@@ -386,7 +386,7 @@ fun CustomerCard(
                     Icon(
                         Icons.Default.Phone,
                         contentDescription = null,
-                        tint = IndigoPrimary.copy(alpha = 0.6f),
+                        tint = StitchTeal.copy(alpha = 0.6f),
                         modifier = Modifier.size(IconSize.xsmall)
                     )
                     Text(

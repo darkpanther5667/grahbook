@@ -30,6 +30,9 @@ import com.aistudio.sharmakhata.pqmzvk.data.model.FullDatabase
 import com.aistudio.sharmakhata.pqmzvk.data.model.Transaction
 import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.ui.components.AppAvatar
+import com.aistudio.sharmakhata.pqmzvk.ui.components.AppDivider
+import com.aistudio.sharmakhata.pqmzvk.ui.components.InfoRow
+import com.aistudio.sharmakhata.pqmzvk.ui.components.StatusBadge
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.OperationState
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.UiState
@@ -137,6 +140,15 @@ fun CustomerDetailScreen(
                             onCreateBill = onCreateBill,
                             onSendReminder = { viewModel.sendReminderOnWhatsApp(context, customer.id) },
                             onSendStatement = { viewModel.sendStatementOnWhatsApp(context, customer.id) },
+                            onWhatsAppDirect = {
+                                val payments = db.transactions.filter { it.customerId == customer.id && it.type == "payment" }.sumOf { it.amount }
+                                val credits = db.transactions.filter { it.customerId == customer.id && it.type == "credit" }.sumOf { it.amount }
+                                val billTotal = db.bills.filter { it.customerId == customer.id }.sumOf { it.total }
+                                val outstanding = credits + billTotal - payments
+                                val shopName = db.shop?.name ?: "Grahbook"
+                                val msg = com.aistudio.sharmakhata.pqmzvk.util.WhatsAppUtils.buildReminderMessage(customer.name, outstanding, shopName)
+                                com.aistudio.sharmakhata.pqmzvk.util.WhatsAppUtils.sendMessage(context, customer.phone ?: "", msg)
+                            },
                             onViewBills = onViewBills,
                             onViewLedger = onViewLedger,
                         )
@@ -155,6 +167,7 @@ fun CustomerDetailContent(
     onCreateBill: () -> Unit,
     onSendReminder: () -> Unit,
     onSendStatement: () -> Unit,
+    onWhatsAppDirect: () -> Unit,
     onViewBills: () -> Unit,
     onViewLedger: () -> Unit,
 ) {
@@ -318,96 +331,265 @@ fun CustomerDetailContent(
                 color = Color(0xFF8B5CF6),
                 onClick = onSendStatement
             )
+            QuickActionIconButton(
+                icon = Icons.Default.Chat,
+                label = "WhatsApp",
+                color = Color(0xFF25D366),
+                onClick = onWhatsAppDirect
+            )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // ===== VIEW BUTTONS ROW =====
-        Row(
+        // ===== TAB ROW: Bills | Ledger | Details =====
+        var selectedTab by remember { mutableStateOf(0) }
+
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Spacing.large)
         ) {
-            OutlinedButton(
-                onClick = onViewBills,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = IndigoPrimary)
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = IndigoPrimary,
+                divider = { HorizontalDivider(color = CardBorder, thickness = 1.dp) }
             ) {
-                Icon(Icons.Default.Receipt, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("View Bills")
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Default.Receipt, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Text("Bills", style = TabLabelStyle)
+                        }
+                    },
+                    selectedContentColor = IndigoPrimary,
+                    unselectedContentColor = TextSecondaryLight
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Default.Book, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Text("Ledger", style = TabLabelStyle)
+                        }
+                    },
+                    selectedContentColor = IndigoPrimary,
+                    unselectedContentColor = TextSecondaryLight
+                )
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Text("Details", style = TabLabelStyle)
+                        }
+                    },
+                    selectedContentColor = IndigoPrimary,
+                    unselectedContentColor = TextSecondaryLight
+                )
             }
-            OutlinedButton(
-                onClick = onViewLedger,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = IndigoPrimary)
-            ) {
-                Icon(Icons.Default.Book, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("View Ledger")
-            }
-        }
 
-        // ===== RECENT TRANSACTIONS TIMELINE =====
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Recent Transactions",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    TextButton(onClick = onViewLedger) {
-                        Text("View All", color = IndigoPrimary, fontWeight = FontWeight.Medium)
+            when (selectedTab) {
+                // ===== BILLS TAB =====
+                0 -> {
+                    val sortedBills = bills.sortedByDescending { it.createdAt }
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = CardShape,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.flat)
+                    ) {
+                        Column(modifier = Modifier.padding(Spacing.cardPadding)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "All Bills (${bills.size})",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                TextButton(onClick = onViewBills) {
+                                    Text("View All", color = IndigoPrimary, fontWeight = FontWeight.Medium)
+                                }
+                            }
+                            if (sortedBills.isEmpty()) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xxlarge),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(Spacing.small)
+                                ) {
+                                    Icon(Icons.Outlined.Receipt, contentDescription = null, tint = TextTertiaryLight, modifier = Modifier.size(IconSize.xlarge))
+                                    Text("No bills yet", color = TextSecondaryLight, style = MaterialTheme.typography.bodyMedium)
+                                }
+                            } else {
+                                sortedBills.take(5).forEachIndexed { index, bill ->
+                                    BillRowItem(bill = bill, index = index, isLast = index == sortedBills.take(5).lastIndex)
+                                }
+                            }
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                val recentTransactions = transactions
-                    .sortedByDescending { it.timestamp }
-                    .take(5)
-
-                if (recentTransactions.isEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                // ===== LEDGER TAB =====
+                1 -> {
+                    val sortedTransactions = transactions.sortedByDescending { it.timestamp }
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = CardShape,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.flat)
                     ) {
-                        Icon(Icons.Outlined.History, contentDescription = null, tint = TextSecondaryLight, modifier = Modifier.size(40.dp))
-                        Text("No transactions yet", color = TextSecondaryLight, style = MaterialTheme.typography.bodyMedium)
+                        Column(modifier = Modifier.padding(Spacing.cardPadding)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Recent Transactions",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                TextButton(onClick = onViewLedger) {
+                                    Text("View All", color = IndigoPrimary, fontWeight = FontWeight.Medium)
+                                }
+                            }
+
+                            if (sortedTransactions.isEmpty()) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xxlarge),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(Spacing.small)
+                                ) {
+                                    Icon(Icons.Outlined.History, contentDescription = null, tint = TextTertiaryLight, modifier = Modifier.size(IconSize.xlarge))
+                                    Text("No transactions yet", color = TextSecondaryLight, style = MaterialTheme.typography.bodyMedium)
+                                }
+                            } else {
+                                sortedTransactions.take(5).forEachIndexed { index, tx ->
+                                    TransactionTimelineItem(
+                                        transaction = tx,
+                                        isLast = index == sortedTransactions.take(5).lastIndex
+                                    )
+                                }
+                            }
+                        }
                     }
-                } else {
-                    recentTransactions.forEachIndexed { index, tx ->
-                        TransactionTimelineItem(
-                            transaction = tx,
-                            isLast = index == recentTransactions.lastIndex
-                        )
+                }
+
+                // ===== DETAILS TAB =====
+                2 -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = CardShape,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.flat)
+                    ) {
+                        Column(modifier = Modifier.padding(Spacing.xlarge)) {
+                            InfoRow(label = "Phone", value = customer.phone ?: "Not set")
+                            AppDivider()
+                            InfoRow(label = "Customer ID", value = customer.id.take(12))
+                            AppDivider()
+                            InfoRow(label = "Total Bills", value = bills.size.toString())
+                            AppDivider()
+                            val paidBills = bills.count { it.status == "paid" }
+                            InfoRow(label = "Paid Bills", value = paidBills.toString())
+                            AppDivider()
+                            InfoRow(
+                                label = "Outstanding Amount",
+                                value = FormatUtils.formatCurrency(outstanding),
+                                valueColor = if (outstanding > 0) ErrorRed else SuccessGreen,
+                                valueStyle = AmountMediumStyle
+                            )
+                            if (customer.createdAt != null) {
+                                AppDivider()
+                                InfoRow(label = "Customer Since", value = FormatUtils.formatDate(customer.createdAt))
+                            }
+                        }
                     }
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun BillRowItem(
+    bill: com.aistudio.sharmakhata.pqmzvk.data.model.Bill,
+    index: Int,
+    isLast: Boolean
+) {
+    val isPaid = bill.status == "paid"
+    val statusColor = if (isPaid) SuccessGreen else ErrorRed
+    val statusLabel = if (isPaid) "Paid" else "Unpaid"
+    val statusBg = if (isPaid) BadgePaidBg else BadgeUnpaidBg
+    val statusText = if (isPaid) BadgePaidText else BadgeUnpaidText
+
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Spacing.small),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(ComponentSize.iconContainerSmall)
+                    .clip(ActionIconShape)
+                    .background(statusBg),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Receipt,
+                    contentDescription = null,
+                    tint = statusColor,
+                    modifier = Modifier.size(IconSize.xsmall)
+                )
+            }
+            Spacer(modifier = Modifier.width(Spacing.medium))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Bill #${bill.id.take(8)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = FormatUtils.formatDate(bill.createdAt),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondaryLight
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = FormatUtils.formatCurrency(bill.total),
+                    style = AmountSmallStyle,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                StatusBadge(
+                    label = statusLabel,
+                    bgColor = statusBg,
+                    textColor = statusText
+                )
+            }
+        }
+        if (!isLast) {
+            HorizontalDivider(color = DividerColor.copy(alpha = 0.5f), thickness = 0.5.dp)
+        }
     }
 }
 

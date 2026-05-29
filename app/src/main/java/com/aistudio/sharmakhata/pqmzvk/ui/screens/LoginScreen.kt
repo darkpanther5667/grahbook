@@ -35,6 +35,9 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = androidx.compose.ui.platform.LocalContext.current
 
+    // Get stored storeId from registration (empty if not registered yet)
+    val storeId = remember { com.aistudio.sharmakhata.pqmzvk.util.SessionManager.storeId ?: "" }
+
     var phoneNumber by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
     var isOtpStage by remember { mutableStateOf(false) }
@@ -65,7 +68,7 @@ fun LoginScreen(
                 )
                 if (result == SnackbarResult.ActionPerformed && !isOtpStage) {
                     // Retry sending OTP if user clicked retry
-                    viewModel.requestLoginCode("", phoneNumber)
+                    viewModel.requestLoginCode(storeId, "+91$phoneNumber")
                 }
                 viewModel.resetOperationState()
             }
@@ -83,9 +86,9 @@ fun LoginScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            IndigoPrimary,
-                            IndigoDark,
-                            Color(0xFF1E1B4B)
+                            StitchTeal,
+                            StitchTealDark,
+                            Color(0xFF134E4A)
                         )
                     )
                 )
@@ -123,7 +126,7 @@ fun LoginScreen(
                                 "G",
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = IndigoPrimary
+                                color = StitchTeal
                             )
                         }
                     }
@@ -165,7 +168,7 @@ fun LoginScreen(
                             Icon(
                                 Icons.Default.Phone,
                                 contentDescription = null,
-                                tint = IndigoPrimary,
+                                tint = StitchTeal,
                                 modifier = Modifier.size(40.dp)
                             )
                             Text(
@@ -203,11 +206,11 @@ fun LoginScreen(
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text("+91", fontWeight = FontWeight.Bold, color = IndigoPrimary)
+                                        Text("+91", fontWeight = FontWeight.Bold, color = StitchTeal)
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Box(modifier = Modifier.width(1.dp).height(20.dp).background(CardBorder))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Icon(Icons.Default.Phone, contentDescription = null, tint = IndigoPrimary, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.Phone, contentDescription = null, tint = StitchTeal, modifier = Modifier.size(18.dp))
                                     }
                                 },
                                 keyboardOptions = KeyboardOptions(
@@ -219,26 +222,26 @@ fun LoginScreen(
                                 colors = TextFieldDefaults.colors(
                                     focusedTextColor = TextPrimaryLight,
                                     unfocusedTextColor = TextPrimaryLight,
-                                    focusedIndicatorColor = if (phoneNumber.length == 10) IndigoPrimary else MaterialTheme.colorScheme.error,
+                                    focusedIndicatorColor = if (phoneNumber.length == 10) StitchTeal else MaterialTheme.colorScheme.error,
                                     unfocusedIndicatorColor = CardBorder,
                                     focusedContainerColor = BackgroundLight,
                                     unfocusedContainerColor = BackgroundLight,
-                                    focusedLabelColor = if (phoneNumber.length == 10) IndigoPrimary else MaterialTheme.colorScheme.error,
+                                    focusedLabelColor = if (phoneNumber.length == 10) StitchTeal else MaterialTheme.colorScheme.error,
                                     unfocusedLabelColor = TextSecondaryLight,
-                                    cursorColor = IndigoPrimary
+                                    cursorColor = StitchTeal
                                 ),
                                 isError = phoneNumber.isNotEmpty() && phoneNumber.length < 10
                             )
 
                             Button(
-                                onClick = { viewModel.requestLoginCode("", phoneNumber) },
+                                onClick = { viewModel.requestLoginCode(storeId, "+91$phoneNumber") },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(52.dp),
                                 enabled = phoneNumber.length == 10 && operationState !is OperationState.Loading,
                                 shape = RoundedCornerShape(14.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (phoneNumber.length == 10) IndigoPrimary else MaterialTheme.colorScheme.surfaceVariant
+                                    containerColor = if (phoneNumber.length == 10) StitchTeal else MaterialTheme.colorScheme.surfaceVariant
                                 )
                             ) {
                                 if (operationState is OperationState.Loading) {
@@ -259,7 +262,7 @@ fun LoginScreen(
                             ) {
                                 Text("New here?", color = TextSecondaryLight, fontSize = 13.sp)
                                 TextButton(onClick = onRegisterStore) {
-                                    Text("Register your store", color = IndigoPrimary, fontWeight = FontWeight.SemiBold)
+                                    Text("Register your store", color = StitchTeal, fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         } else {
@@ -267,7 +270,7 @@ fun LoginScreen(
                             Icon(
                                 Icons.Default.Shield,
                                 contentDescription = null,
-                                tint = IndigoPrimary,
+                                tint = StitchTeal,
                                 modifier = Modifier.size(40.dp)
                             )
                             Text(
@@ -294,7 +297,7 @@ fun LoginScreen(
                                 label = { Text("OTP") },
                                 placeholder = { Text("_ _ _ _ _ _") },
                                 leadingIcon = {
-                                    Icon(Icons.Default.Lock, contentDescription = null, tint = IndigoPrimary)
+                                    Icon(Icons.Default.Lock, contentDescription = null, tint = StitchTeal)
                                 },
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Number,
@@ -305,13 +308,13 @@ fun LoginScreen(
                                 colors = TextFieldDefaults.colors(
                                     focusedTextColor = TextPrimaryLight,
                                     unfocusedTextColor = TextPrimaryLight,
-                                    focusedIndicatorColor = IndigoPrimary,
+                                    focusedIndicatorColor = StitchTeal,
                                     unfocusedIndicatorColor = CardBorder,
                                     focusedContainerColor = BackgroundLight,
                                     unfocusedContainerColor = BackgroundLight,
-                                    focusedLabelColor = IndigoPrimary,
+                                    focusedLabelColor = StitchTeal,
                                     unfocusedLabelColor = TextSecondaryLight,
-                                    cursorColor = IndigoPrimary
+                                    cursorColor = StitchTeal
                                 ),
                                 textStyle = MaterialTheme.typography.headlineSmall.copy(
                                     textAlign = TextAlign.Center,
@@ -320,13 +323,13 @@ fun LoginScreen(
                             )
 
                             Button(
-                                onClick = { viewModel.verifyLoginCode("", phoneNumber, otp, context) },
+                                onClick = { viewModel.verifyLoginCode(storeId, "+91$phoneNumber", otp, context) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(52.dp),
                                 enabled = otp.length == 6 && operationState !is OperationState.Loading,
                                 shape = RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+                                colors = ButtonDefaults.buttonColors(containerColor = StitchTeal)
                             ) {
                                 if (operationState is OperationState.Loading) {
                                     CircularProgressIndicator(
@@ -342,9 +345,9 @@ fun LoginScreen(
                             TextButton(onClick = {
                                 isOtpStage = false
                                 otp = ""
-                                viewModel.requestLoginCode("", phoneNumber)
+                                viewModel.requestLoginCode(storeId, "+91$phoneNumber")
                             }) {
-                                Text("Resend OTP", color = IndigoPrimary, fontWeight = FontWeight.SemiBold)
+                                Text("Resend OTP", color = StitchTeal, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }

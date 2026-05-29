@@ -16,7 +16,7 @@ object NetworkUtils {
      * Check if device has active internet connection
      */
     fun isNetworkAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return false
         
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val network = connectivityManager.activeNetwork ?: return false
@@ -34,7 +34,7 @@ object NetworkUtils {
      * Get network type (WiFi, Cellular, etc.)
      */
     fun getNetworkType(context: Context): String {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return "none"
         
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val network = connectivityManager.activeNetwork ?: return "none"
@@ -62,7 +62,11 @@ object NetworkUtils {
      * Flow to observe network connectivity changes
      */
     fun observeNetworkConnectivity(context: Context): Flow<Boolean> = callbackFlow {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: run {
+            trySend(false)
+            awaitClose()
+            return@callbackFlow
+        }
         
         val networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {

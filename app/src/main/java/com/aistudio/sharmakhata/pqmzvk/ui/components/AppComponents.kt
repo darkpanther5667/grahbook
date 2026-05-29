@@ -1,8 +1,13 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -351,4 +356,169 @@ fun ScreenContent(
             .padding(horizontal = Spacing.screenPadding),
         content = content
     )
+}
+
+// ============================================================
+// MODERN STAT CARD (Vyapaar/MyBillBook style)
+// Elevated card with gradient-tinted icon container, label, large amount value
+// ============================================================
+
+@Composable
+fun ModernStatCard(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    gradient: List<Color>,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = CardShape,
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.low),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Spacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(Spacing.small)
+        ) {
+            // Icon in gradient-tinted container
+            Box(
+                modifier = Modifier
+                    .size(ComponentSize.iconContainerMedium)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Brush.linearGradient(gradient.map { it.copy(alpha = 0.15f) })),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = gradient.first(),
+                    modifier = Modifier.size(IconSize.small)
+                )
+            }
+
+            // Label
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = TextSecondaryLight,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            // Value (large, bold amount)
+            Text(
+                text = value,
+                style = AmountDisplayStyle,
+                fontWeight = FontWeight.Bold,
+                color = valueColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+// ============================================================
+// CUSTOMER LIST ITEM (for customer list screens)
+// Avatar, name, phone, outstanding amount with color, chevron
+// ============================================================
+
+@Composable
+fun CustomerListItem(
+    name: String,
+    phone: String?,
+    outstandingAmount: String,
+    outstandingLabel: String,
+    amountColor: Color,
+    colorIndex: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = ListCardShape,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.low)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Spacing.cardPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Colored gradient avatar
+            AppAvatar(
+                name = name,
+                size = ComponentSize.avatarLarge,
+                colorIndex = colorIndex
+            )
+
+            Spacer(modifier = Modifier.width(Spacing.medium))
+
+            // Name + phone
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (!phone.isNullOrBlank()) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xsmall),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Phone,
+                            contentDescription = null,
+                            tint = IndigoPrimary.copy(alpha = 0.6f),
+                            modifier = Modifier.size(IconSize.xsmall)
+                        )
+                        Text(
+                            text = phone,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondaryLight,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
+            // Outstanding amount
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = outstandingAmount,
+                    style = AmountMediumStyle,
+                    fontWeight = FontWeight.Bold,
+                    color = amountColor,
+                    maxLines = 1
+                )
+                Text(
+                    text = outstandingLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = amountColor,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.width(Spacing.small))
+
+            // Chevron
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = "View details",
+                tint = TextTertiaryLight,
+                modifier = Modifier.size(IconSize.medium)
+            )
+        }
+    }
 }
