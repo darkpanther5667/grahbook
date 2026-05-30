@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,9 +40,12 @@ fun LoginScreen(
     val context = LocalContext.current
 
     var phoneNumber by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
     var isOtpStage by remember { mutableStateOf(false) }
     var storeNotFound by remember { mutableStateOf(false) }
+    var loginMode by remember { mutableStateOf("password") } // "password" | "otp"
+    var passwordVisible by remember { mutableStateOf(false) }
 
     // Load session once on first composition
     LaunchedEffect(Unit) {
@@ -71,9 +76,8 @@ fun LoginScreen(
                         viewModel.resetOperationState()
                     }
                     else -> {
-                        // Generic success — mostly for "Store registered" / "already exists"
-                        // Navigate to OTP stage automatically
-                        if (!isOtpStage && phoneNumber.length == 10) {
+                        // Generic success — navigate to OTP stage automatically
+                        if (!isOtpStage && phoneNumber.length == 10 && loginMode == "otp") {
                             isOtpStage = true
                         }
                         viewModel.resetOperationState()
@@ -83,7 +87,8 @@ fun LoginScreen(
             is OperationState.Error -> {
                 val message = state.message
                 storeNotFound = message.contains("No store found", ignoreCase = true) ||
-                                message.contains("not authorized", ignoreCase = true)
+                                message.contains("not authorized", ignoreCase = true) ||
+                                message.contains("No account found", ignoreCase = true)
 
                 val actionLabel = when {
                     message.contains("internet", ignoreCase = true) ||
@@ -275,33 +280,135 @@ fun LoginScreen(
                                 isError = (phoneNumber.isNotEmpty() && phoneNumber.length < 10) || storeNotFound
                             )
 
-                            // Send OTP button
-                            Button(
-                                onClick = {
-                                    storeNotFound = false
-                                    viewModel.requestLoginCode("+91$phoneNumber")
-                                },
+                            // ── Login Mode Toggle ──
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(52.dp),
-                                enabled = phoneNumber.length == 10 && operationState !is OperationState.Loading,
-                                shape = RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (phoneNumber.length == 10) StitchTeal else MaterialTheme.colorScheme.surfaceVariant
-                                )
+                                    .background(BackgroundLight, RoundedCornerShape(12.dp))
+                                    .padding(4.dp),
+                                horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                if (operationState is OperationState.Loading) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = Color.White,
-                                        strokeWidth = 2.dp
+                                FilterChip(
+                                    selected = loginMode == "password",
+                                    onClick = { loginMode = "password" },
+                                    label = { Text("Password", fontWeight = if (loginMode == "password") FontWeight.Bold else FontWeight.Normal) },
+                                    leadingIcon = {
+                                        if (loginMode == "password") {
+                                            Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp), tint = StitchTeal)
+                                        }
+                                    },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = StitchTeal.copy(alpha = 0.15f),
+                                        selectedLabelColor = StitchTeal
                                     )
-                                } else {
-                                    Text("Send OTP", fontWeight = FontWeight.Bold)
+                                )
+                                FilterChip(
+                                    selected = loginMode == "otp",
+                                    onClick = { loginMode = "otp" },
+                                    label = { Text("OTP", fontWeight = if (loginMode == "otp") FontWeight.Bold else FontWeight.Normal) },
+                                    leadingIcon = {
+                                        if (loginMode == "otp") {
+                                            Icon(Icons.Default.Sms, contentDescription = null, modifier = Modifier.size(16.dp), tint = StitchTeal)
+                                        }
+                                    },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = StitchTeal.copy(alpha = 0.15f),
+                                        selectedLabelColor = StitchTeal
+                                    )
+                                )
+                            }
+
+                            if (loginMode == "password") {
+                                // ── Password Login ──
+                                OutlinedTextField(
+                                    value = password,
+                                    onValueChange = { password = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    label = { Text("Password") },
+                                    placeholder = { Text("Enter your password") },
+                                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = StitchTeal) },
+                                    trailingIcon = {
+                                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                            Icon(
+                                                if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                                contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                                tint = TextSecondaryLight
+                                            )
+                                        }
+                                    },
+                                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Password,
+                                        imeAction = ImeAction.Done
+                                    ),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(14.dp),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedTextColor = TextPrimaryLight,
+                                        unfocusedTextColor = TextPrimaryLight,
+                                        focusedIndicatorColor = StitchTeal,
+                                        unfocusedIndicatorColor = CardBorder,
+                                        focusedContainerColor = BackgroundLight,
+                                        unfocusedContainerColor = BackgroundLight,
+                                        focusedLabelColor = StitchTeal,
+                                        unfocusedLabelColor = TextSecondaryLight,
+                                        cursorColor = StitchTeal
+                                    )
+                                )
+
+                                Button(
+                                    onClick = {
+                                        storeNotFound = false
+                                        viewModel.loginWithPassword("+91$phoneNumber", password, context)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp),
+                                    enabled = phoneNumber.length == 10 && password.length >= 4 && operationState !is OperationState.Loading,
+                                    shape = RoundedCornerShape(14.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = StitchTeal)
+                                ) {
+                                    if (operationState is OperationState.Loading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = Color.White,
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(20.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Login", fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            } else {
+                                // ── OTP Login ──
+                                Button(
+                                    onClick = {
+                                        storeNotFound = false
+                                        viewModel.requestLoginCode("+91$phoneNumber")
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp),
+                                    enabled = phoneNumber.length == 10 && operationState !is OperationState.Loading,
+                                    shape = RoundedCornerShape(14.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (phoneNumber.length == 10) StitchTeal else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                ) {
+                                    if (operationState is OperationState.Loading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = Color.White,
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Text("Send OTP", fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
 
-                            // Register link
+                            // Register link (always visible)
                             Row(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically

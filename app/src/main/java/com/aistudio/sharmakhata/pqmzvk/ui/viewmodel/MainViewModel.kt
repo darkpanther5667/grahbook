@@ -24,6 +24,7 @@ import com.aistudio.sharmakhata.pqmzvk.data.remote.MarkBillPaidRequest
 import com.aistudio.sharmakhata.pqmzvk.data.remote.RequestLoginCodeRequest
 import com.aistudio.sharmakhata.pqmzvk.data.remote.VerifyLoginCodeRequest
 import com.aistudio.sharmakhata.pqmzvk.data.remote.RegisterStoreRequest
+import com.aistudio.sharmakhata.pqmzvk.data.remote.LoginWithPasswordRequest
 import com.aistudio.sharmakhata.pqmzvk.util.NetworkUtils
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -572,6 +573,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Login using phone + password (no OTP needed).
+     * On success, saves token + storeId to SessionManager.
+     */
+    fun loginWithPassword(phone: String, password: String, context: android.content.Context) {
+        _operationState.value = OperationState.Loading
+        viewModelScope.launch {
+            try {
+                val response = ApiClient.apiService.loginWithPassword(LoginWithPasswordRequest(phone, password))
+                val body = response.body()
+                if (response.isSuccessful && body?.success == true && !body.token.isNullOrBlank()) {
+                    _authToken.value = body.token
+                    com.aistudio.sharmakhata.pqmzvk.util.SessionManager.setToken(context, body.token)
+
+                    // Save storeId from response
+                    val storeMap = body.store as? Map<*, *>
+                    val storeIdFromServer = storeMap?.get("id") as? String
+                    if (!storeIdFromServer.isNullOrBlank()) {
+                        com.aistudio.sharmakhata.pqmzvk.util.SessionManager.saveStoreInfo(context, storeIdFromServer, phone)
+                        com.aistudio.sharmakhata.pqmzvk.util.SessionManager.reload(context)
+                    }
+
+                    LiveSyncManager.stop()
+                    LiveSyncManager.start()
+                    _operationState.value = OperationState.Success("Logged in")
+                } else {
+                    val serverMsg = body?.message ?: "Login failed. Check your phone and password."
+                    _operationState.value = OperationState.Error(serverMsg)
+                }
+            } catch (e: Exception) {
+                _operationState.value = OperationState.Error("Network error: ${e.message}")
+            }
+        }
+    }
+
     fun consumeAuthToken(): String? {
         val t = _authToken.value
         _authToken.value = null
@@ -591,6 +627,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         email: String,
         address: String?,
         gstin: String? = null,
+        password: String? = null,
         context: android.content.Context? = null,
     ) {
         _operationState.value = OperationState.Loading
@@ -604,6 +641,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         email = email,
                         address = address,
                         gstin = gstin,
+                        password = password,
                     )
                 )
                 val body = response.body()

@@ -14,6 +14,9 @@ interface ApiService {
     @POST("api/auth/verify-code")
     suspend fun verifyLoginCode(@Body request: VerifyLoginCodeRequest): retrofit2.Response<VerifyLoginResponse>
 
+    @POST("api/auth/login")
+    suspend fun loginWithPassword(@Body request: LoginWithPasswordRequest): retrofit2.Response<VerifyLoginResponse>
+
     @POST("api/register-store")
     suspend fun registerStore(@Body request: RegisterStoreRequest): retrofit2.Response<RegisterStoreResponse>
     @GET("api/db")
@@ -128,6 +131,11 @@ data class VerifyLoginResponse(
     val message: String? = null
 )
 
+data class LoginWithPasswordRequest(
+    val phone: String,
+    val password: String
+)
+
 data class RegisterStoreRequest(
     val store_name: String,
     val owner_name: String,
@@ -137,6 +145,7 @@ data class RegisterStoreRequest(
     val plan: String? = "basic",
     val address: String? = null,
     val gstin: String? = null,
+    val password: String? = null,
 )
 
 data class RegisterStoreResponse(

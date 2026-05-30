@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const OpenAI = require('openai');
+const bcrypt = require('bcryptjs');
 const PDFDocument = require('pdfkit');
 
 // Initialize OpenRouter API
@@ -79,6 +80,7 @@ function requiresSessionAuth(req) {
   if (req.path.startsWith('/api/store/')) return false;
   if (req.path === '/api/auth/request-code') return false;
   if (req.path === '/api/auth/verify-code') return false;
+  if (req.path === '/api/auth/login') return false;
 
   // PDF endpoints are fetched by WhatsApp directly.
   if (req.method === 'GET') {
@@ -1785,6 +1787,59 @@ app.post('/api/auth/verify-code', async (req, res) => {
   }
 });
 
+// POST /api/auth/login — Password-based login
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { phone, password } = req.body || {};
+    const p = normalizePhone(phone);
+    if (!p) return res.status(400).json({ success: false, message: 'Phone number is required' });
+    if (!password) return res.status(400).json({ success: false, message: 'Password is required' });
+
+    const database = await connectDB();
+    if (!database) return res.status(500).json({ success: false, message: 'Server DB not configured' });
+
+    // Build phone variants
+    const phoneVariants = [p];
+    if (p.startsWith('91') && p.length === 12) phoneVariants.push(p.slice(2));
+    else if (p.length === 10) phoneVariants.push('91' + p);
+
+    // Find staff entry
+    const staff = await database.collection('staff').findOne({ phone: { $in: phoneVariants }, status: { $ne: 'disabled' } });
+    if (!staff) {
+      return res.status(404).json({ success: false, message: 'No account found for this phone number. Please register first.' });
+    }
+
+    // Check password
+    if (!staff.password_hash) {
+      return res.status(400).json({ success: false, message: 'No password set. Please use OTP login or register again.' });
+    }
+
+    const valid = await bcrypt.compare(password, staff.password_hash);
+    if (!valid) {
+      return res.status(401).json({ success: false, message: 'Invalid password' });
+    }
+
+    // Create session token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await database.collection('sessions').insertOne({
+      token,
+      store_id: staff.store_id,
+      phone: p,
+      created_at: new Date(),
+      expires_at: expiresAt,
+    });
+
+    // Fetch store info
+    const store = await database.collection('stores').findOne({ id: staff.store_id });
+    console.log(`🔑 Password login successful: ${p} → store ${staff.store_id}`);
+    return res.json({ success: true, token, store });
+  } catch (error) {
+    console.error('Error in password login:', error);
+    return res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
+  }
+});
+
 // POST /api/customer/add - Add a new customer
 app.post('/api/customer/add', async (req, res) => {
   try {
@@ -1987,10 +2042,16 @@ app.post('/api/db', async (req, res) => {
 // POST /api/register-store - Register a new store
 app.post('/api/register-store', async (req, res) => {
   try {
-    const { store_name, owner_name, phone, email, business_type, plan, address } = req.body;
-    
+    const { store_name, owner_name, phone, email, business_type, plan, address, password } = req.body;
+
     if (!store_name || !owner_name || !phone) {
       return res.status(400).json({ status: 'error', message: 'store_name, owner_name, and phone are required' });
+    }
+
+    // Hash password for login
+    let passwordHash = null;
+    if (password && password.length >= 4) {
+      passwordHash = await bcrypt.hash(password, 10);
     }
 
     // Generate unique store ID
@@ -2007,6 +2068,15 @@ app.post('/api/register-store', async (req, res) => {
     // Check if store already exists
     const existingStore = db.stores.find(s => s.phone === normalizePhone(phone) || (email && s.email === email));
     if (existingStore) {
+      // If a password was provided, update it for existing store
+      if (password && password.length >= 4) {
+        const newHash = await bcrypt.hash(password, 10);
+        const existingStaff = db.staff.find(s => s.phone === normalizePhone(phone) && (s.store_id || 'default') === existingStore.id);
+        if (existingStaff) {
+          existingStaff.password_hash = newHash;
+          await writeDB(db);
+        }
+      }
       // Return the existing store_id so the client can use it for login
       return res.status(200).json({
         status: 'exists',
@@ -2043,6 +2113,7 @@ app.post('/api/register-store', async (req, res) => {
         phone: ownerPhone,
         role: 'owner',
         store_id: storeId,
+        password_hash: passwordHash,
         status: 'active',
         created_at: new Date().toISOString(),
       });

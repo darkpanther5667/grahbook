@@ -22,6 +22,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,6 +49,9 @@ fun RegisterStoreScreen(
     var email by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var gstin by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     var isExistingStore by remember { mutableStateOf(false) }
 
     // Pre-fill phone from session if available
@@ -79,7 +84,8 @@ fun RegisterStoreScreen(
         }
     }
 
-    val isValid = businessName.isNotBlank() && ownerName.isNotBlank() && phone.length >= 10
+    val isValid = businessName.isNotBlank() && ownerName.isNotBlank() && phone.length >= 10 &&
+                  password.length >= 4 && password == confirmPassword
 
     Scaffold(
         topBar = {
@@ -254,6 +260,59 @@ fun RegisterStoreScreen(
                             )
                         )
 
+                        // Password
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Password *") },
+                            placeholder = { Text("At least 4 characters") },
+                            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = StitchTeal) },
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = null,
+                                        tint = TextSecondaryLight
+                                    )
+                                }
+                            },
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = StitchTeal,
+                                unfocusedIndicatorColor = CardBorder,
+                                focusedContainerColor = BackgroundLight,
+                                unfocusedContainerColor = BackgroundLight
+                            )
+                        )
+
+                        // Confirm Password
+                        OutlinedTextField(
+                            value = confirmPassword,
+                            onValueChange = { confirmPassword = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Confirm Password *") },
+                            placeholder = { Text("Re-enter your password") },
+                            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = StitchTeal) },
+                            isError = confirmPassword.isNotEmpty() && password != confirmPassword,
+                            supportingText = {
+                                if (confirmPassword.isNotEmpty() && password != confirmPassword) {
+                                    Text("Passwords do not match", color = MaterialTheme.colorScheme.error)
+                                }
+                            },
+                            visualTransformation = PasswordVisualTransformation(),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = StitchTeal,
+                                unfocusedIndicatorColor = CardBorder,
+                                focusedContainerColor = BackgroundLight,
+                                unfocusedContainerColor = BackgroundLight
+                            )
+                        )
+
                         // Email (optional)
                         OutlinedTextField(
                             value = email,
@@ -327,6 +386,7 @@ fun RegisterStoreScreen(
                                     email = email.ifBlank { "" },
                                     address = address.ifBlank { null },
                                     gstin = gstin.ifBlank { null },
+                                    password = password,
                                     context = context
                                 )
                             },

@@ -50,7 +50,7 @@ object SessionManager {
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
-        } catch (_: GeneralSecurityException | IOException | RuntimeException) {
+        } catch (_: Exception) {
             // Fallback to regular SharedPreferences if encryption setup fails
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         }
