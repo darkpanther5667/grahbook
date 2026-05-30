@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.OperationState
+import com.aistudio.sharmakhata.pqmzvk.util.SessionManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,19 +35,22 @@ fun LoginScreen(
 ) {
     val operationState by viewModel.operationState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
 
     var phoneNumber by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
     var isOtpStage by remember { mutableStateOf(false) }
+    var storeNotFound by remember { mutableStateOf(false) }
 
-    // Load session (reads storeId + phone from persistent storage)
+    // Load session once on first composition
     LaunchedEffect(Unit) {
-        com.aistudio.sharmakhata.pqmzvk.util.SessionManager.load(context)
+        SessionManager.load(context)
         viewModel.resetOperationState()
+
         // Pre-fill phone from stored registration if available
         if (phoneNumber.isEmpty()) {
-            com.aistudio.sharmakhata.pqmzvk.util.SessionManager.phone?.let { storedPhone ->
+            val storedPhone = SessionManager.phone
+            if (!storedPhone.isNullOrBlank()) {
                 val digits = storedPhone.filter { it.isDigit() }
                 if (digits.length >= 10) {
                     phoneNumber = digits.takeLast(10)
@@ -54,31 +59,52 @@ fun LoginScreen(
         }
     }
 
-    // Read storeId fresh each time (not cached in remember) so registration's save is picked up
-    val storeId = com.aistudio.sharmakhata.pqmzvk.util.SessionManager.storeId ?: ""
-
+    // React to operation state changes
     LaunchedEffect(operationState) {
         when (val state = operationState) {
             is OperationState.Success -> {
-                val msg = state.message
-                if (msg == "Logged in") {
-                    onLoggedIn()
-                } else if (msg == "Code sent on WhatsApp") {
-                    isOtpStage = true
-                    viewModel.resetOperationState()
+                when (state.message) {
+                    "Logged in" -> onLoggedIn()
+                    "Code sent on WhatsApp" -> {
+                        isOtpStage = true
+                        storeNotFound = false
+                        viewModel.resetOperationState()
+                    }
+                    else -> {
+                        // Generic success — mostly for "Store registered" / "already exists"
+                        // Navigate to OTP stage automatically
+                        if (!isOtpStage && phoneNumber.length == 10) {
+                            isOtpStage = true
+                        }
+                        viewModel.resetOperationState()
+                    }
                 }
             }
             is OperationState.Error -> {
+                val message = state.message
+                storeNotFound = message.contains("No store found", ignoreCase = true) ||
+                                message.contains("not authorized", ignoreCase = true)
+
+                val actionLabel = when {
+                    message.contains("internet", ignoreCase = true) ||
+                    message.contains("timeout", ignoreCase = true) ||
+                    message.contains("connect", ignoreCase = true) -> "Retry"
+                    storeNotFound -> "Register"
+                    else -> null
+                }
+
                 val result = snackbarHostState.showSnackbar(
                     message = state.message,
-                    actionLabel = if (state.message.contains("internet", ignoreCase = true) || 
-                                       state.message.contains("timeout", ignoreCase = true) ||
-                                       state.message.contains("connect", ignoreCase = true)) "Retry" else null,
+                    actionLabel = actionLabel,
                     withDismissAction = true
                 )
-                if (result == SnackbarResult.ActionPerformed && !isOtpStage) {
-                    // Retry sending OTP if user clicked retry
-                    viewModel.requestLoginCode(storeId, "+91$phoneNumber")
+                when {
+                    result == SnackbarResult.ActionPerformed && actionLabel == "Retry" && !isOtpStage -> {
+                        viewModel.requestLoginCode("+91$phoneNumber")
+                    }
+                    result == SnackbarResult.ActionPerformed && actionLabel == "Register" -> {
+                        onRegisterStore()
+                    }
                 }
                 viewModel.resetOperationState()
             }
@@ -174,7 +200,7 @@ fun LoginScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         if (!isOtpStage) {
-                            // Phone Input Stage
+                            // ── Phone Input Stage ──
                             Icon(
                                 Icons.Default.Phone,
                                 contentDescription = null,
@@ -197,19 +223,25 @@ fun LoginScreen(
                             OutlinedTextField(
                                 value = phoneNumber,
                                 onValueChange = { newVal ->
-                                    // Allow only digits, max 10 characters
                                     if (newVal.length <= 10 && newVal.all { it.isDigit() }) {
                                         phoneNumber = newVal
+                                        storeNotFound = false
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 label = { Text("Phone Number") },
                                 placeholder = { Text("9876543210") },
-                                supportingText = { 
-                                    if (phoneNumber.isNotEmpty() && phoneNumber.length < 10) {
-                                        Text("Enter 10-digit mobile number", color = MaterialTheme.colorScheme.error)
-                                    } else {
-                                        Text("Enter your 10-digit Indian mobile number")
+                                supportingText = {
+                                    when {
+                                        storeNotFound -> Text(
+                                            "No account found. Tap 'Register' below",
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                        phoneNumber.isNotEmpty() && phoneNumber.length < 10 -> Text(
+                                            "Enter 10-digit mobile number",
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                        else -> Text("Enter your 10-digit Indian mobile number")
                                     }
                                 },
                                 leadingIcon = {
@@ -240,11 +272,15 @@ fun LoginScreen(
                                     unfocusedLabelColor = TextSecondaryLight,
                                     cursorColor = StitchTeal
                                 ),
-                                isError = phoneNumber.isNotEmpty() && phoneNumber.length < 10
+                                isError = (phoneNumber.isNotEmpty() && phoneNumber.length < 10) || storeNotFound
                             )
 
+                            // Send OTP button
                             Button(
-                                onClick = { viewModel.requestLoginCode(storeId, "+91$phoneNumber") },
+                                onClick = {
+                                    storeNotFound = false
+                                    viewModel.requestLoginCode("+91$phoneNumber")
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(52.dp),
@@ -276,7 +312,7 @@ fun LoginScreen(
                                 }
                             }
                         } else {
-                            // OTP Stage
+                            // ── OTP Stage ──
                             Icon(
                                 Icons.Default.Shield,
                                 contentDescription = null,
@@ -333,7 +369,9 @@ fun LoginScreen(
                             )
 
                             Button(
-                                onClick = { viewModel.verifyLoginCode(storeId, "+91$phoneNumber", otp, context) },
+                                onClick = {
+                                    viewModel.verifyLoginCode("+91$phoneNumber", otp, context)
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(52.dp),
@@ -355,7 +393,7 @@ fun LoginScreen(
                             TextButton(onClick = {
                                 isOtpStage = false
                                 otp = ""
-                                viewModel.requestLoginCode(storeId, "+91$phoneNumber")
+                                viewModel.requestLoginCode("+91$phoneNumber")
                             }) {
                                 Text("Resend OTP", color = StitchTeal, fontWeight = FontWeight.SemiBold)
                             }

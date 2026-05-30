@@ -7,15 +7,18 @@ import androidx.security.crypto.MasterKey
 import java.io.IOException
 import java.security.GeneralSecurityException
 
+/**
+ * Manages persistent session data using EncryptedSharedPreferences with
+ * automatic fallback to regular SharedPreferences when encryption is unavailable.
+ *
+ * IMPORTANT: Always call [load] before reading any field. Call [saveStoreInfo]
+ * after registration and [setToken] after OTP verification.
+ */
 object SessionManager {
     private const val PREFS = "grahbook_session"
     private const val KEY_TOKEN = "token"
     private const val KEY_STORE_ID = "store_id"
     private const val KEY_PHONE = "phone"
-
-    // Fallback to regular SharedPreferences if encryption fails
-    private var fallbackPrefs: SharedPreferences? = null
-    private var encryptedPrefs: SharedPreferences? = null
 
     @Volatile
     var token: String? = null
@@ -29,114 +32,97 @@ object SessionManager {
     var phone: String? = null
         private set
 
+    private var prefs: SharedPreferences? = null
+
     /**
-     * Load session from secure storage
+     * Load session from secure storage. MUST be called before reading fields.
      */
     fun load(context: Context) {
-        try {
+        prefs = try {
             val masterKey = MasterKey.Builder(context)
                 .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                 .build()
 
-            encryptedPrefs = EncryptedSharedPreferences.create(
+            EncryptedSharedPreferences.create(
                 context,
                 PREFS,
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
-
-            token = encryptedPrefs?.getString(KEY_TOKEN, null)
-            storeId = encryptedPrefs?.getString(KEY_STORE_ID, null)
-            phone = encryptedPrefs?.getString(KEY_PHONE, null)
-
-        } catch (e: GeneralSecurityException) {
-            // Fallback to regular SharedPreferences if encryption fails
-            fallbackPrefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            token = fallbackPrefs?.getString(KEY_TOKEN, null)
-            storeId = fallbackPrefs?.getString(KEY_STORE_ID, null)
-            phone = fallbackPrefs?.getString(KEY_PHONE, null)
-        } catch (e: IOException) {
-            // Fallback to regular SharedPreferences if encryption fails
-            fallbackPrefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            token = fallbackPrefs?.getString(KEY_TOKEN, null)
-            storeId = fallbackPrefs?.getString(KEY_STORE_ID, null)
-            phone = fallbackPrefs?.getString(KEY_PHONE, null)
+        } catch (_: GeneralSecurityException | IOException | RuntimeException) {
+            // Fallback to regular SharedPreferences if encryption setup fails
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         }
+
+        token = prefs?.getString(KEY_TOKEN, null)
+        storeId = prefs?.getString(KEY_STORE_ID, null)
+        phone = prefs?.getString(KEY_PHONE, null)
     }
 
     /**
-     * Save token securely
+     * Reload fields from persistent storage (useful after registration from another screen).
+     */
+    fun reload(context: Context) {
+        load(context)
+    }
+
+    /**
+     * Save JWT token after successful OTP verification.
      */
     fun setToken(context: Context, value: String?) {
-        try {
-            if (encryptedPrefs != null) {
-                encryptedPrefs?.edit()?.putString(KEY_TOKEN, value)?.apply()
-            } else {
-                // Fallback to regular SharedPreferences
-                fallbackPrefs?.edit()?.putString(KEY_TOKEN, value)?.apply()
-            }
-            token = value
-        } catch (e: Exception) {
-            // Fallback to regular SharedPreferences on error
-            fallbackPrefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            fallbackPrefs?.edit()?.putString(KEY_TOKEN, value)?.apply()
-            token = value
-        }
+        if (prefs == null) load(context)
+        edit { putString(KEY_TOKEN, value) }
+        token = value
     }
 
     /**
-     * Save store ID and phone after registration
+     * Save store ID and phone after registration (or when recovering existing store).
+     * Use [reload] after this to ensure in-memory values match.
      */
     fun saveStoreInfo(context: Context, storeIdValue: String?, phoneValue: String?) {
-        try {
-            if (encryptedPrefs != null) {
-                encryptedPrefs?.edit()?.putString(KEY_STORE_ID, storeIdValue)?.putString(KEY_PHONE, phoneValue)?.apply()
-            } else {
-                fallbackPrefs?.edit()?.putString(KEY_STORE_ID, storeIdValue)?.putString(KEY_PHONE, phoneValue)?.apply()
-            }
-            storeId = storeIdValue
-            phone = phoneValue
-        } catch (e: Exception) {
-            fallbackPrefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            fallbackPrefs?.edit()?.putString(KEY_STORE_ID, storeIdValue)?.putString(KEY_PHONE, phoneValue)?.apply()
-            storeId = storeIdValue
-            phone = phoneValue
+        if (prefs == null) load(context)
+        edit {
+            putString(KEY_STORE_ID, storeIdValue)
+            putString(KEY_PHONE, phoneValue)
         }
+        storeId = storeIdValue
+        phone = phoneValue
     }
 
     /**
-     * Clear session (logout)
+     * Clear all session data (logout).
      */
     fun clear(context: Context) {
-        try {
-            encryptedPrefs?.edit()?.clear()?.apply()
-            fallbackPrefs?.edit()?.clear()?.apply()
-            token = null
-            storeId = null
-            phone = null
-        } catch (e: Exception) {
-            fallbackPrefs?.edit()?.clear()?.apply()
-            token = null
-            storeId = null
-            phone = null
-        }
+        prefs?.edit()?.clear()?.apply()
+        token = null
+        storeId = null
+        phone = null
     }
 
     /**
-     * Clear token in-memory only (for use from OkHttp interceptors without context).
-     * This wipes the in-memory token so subsequent requests won't include it.
-     * Persistent prefs are cleared later when the user navigates to login.
+     * Clear in-memory token only (used by OkHttp 401 interceptor).
+     * Persistent storage is cleared when user navigates to login.
      */
     fun clearToken() {
         token = null
     }
-    
-    /**
-     * Check if user is logged in
-     */
-    fun isLoggedIn(): Boolean {
-        return !token.isNullOrBlank()
+
+    /** Returns true when a session token is present and non-blank. */
+    fun isLoggedIn(): Boolean = !token.isNullOrBlank()
+
+    /** Returns true when a storeId is present and non-blank. */
+    fun hasStoreId(): Boolean = !storeId.isNullOrBlank()
+
+    /** Returns storeId or empty string (for safe JSON serialization). */
+    fun getStoreIdSafe(): String = storeId ?: ""
+
+    /** Returns phone or empty string. */
+    fun getPhoneSafe(): String = phone ?: ""
+
+    // ── helpers ──────────────────────────────────────────────────────────
+
+    private fun edit(block: SharedPreferences.Editor.() -> Unit) {
+        prefs?.edit()?.apply { block(); apply() }
     }
 }
-

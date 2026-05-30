@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.MainViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.OperationState
+import com.aistudio.sharmakhata.pqmzvk.util.SessionManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +39,7 @@ fun RegisterStoreScreen(
 ) {
     val operationState by viewModel.operationState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     var businessName by remember { mutableStateOf("") }
     var ownerName by remember { mutableStateOf("") }
@@ -44,16 +47,32 @@ fun RegisterStoreScreen(
     var email by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var gstin by remember { mutableStateOf("") }
-    val context = androidx.compose.ui.platform.LocalContext.current
+    var isExistingStore by remember { mutableStateOf(false) }
+
+    // Pre-fill phone from session if available
+    LaunchedEffect(Unit) {
+        SessionManager.load(context)
+        val storedPhone = SessionManager.phone
+        if (!storedPhone.isNullOrBlank()) {
+            val digits = storedPhone.filter { it.isDigit() }
+            if (digits.length >= 10) {
+                phone = digits.takeLast(10)
+            }
+        }
+    }
 
     LaunchedEffect(operationState) {
         when (val state = operationState) {
             is OperationState.Success -> {
                 snackbarHostState.showSnackbar(state.message)
+                // Navigate back to login screen — the storeId is now saved in SessionManager.
+                // LoginScreen's LaunchedEffect will read it and pre-fill the phone.
                 onSuccess()
             }
             is OperationState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
+                isExistingStore = state.message.contains("already exists", ignoreCase = true) ||
+                                  state.message.contains("already registered", ignoreCase = true)
                 viewModel.resetOperationState()
             }
             else -> {}
@@ -129,14 +148,17 @@ fun RegisterStoreScreen(
                 }
 
                 Text(
-                    text = "Setup Your Business",
+                    text = if (isExistingStore) "Store Already Registered" else "Setup Your Business",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
 
                 Text(
-                    text = "Enter your business details to get started with Grahbook",
+                    text = if (isExistingStore)
+                        "Your store is already registered. You can update your details below."
+                    else
+                        "Enter your business details to get started with Grahbook",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
@@ -297,6 +319,7 @@ fun RegisterStoreScreen(
                         // Register Button
                         Button(
                             onClick = {
+                                isExistingStore = false
                                 viewModel.registerStore(
                                     storeName = businessName,
                                     ownerName = ownerName,

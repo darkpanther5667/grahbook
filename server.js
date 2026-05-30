@@ -338,10 +338,10 @@ function findCustomer(text, customers) {
 
 // ─── DATABASE OPERATION TOOLS FOR GEMINI AI ───────────────────────────────────
 
-async function addCustomerTool(name, phone) {
+async function addCustomerTool(name, phone, storeId) {
   const np = normalizePhone(phone);
-  const db = await readDB();
-  const existing = db.customers.find(c => normalizePhone(c.phone) === np || c.name.toLowerCase() === name.toLowerCase());
+  const storeDb = await readStoreDB(storeId);
+  const existing = storeDb.customers.find(c => normalizePhone(c.phone) === np || c.name.toLowerCase() === name.toLowerCase());
   if (existing) {
     return { error: `Customer '${name}' or phone '${phone}' is already registered.` };
   }
@@ -349,19 +349,20 @@ async function addCustomerTool(name, phone) {
     id: genId('c'),
     name: name.replace(/\b\w/g, c => c.toUpperCase()),
     phone: np,
+    store_id: storeId || 'default',
     created_at: new Date().toISOString().substring(0, 10)
   };
+  const db = await readDB();
   db.customers.push(newCustomer);
   await writeDB(db);
-  // Invalidate cache to ensure AI gets fresh data
-  cachedDB = null;
-  dbCacheTimestamp = 0;
+  cachedDB = null; dbCacheTimestamp = 0;
   return { success: true, customer: newCustomer };
 }
 
-async function recordPaymentTool(customerId, amount, note, staffPhone) {
+async function recordPaymentTool(customerId, amount, note, staffPhone, storeId) {
   const db = await readDB();
-  const customer = db.customers.find(c => c.id === customerId);
+  const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === (storeId || 'default'));
+  const customer = storeCustomers.find(c => c.id === customerId);
   if (!customer) return { error: `Customer with ID '${customerId}' not found.` };
   const newTxId = genId('t');
   db.transactions.push({
@@ -371,19 +372,19 @@ async function recordPaymentTool(customerId, amount, note, staffPhone) {
     amount: Number(amount),
     note: note || 'Payment recorded via AI Bot',
     staff_phone: staffPhone || 'system',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    store_id: storeId || 'default',
   });
   await writeDB(db);
-  // Invalidate cache to ensure AI gets fresh data
-  cachedDB = null;
-  dbCacheTimestamp = 0;
+  cachedDB = null; dbCacheTimestamp = 0;
   const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
   return { success: true, customerName: customer.name, amount: Number(amount), remainingOutstanding: balance };
 }
 
-async function addCreditTool(customerId, amount, note, staffPhone) {
+async function addCreditTool(customerId, amount, note, staffPhone, storeId) {
   const db = await readDB();
-  const customer = db.customers.find(c => c.id === customerId);
+  const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === (storeId || 'default'));
+  const customer = storeCustomers.find(c => c.id === customerId);
   if (!customer) return { error: `Customer with ID '${customerId}' not found.` };
   const newTxId = genId('t');
   db.transactions.push({
@@ -393,20 +394,20 @@ async function addCreditTool(customerId, amount, note, staffPhone) {
     amount: Number(amount),
     note: note || 'Credit added via AI Bot',
     staff_phone: staffPhone || 'system',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    store_id: storeId || 'default',
   });
   await writeDB(db);
-  // Invalidate cache to ensure AI gets fresh data
-  cachedDB = null;
-  dbCacheTimestamp = 0;
+  cachedDB = null; dbCacheTimestamp = 0;
   const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
   return { success: true, customerName: customer.name, amountAdded: Number(amount), totalOutstanding: balance };
 }
 
-async function addItemToUnpaidBillTool(customerId, itemName, price, qty) {
+async function addItemToUnpaidBillTool(customerId, itemName, price, qty, storeId) {
   const db = await readDB();
-  const customer = db.customers.find(c => c.id === customerId);
-  if (!customer) return { error: `Customer with ID '${customerId}' not found.` };
+  const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === (storeId || 'default'));
+  const customer = storeCustomers.find(c => c.id === customerId);
+  if (!customer) return { error: `Customer with ID '${customerId}' not found in your store.` };
   let currentBill = db.bills.find(b => b.customer_id === customerId && b.status === 'unpaid');
   const timestampIso = new Date().toISOString();
   if (!currentBill) {
@@ -416,6 +417,7 @@ async function addItemToUnpaidBillTool(customerId, itemName, price, qty) {
       items: [],
       total: 0,
       status: 'unpaid',
+      store_id: storeId || 'default',
       created_at: timestampIso,
       paid_at: null
     };
@@ -432,10 +434,11 @@ async function addItemToUnpaidBillTool(customerId, itemName, price, qty) {
   return { success: true, customerName: customer.name, itemAdded: itemName, itemPrice: Number(price), qty: quantity, billTotal: currentBill.total, netOutstanding: balance };
 }
 
-async function generateBillTool(customerId, amount) {
+async function generateBillTool(customerId, amount, storeId) {
   const db = await readDB();
-  const customer = db.customers.find(c => c.id === customerId);
-  if (!customer) return { error: `Customer with ID '${customerId}' not found.` };
+  const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === (storeId || 'default'));
+  const customer = storeCustomers.find(c => c.id === customerId);
+  if (!customer) return { error: `Customer with ID '${customerId}' not found in your store.` };
   const newBillId = genId('b');
   const timestampIso = new Date().toISOString();
   db.bills.push({
@@ -444,6 +447,7 @@ async function generateBillTool(customerId, amount) {
     items: [{ name: 'General Grocery Item', qty: 1, price: Number(amount) }],
     total: Number(amount),
     status: 'unpaid',
+    store_id: storeId || 'default',
     created_at: timestampIso,
     paid_at: null
   });
@@ -455,10 +459,11 @@ async function generateBillTool(customerId, amount) {
   return { success: true, customerName: customer.name, billId: newBillId, amount: Number(amount), netOutstanding: balance };
 }
 
-async function markBillAsPaidTool(customerId) {
+async function markBillAsPaidTool(customerId, storeId) {
   const db = await readDB();
-  const customer = db.customers.find(c => c.id === customerId);
-  if (!customer) return { error: `Customer with ID '${customerId}' not found.` };
+  const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === (storeId || 'default'));
+  const customer = storeCustomers.find(c => c.id === customerId);
+  if (!customer) return { error: `Customer with ID '${customerId}' not found in your store.` };
   const unpaidBill = db.bills.find(b => b.customer_id === customerId && b.status === 'unpaid');
   if (!unpaidBill) {
     return { error: `No active unpaid bill found for customer '${customer.name}'.` };
@@ -473,19 +478,21 @@ async function markBillAsPaidTool(customerId) {
   return { success: true, customerName: customer.name, billId: unpaidBill.id, amountPaid: unpaidBill.total, netOutstanding: balance };
 }
 
-async function getCustomerBalancesTool() {
+async function getCustomerBalancesTool(storeId) {
   const db = await readDB();
-  const balances = db.customers.map(c => {
+  const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === (storeId || 'default'));
+  const balances = storeCustomers.map(c => {
     const bal = getCustomerOutstanding(c.id, db.transactions, db.bills);
     return { id: c.id, name: c.name, phone: c.phone, outstandingBalance: bal };
   });
   return { success: true, balances };
 }
 
-async function getBillPdfTool(customerId) {
+async function getBillPdfTool(customerId, storeId) {
   const db = await readDB();
-  const customer = db.customers.find(c => c.id === customerId);
-  if (!customer) return { error: `Customer with ID '${customerId}' not found.` };
+  const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === (storeId || 'default'));
+  const customer = storeCustomers.find(c => c.id === customerId);
+  if (!customer) return { error: `Customer with ID '${customerId}' not found in your store.` };
 
   // Find the latest unpaid bill for this customer
   const unpaidBill = db.bills.find(b => b.customer_id === customerId && b.status === 'unpaid');
@@ -499,6 +506,7 @@ async function getBillPdfTool(customerId) {
       items: [{ name: 'General Grocery Item', qty: 1, price: 100 }],
       total: 100,
       status: 'unpaid',
+      store_id: storeId || 'default',
       created_at: timestampIso,
       paid_at: null
     };
@@ -520,10 +528,11 @@ async function getBillPdfTool(customerId) {
   };
 }
 
-async function getCustomerStatementPdfTool(customerId) {
+async function getCustomerStatementPdfTool(customerId, storeId) {
   const db = await readDB();
-  const customer = db.customers.find(c => c.id === customerId);
-  if (!customer) return { error: `Customer with ID '${customerId}' not found.` };
+  const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === (storeId || 'default'));
+  const customer = storeCustomers.find(c => c.id === customerId);
+  if (!customer) return { error: `Customer with ID '${customerId}' not found in your store.` };
 
   const customerTransactions = db.transactions.filter(t => t.customer_id === customerId);
   const customerBills = db.bills.filter(b => b.customer_id === customerId);
@@ -541,15 +550,17 @@ async function getCustomerStatementPdfTool(customerId) {
   };
 }
 
-async function getDailyReportPdfTool(date) {
+async function getDailyReportPdfTool(date, storeId) {
   const db = await readDB();
   const targetDate = date || new Date().toISOString().substring(0, 10);
-  
-  const billsToday = db.bills.filter(b => b.created_at.startsWith(targetDate));
+
+  const storeBills = (db.bills || []).filter(b => (b.store_id || 'default') === (storeId || 'default'));
+  const billsToday = storeBills.filter(b => b.created_at.startsWith(targetDate));
   const billsTotal = billsToday.reduce((sum, b) => sum + b.total, 0);
-  const collectionsToday = db.transactions.filter(t => t.type === 'payment' && t.timestamp.startsWith(targetDate));
+  const storeTransactions = (db.transactions || []).filter(t => (t.store_id || 'default') === (storeId || 'default'));
+  const collectionsToday = storeTransactions.filter(t => t.type === 'payment' && t.timestamp.startsWith(targetDate));
   const paymentTotal = collectionsToday.reduce((sum, t) => sum + t.amount, 0);
-  const creditsToday = db.transactions.filter(t => t.type === 'credit' && t.timestamp.startsWith(targetDate));
+  const creditsToday = storeTransactions.filter(t => t.type === 'credit' && t.timestamp.startsWith(targetDate));
   const creditTotal = creditsToday.reduce((sum, t) => sum + t.amount, 0);
 
   return {
@@ -564,12 +575,14 @@ async function getDailyReportPdfTool(date) {
   };
 }
 
-async function getTodaySalesReportTool() {
+async function getTodaySalesReportTool(storeId) {
   const db = await readDB();
   const todayString = new Date().toISOString().substring(0, 10);
-  const billsToday = db.bills.filter(b => b.created_at.startsWith(todayString));
+  const storeBills = (db.bills || []).filter(b => (b.store_id || 'default') === (storeId || 'default'));
+  const billsToday = storeBills.filter(b => b.created_at.startsWith(todayString));
   const billsTotal = billsToday.reduce((sum, b) => sum + b.total, 0);
-  const collectionsToday = db.transactions.filter(t => t.type === 'payment' && t.timestamp.startsWith(todayString));
+  const storeTransactions = (db.transactions || []).filter(t => (t.store_id || 'default') === (storeId || 'default'));
+  const collectionsToday = storeTransactions.filter(t => t.type === 'payment' && t.timestamp.startsWith(todayString));
   const paymentTotal = collectionsToday.reduce((sum, t) => sum + t.amount, 0);
   const unpaidCount = billsToday.filter(b => b.status === 'unpaid').length;
   return {
@@ -582,14 +595,15 @@ async function getTodaySalesReportTool() {
   };
 }
 
-async function getShopDetailsTool() {
-  const db = await readDB();
-  return { success: true, shop: db.shop || {} };
+async function getShopDetailsTool(storeId) {
+  const storeDb = await readStoreDB(storeId);
+  return { success: true, shop: storeDb.shop || {} };
 }
 
-async function getCustomersListTool() {
+async function getCustomersListTool(storeId) {
   const db = await readDB();
-  const list = db.customers.map(c => ({ id: c.id, name: c.name, phone: c.phone }));
+  const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === (storeId || 'default'));
+  const list = storeCustomers.map(c => ({ id: c.id, name: c.name, phone: c.phone }));
   return { success: true, customers: list };
 }
 
@@ -646,8 +660,9 @@ function parseCommand(message, customers, transactions, bills) {
   }
 
   // ── ADD NEW CUSTOMER ──────────────────────────────────────────────────────────
-  // e.g. "naya customer Rahul 9876543210" / "add customer Priya 98765"
-  const newCustMatch = text.match(/(?:naya|new|add)\s+(?:customer|khata|grahak)\s+([a-zA-Z\u0900-\u097F\s]+?)\s+(\d{10})/i);
+  // e.g. "naya customer Rahul 9876543210" / "add customer Priya 98765" / "register customer Ramesh 9876543210"
+  const newCustMatch = text.match(/(?:naya|new|add|register)\s+(?:customer|khata|grahak|gahak|member)\s+([a-zA-Z\u0900-\u097F\s]+?)\s+(\d{10})/i) ||
+    text.match(/([a-zA-Z\u0900-\u097F\s]+?)\s+(?:ko|ka|ke)?\s*(?:customer|khata|grahak)\s+(?:add|register|banaye)\s*(?:karo|kar)?\s*(\d{10})/i);
   if (newCustMatch) {
     const name = newCustMatch[1].trim();
     const phone = newCustMatch[2].trim();
@@ -693,7 +708,9 @@ function parseCommand(message, customers, transactions, bills) {
   const custId = customer.id;
 
   // ── SEND BILL ─────────────────────────────────────────────────────────────────
-  if (text.includes('bill bhej') || text.includes('send bill') || text.includes('bill send')) {
+  if (text.includes('bill bhej') || text.includes('send bill') || text.includes('bill send') ||
+      text.includes('bill do') || text.includes('bill lao') || text.includes('bill dikhao') ||
+      text.includes('bill dekhna') || text.includes('bill chahiye') || text.includes('bill de do')) {
     return { type: 'send_bill', customerId: custId, customerName: custName };
   }
 
@@ -716,10 +733,10 @@ function parseCommand(message, customers, transactions, bills) {
   }
 
   // ── RECORD PAYMENT RECEIVED ───────────────────────────────────────────────────
-  // e.g. "Ramesh ne 200 diya" / "Ramesh ne 500 rupaye diye" / "Ramesh payment 300"
-  const paymentMatch = text.match(/(?:ne|ka|ke)?\s*(\d+)\s*(?:diya|diye|rupaye|rs|payment|jama|ada|paid)/i) ||
+  // e.g. "Ramesh ne 200 diya" / "Ramesh ne 500 rupaye diye" / "Ramesh payment 300" / "Ramesh se 500 liye"
+  const paymentMatch = text.match(/(?:ne|ka|ke|se)?\s*(\d+)\s*(?:diya|diye|rupaye|rs|payment|jama|ada|paid|liye|liya|mila|mil gaye|cash|chuka)/i) ||
     text.match(/payment\s+(\d+)/i) || text.match(/(\d+)\s*(?:diya|diye|ada kiya)/i);
-  if (paymentMatch && (text.includes('ne ') || text.includes('payment') || text.includes('diya') || text.includes('diye') || text.includes('ada'))) {
+  if (paymentMatch && (text.includes('ne ') || text.includes('payment') || text.includes('diya') || text.includes('diye') || text.includes('ada') || text.includes('liye') || text.includes('mila') || text.includes('cash'))) {
     const amount = parseInt(paymentMatch[1]);
     if (amount > 0) {
       return { type: 'record_payment', customerId: custId, customerName: custName, amount };
@@ -739,7 +756,7 @@ function parseCommand(message, customers, transactions, bills) {
   // ── ADD ITEM TO BILL ──────────────────────────────────────────────────────────
   // e.g. "Ramesh ka 50 mein Chini add karo" / "Ramesh ka soap 30 add karo"
   const addLineMatch = text.match(
-    /(?:(?:ka|ke)\s+(\d+)\s*(?:mein|me)?\s*([a-zA-Z\u0900-\u097F]+?)\s*add\s*(?:karo|do)?)|(?:(?:ka|ke)\s*([a-zA-Z\u0900-\u097F]+?)\s+(\d+)\s*add\s*(?:karo|do)?)/
+    /(?:(?:ka|ke|mein)\s+(\d+)\s*(?:mein|me|rupee|rupaye|rs|ka)?\s*([a-zA-Z\u0900-\u097F]+?)\s*(?:add|daal|dal|rakh)\s*(?:karo|do)?)|(?:(?:ka|ke)\s*([a-zA-Z\u0900-\u097F]+?)\s+(\d+)\s*(?:add|daal|dal|rakh)\s*(?:karo|do)?)/
   );
   if (addLineMatch) {
     let price = 0; let itemName = '';
@@ -759,6 +776,13 @@ function parseCommand(message, customers, transactions, bills) {
     return { type: 'generate_bill', customerId: custId, customerName: custName, amount };
   }
 
+  // ── GENERATE BILL (NO AMOUNT) ────────────────────────────────────────────────
+  // e.g. "Ramesh ka bill banao" (without amount) → fall through to ask via AI
+  if (text.includes('bill banao') || text.includes('bill banaiye') || text.includes('bill create')) {
+    // No amount found, so return unknown to let AI handle it (ask for amount or create empty)
+    return { type: 'unknown' };
+  }
+
   // ── ADD CREDIT (UDHAR) ────────────────────────────────────────────────────────
   // e.g. "Ramesh ka khata mein 100 daal do"
   const creditMatch = text.match(/(?:(?:khata|khate|account|me|mein)?\s*(\d+)\s*(?:daal|add|jama|credit|plus|deposit|udhar|udhaar))/i) ||
@@ -776,36 +800,36 @@ function parseCommand(message, customers, transactions, bills) {
 // ─── OPENROUTER AI FUNCTION CALLING (TOOL USE) ────────────────────────────────────
 
 // Map OpenRouter function calls to local JS functions
-async function executeTool(name, args, staffPhone) {
-  console.log(`🛠️ Executing AI Tool: "${name}" with args:`, args);
+async function executeTool(name, args, staffPhone, storeId) {
+  console.log(`🛠️ Executing AI Tool: "${name}" with args:`, args, `storeId:`, storeId);
   try {
     switch (name) {
       case 'addCustomerTool':
-        return await addCustomerTool(args.name, args.phone);
+        return await addCustomerTool(args.name, args.phone, storeId);
       case 'recordPaymentTool':
-        return await recordPaymentTool(args.customerId, args.amount, args.note, staffPhone);
+        return await recordPaymentTool(args.customerId, args.amount, args.note, staffPhone, storeId);
       case 'addCreditTool':
-        return await addCreditTool(args.customerId, args.amount, args.note, staffPhone);
+        return await addCreditTool(args.customerId, args.amount, args.note, staffPhone, storeId);
       case 'addItemToUnpaidBillTool':
-        return await addItemToUnpaidBillTool(args.customerId, args.itemName, args.price, args.qty);
+        return await addItemToUnpaidBillTool(args.customerId, args.itemName, args.price, args.qty, storeId);
       case 'generateBillTool':
-        return await generateBillTool(args.customerId, args.amount);
+        return await generateBillTool(args.customerId, args.amount, storeId);
       case 'markBillAsPaidTool':
-        return await markBillAsPaidTool(args.customerId);
+        return await markBillAsPaidTool(args.customerId, storeId);
       case 'getCustomerBalancesTool':
-        return await getCustomerBalancesTool();
+        return await getCustomerBalancesTool(storeId);
       case 'getTodaySalesReportTool':
-        return await getTodaySalesReportTool();
+        return await getTodaySalesReportTool(storeId);
       case 'getShopDetailsTool':
-        return await getShopDetailsTool();
+        return await getShopDetailsTool(storeId);
       case 'getCustomersListTool':
-        return await getCustomersListTool();
+        return await getCustomersListTool(storeId);
       case 'getBillPdfTool':
-        return await getBillPdfTool(args.customerId);
+        return await getBillPdfTool(args.customerId, storeId);
       case 'getCustomerStatementPdfTool':
-        return await getCustomerStatementPdfTool(args.customerId);
+        return await getCustomerStatementPdfTool(args.customerId, storeId);
       case 'getDailyReportPdfTool':
-        return await getDailyReportPdfTool(args.date);
+        return await getDailyReportPdfTool(args.date, storeId);
       default:
         return { error: `Tool "${name}" is not implemented.` };
     }
@@ -815,7 +839,7 @@ async function executeTool(name, args, staffPhone) {
   }
 }
 
-async function askOpenRouterWithTools(messageText, staffPhone) {
+async function askOpenRouterWithTools(messageText, staffPhone, storeId) {
   if (!openai) {
     const currentApiKey = process.env.OPENROUTER_API_KEY;
     if (currentApiKey && currentApiKey !== 'YOUR_OPENROUTER_API_KEY') {
@@ -831,235 +855,95 @@ async function askOpenRouterWithTools(messageText, staffPhone) {
     return '⚠️ OpenRouter API key missing. Please configure it in your .env file.';
   }
 
-  const modelName = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
-  const language = getLanguage(staffPhone);
+  const modelName = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-r1:free';
   const conversationContext = getConversationContext(staffPhone);
-  
+
   try {
     const db = await readDB();
-    const shopInfo = db.shop || {};
-    
-    // Declare the database tools for OpenRouter (OpenAI format)
-    const tools = [
-      {
-        type: 'function',
-        function: {
-          name: 'addCustomerTool',
-          description: 'Registers a new customer in the database with their name and phone number. Returns success:true with customer object if successful, or error if customer already exists.',
-          parameters: {
-            type: 'object',
-            properties: {
-              name: { type: 'string', description: 'The customer\'s full name, e.g. "Rahul Singh".' },
-              phone: { type: 'string', description: 'The customer\'s 10-digit phone number, e.g. "9876543210".' }
-            },
-            required: ['name', 'phone']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'recordPaymentTool',
-          description: 'Records a payment (jama/diya/cash received) from an existing customer to reduce their outstanding balance.',
-          parameters: {
-            type: 'object',
-            properties: {
-              customerId: { type: 'string', description: 'The customer ID, e.g. "c1".' },
-              amount: { type: 'number', description: 'The payment amount in Rupees, e.g. 500.' },
-              note: { type: 'string', description: 'Optional description of the payment, e.g. "Cash token payment".' }
-            },
-            required: ['customerId', 'amount']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'addCreditTool',
-          description: 'Adds outstanding credit (udhaar/khata/item taken on credit) to an existing customer.',
-          parameters: {
-            type: 'object',
-            properties: {
-              customerId: { type: 'string', description: 'The customer ID, e.g. "c1".' },
-              amount: { type: 'number', description: 'The credit amount in Rupees, e.g. 150.' },
-              note: { type: 'string', description: 'Optional description of the credit, e.g. "Refined oil 2L".' }
-            },
-            required: ['customerId', 'amount']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'addItemToUnpaidBillTool',
-          description: 'Adds an item (along with price and optional quantity) to a customer\'s active unpaid bill. Creates a new unpaid bill if none exists.',
-          parameters: {
-            type: 'object',
-            properties: {
-              customerId: { type: 'string', description: 'The customer ID, e.g. "c1".' },
-              itemName: { type: 'string', description: 'The name of the item, e.g. "Sugar".' },
-              price: { type: 'number', description: 'The price per unit in Rupees, e.g. 50.' },
-              qty: { type: 'number', description: 'The quantity of items, defaults to 1.' }
-            },
-            required: ['customerId', 'itemName', 'price']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'generateBillTool',
-          description: 'Generates a simple fixed-amount unpaid bill for a customer.',
-          parameters: {
-            type: 'object',
-            properties: {
-              customerId: { type: 'string', description: 'The customer ID, e.g. "c1".' },
-              amount: { type: 'number', description: 'The total bill amount in Rupees, e.g. 1000.' }
-            },
-            required: ['customerId', 'amount']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'markBillAsPaidTool',
-          description: 'Marks the customer\'s active unpaid bill as paid.',
-          parameters: {
-            type: 'object',
-            properties: {
-              customerId: { type: 'string', description: 'The customer ID, e.g. "c1".' }
-            },
-            required: ['customerId']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'getCustomerBalancesTool',
-          description: 'Retrieves outstanding balances for all registered customers.',
-          parameters: { type: 'object', properties: {} }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'getTodaySalesReportTool',
-          description: 'Retrieves today\'s sales report including total sales, total collections, and count of bills.',
-          parameters: { type: 'object', properties: {} }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'getShopDetailsTool',
-          description: 'Retrieves metadata about the shop, such as shop name, owner, and address.',
-          parameters: { type: 'object', properties: {} }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'getCustomersListTool',
-          description: 'Retrieves a list of all registered customers with their IDs, names, and phone numbers.',
-          parameters: { type: 'object', properties: {} }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'getBillPdfTool',
-          description: 'Generates a PDF invoice for a customer and returns the download URL. Finds the latest unpaid bill or creates a simple one if none exists.',
-          parameters: {
-            type: 'object',
-            properties: {
-              customerId: { type: 'string', description: 'The customer ID, e.g. "c1".' }
-            },
-            required: ['customerId']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'getCustomerStatementPdfTool',
-          description: 'Generates a PDF statement for a customer showing all their transactions, bills, and current balance.',
-          parameters: {
-            type: 'object',
-            properties: {
-              customerId: { type: 'string', description: 'The customer ID, e.g. "c1".' }
-            },
-            required: ['customerId']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'getDailyReportPdfTool',
-          description: 'Generates a PDF daily report showing sales, collections, credits, and bill counts for a specific date.',
-          parameters: {
-            type: 'object',
-            properties: {
-              date: { type: 'string', description: 'The date in YYYY-MM-DD format. If not provided, uses today\'s date.' }
-            },
-            required: []
-          }
-        }
-      }
-    ];
+    const storeDb = await readStoreDB(storeId);
+    const shopInfo = storeDb.shop || {};
 
-    // Build language-specific system instruction
-    const languageInstruction = language === 'english' 
-      ? `You must respond in English only. Do not use Hindi or Hinglish.`
-      : `You must respond in Hindi or Hinglish only. Do not use English. Use natural conversational Hindi that a shopkeeper would use.`;
+    const customerListString = (storeDb.customers || []).length > 0
+      ? (storeDb.customers || []).map(c => `  ID: ${c.id} — ${c.name} (${c.phone})`).join('\n')
+      : '  (No customers registered yet.)';
 
-    const systemInstruction = `
-You are the AI assistant for ${shopInfo.name || 'Sharma General Store'} owned by ${shopInfo.owner || 'Rajesh Sharma'} located at ${shopInfo.address || 'Main Bazaar, Farrukhabad'}.
-You process incoming messages from store staff and perform operations on the database using the tools available.
+    const todayBills = (storeDb.bills || []).filter(b => b.created_at?.startsWith(new Date().toISOString().substring(0, 10)));
+    const todaySales = todayBills.reduce((s, b) => s + (b.total || 0), 0);
+    const todayCollections = (storeDb.transactions || [])
+      .filter(t => t.type === 'payment' && t.timestamp?.startsWith(new Date().toISOString().substring(0, 10)))
+      .reduce((s, t) => s + (t.amount || 0), 0);
 
-${languageInstruction}
+    const systemInstruction = `Tu ${shopInfo.name || 'store'} ka AI assistant hai. Shop owner: ${shopInfo.owner || 'unknown'}, Address: ${shopInfo.address || 'unknown'}.
 
-CRITICAL RULES TO PREVENT HALLUCINATION:
-1. ALWAYS start by fetching the list of customers using 'getCustomersListTool' if you need to map names to customer IDs. If the user mentions customer names (e.g. "ramesh", "suresh"), you MUST match them to the registered customer ID from the list.
-2. If a customer is mentioned but is NOT in the list, tell the user that the customer is not registered, and politely instruct them to register the customer first using the format 'naya customer <naam> <phone>'. Do NOT call any other tool for that customer.
-3. NEVER make up customer IDs, names, or data. Only use data returned from tools. If addCustomerTool returns success, use the EXACT customer ID it returns. Do not invent your own.
-4. If money/rupees are mentioned, pass them to tools as integers/numbers.
-5. Execute tools when needed to resolve the user's intent. You can make multiple tool calls in a single turn (e.g., adding a customer and then recording their payment).
-6. After receiving the output of a tool, summarize the result in a polite conversational message to send back to the user. Make sure to use emojis, clear formatting, and standard Indian currency style (e.g., ₹1,000).
-7. If the request is a general question (greeting, shop details, or balance questions), call the appropriate query tool ('getShopDetailsTool', 'getCustomerBalancesTool', etc.) to fetch accurate info before answering.
-8. If a tool returns an error, communicate the exact error message to the user. Do not make up success messages.
-9. Keep responses concise and relevant. Do not add unnecessary information.
-10. PAY ATTENTION to conversation context. If the user previously provided a customer ID or name, remember it and use it. Don't ask for it again.
-11. If user provides a customer ID in format "(ID: c_xxxxx)" or "ID: c_xxxxx", use that exact ID for operations.
-`;
+Store ka aaj ka data:
+📊 Aaj ki sales: ₹${todaySales}
+💰 Aaj ka collection: ₹${todayCollections}
+👥 Total customers: ${(storeDb.customers || []).length}
+
+TERE PAAS YEH CUSTOMERS HAIN (INHI IDs use karna, kabhi bina ID mat banao):
+${customerListString}
+
+JO TOOLS TU USE KAR SAKTA HAI:
+- addCustomerTool(name, phone) → naya customer add
+- addItemToUnpaidBillTool(customerId, itemName, price, qty) → item add kare bill mein
+- generateBillTool(customerId, amount) → fixed amount ka bill
+- recordPaymentTool(customerId, amount, note) → payment record
+- addCreditTool(customerId, amount, note) → udhaar add
+- markBillAsPaidTool(customerId) → bill paid mark
+- getCustomerBalancesTool() → sab customers ka balance
+- getTodaySalesReportTool() → aaj ki sale
+- getShopDetailsTool() → shop info
+- getCustomersListTool() → customer list
+- getBillPdfTool(customerId) → bill ka PDF bhejna
+- getCustomerStatementPdfTool(customerId) → statement PDF
+- getDailyReportPdfTool(date) → daily report PDF
+
+BASIC RULES:
+1. Jo language mein user baat kare, usi mein jawab de (hinglish/hindi/english)
+2. Customer ID kabhi bina database ke mat banao — upar di hui list mein se lo ya addCustomerTool se milne ke baad
+3. Jo customer list mein nahi hai, pehle use add karo via addCustomerTool
+4. Ek turn mein ek se zyada tool call kar sakta hai (e.g. pehle customer add, phir bill)
+5. Paise hamesha number mein bhejo (e.g. 500, "five hundred" nahi)
+6. Jawab mein emoji aur Indian currency (₹1,000) use karo
+7. Agar tool error de, to wahi error user ko batao — success mat banao
+8. Users ka context yaad rakho — jo customer ID previous turn mein mili, wapas mat poocho`;
 
     // Build conversation context string
     let contextString = '';
     let lastCustomerId = null;
-    
+
     if (conversationContext.length > 0) {
-      contextString = '\n\nRecent conversation context:\n';
+      contextString = '\n\nPichli baatein (yaad rakho):\n';
       conversationContext.forEach((ctx, idx) => {
-        contextString += `${idx + 1}. User: "${ctx.message}"\n   Assistant: "${ctx.response.substring(0, 100)}..."\n`;
-        
-        // Extract customer ID from recent messages
+        contextString += `${idx + 1}. User: "${ctx.message}"\n   Assistant: "${ctx.response.substring(0, 150)}..."\n`;
         const extractedId = extractCustomerId(ctx.message);
-        if (extractedId) {
-          lastCustomerId = extractedId;
-        }
+        if (extractedId) { lastCustomerId = extractedId; }
       });
-      
       if (lastCustomerId) {
-        contextString += `\n⚠️ IMPORTANT: User recently mentioned customer ID: ${lastCustomerId}. Use this ID if they ask for operations without specifying customer again.`;
+        contextString += `\n⚠️ User ne pehle customer ID batayi thi: ${lastCustomerId}. Use karo agar wahi customer ho.`;
       }
     }
 
-    // Initialize messages list with context
     const messages = [
-      { role: 'system', content: `${systemInstruction}${contextString}` },
+      { role: 'system', content: `${systemInstruction}\n${contextString}` },
       { role: 'user', content: messageText }
+    ];
+
+    // DeepSeek-R1 ko tool definitions bhejni zaroori hai function calling ke liye
+    const tools = [
+      { type: 'function', function: { name: 'addCustomerTool', description: 'Naya customer add karna (name, phone)', parameters: { type: 'object', properties: { name: { type: 'string' }, phone: { type: 'string' } }, required: ['name', 'phone'] } } },
+      { type: 'function', function: { name: 'recordPaymentTool', description: 'Payment record karna (customerId, amount, note)', parameters: { type: 'object', properties: { customerId: { type: 'string' }, amount: { type: 'number' }, note: { type: 'string' } }, required: ['customerId', 'amount'] } } },
+      { type: 'function', function: { name: 'addCreditTool', description: 'Udhaar/credit add karna (customerId, amount, note)', parameters: { type: 'object', properties: { customerId: { type: 'string' }, amount: { type: 'number' }, note: { type: 'string' } }, required: ['customerId', 'amount'] } } },
+      { type: 'function', function: { name: 'addItemToUnpaidBillTool', description: 'Bill mein item add karna (customerId, itemName, price, qty)', parameters: { type: 'object', properties: { customerId: { type: 'string' }, itemName: { type: 'string' }, price: { type: 'number' }, qty: { type: 'number' } }, required: ['customerId', 'itemName', 'price'] } } },
+      { type: 'function', function: { name: 'generateBillTool', description: 'Fixed amount ka bill banana (customerId, amount)', parameters: { type: 'object', properties: { customerId: { type: 'string' }, amount: { type: 'number' } }, required: ['customerId', 'amount'] } } },
+      { type: 'function', function: { name: 'markBillAsPaidTool', description: 'Bill paid mark karna (customerId)', parameters: { type: 'object', properties: { customerId: { type: 'string' } }, required: ['customerId'] } } },
+      { type: 'function', function: { name: 'getCustomerBalancesTool', description: 'Sab customers ke outstanding balances dikhana', parameters: { type: 'object', properties: {} } } },
+      { type: 'function', function: { name: 'getTodaySalesReportTool', description: 'Aaj ki sales report dikhana', parameters: { type: 'object', properties: {} } } },
+      { type: 'function', function: { name: 'getShopDetailsTool', description: 'Shop ka naam, owner, address dikhana', parameters: { type: 'object', properties: {} } } },
+      { type: 'function', function: { name: 'getCustomersListTool', description: 'Saare customers ki list dikhana', parameters: { type: 'object', properties: {} } } },
+      { type: 'function', function: { name: 'getBillPdfTool', description: 'Bill ka PDF generate karna (customerId)', parameters: { type: 'object', properties: { customerId: { type: 'string' } }, required: ['customerId'] } } },
+      { type: 'function', function: { name: 'getCustomerStatementPdfTool', description: 'Customer statement ka PDF (customerId)', parameters: { type: 'object', properties: { customerId: { type: 'string' } }, required: ['customerId'] } } },
+      { type: 'function', function: { name: 'getDailyReportPdfTool', description: 'Daily report PDF (date YYYY-MM-DD optional)', parameters: { type: 'object', properties: { date: { type: 'string' } } } } }
     ];
 
     let response = await openai.chat.completions.create({
@@ -1082,7 +966,7 @@ CRITICAL RULES TO PREVENT HALLUCINATION:
       
       // Execute tools and get results
       for (const toolCall of toolCalls) {
-        const toolResult = await executeTool(toolCall.function.name, JSON.parse(toolCall.function.arguments), staffPhone);
+        const toolResult = await executeTool(toolCall.function.name, JSON.parse(toolCall.function.arguments), staffPhone, storeId);
         console.log(`   ↳ ${toolCall.function.name} result:`, toolResult);
         
         messages.push({
@@ -1109,19 +993,13 @@ CRITICAL RULES TO PREVENT HALLUCINATION:
     return finalResponse;
   } catch (error) {
     console.error('❌ OpenRouter API error:', error.message || error);
-    const errorMsg = language === 'english'
-      ? `❌ Technical error occurred. Please try again or contact admin. 🙏`
-      : `❌ कुछ तकनीकल समस्या हुई। कृपया दोबारा कोशिश करें या एडमिन को बताएं। 🙏`;
-    
+        const errorMsg = `❌ कुछ तकनीकल समस्या हुई। कृपया दोबारा कोशिश करें या एडमिन को बताएं। 🙏`;
+
     if (error.status === 429) {
-      return language === 'english'
-        ? `⏳ Bot is busy right now. Please try again in a minute. 🙏`
-        : `⏳ बॉट अभी व्यस्त है। एक मिनट बाद दोबारा कोशिश करें। 🙏`;
+      return `⏳ बॉट अभी व्यस्त है। एक मिनट बाद दोबारा कोशिश करें। 🙏`;
     }
-    if (error.status === 503 || error.message?.includes('network')) {
-      return language === 'english'
-        ? `📶 Network error. Please try again later.`
-        : `📶 नेटवर्क एरर। कृपया बाद में कोशिश करें।`;
+    if (error.status === 503 || error.message?.includes("network")) {
+      return `📶 नेटवर्क एरर। कृपया बाद में कोशिश करें।`;
     }
     return errorMsg;
   }
@@ -1293,6 +1171,7 @@ app.post('/webhook', async (req, res) => {
     const storeId = staffRow.store_id || 'default';
     const db = await readStoreDB(storeId);
     const shop = db.shop || {};
+    // fullDb already declared at line 1164 for write operations
     const activeStaff = staffRow;
     const action = parseCommand(bodyText, db.customers, db.transactions, db.bills);
     const timestampIso = new Date().toISOString();
@@ -1475,13 +1354,12 @@ app.post('/webhook', async (req, res) => {
           id: genId('c'),
           name,
           phone: np,
+          store_id: storeId || 'default',
           created_at: timestampIso.substring(0, 10)
         };
-        db.customers.push(newCustomer);
-        await writeDB(db);
-        // Invalidate cache to ensure AI gets fresh data
-        cachedDB = null;
-        dbCacheTimestamp = 0;
+        fullDb.customers.push(newCustomer);
+        await writeDB(fullDb);
+        cachedDB = null; dbCacheTimestamp = 0;
         replyText =
           `✅ *Naya Customer Add Ho Gaya!*\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -1497,19 +1375,18 @@ app.post('/webhook', async (req, res) => {
     } else if (action.type === 'record_payment') {
       const { customerId, customerName, amount } = action;
       const newTxId = genId('t');
-      db.transactions.push({
+      fullDb.transactions.push({
         id: newTxId,
         customer_id: customerId,
         type: 'payment',
         amount,
         note: `Payment received via Bot by ${activeStaff.name}`,
         staff_phone: staffPhone,
-        timestamp: timestampIso
+        timestamp: timestampIso,
+        store_id: storeId || 'default',
       });
-      await writeDB(db);
-      // Invalidate cache to ensure AI gets fresh data
-      cachedDB = null;
-      dbCacheTimestamp = 0;
+      await writeDB(fullDb);
+      cachedDB = null; dbCacheTimestamp = 0;
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `💵 *Payment Recorded!*\n` +
@@ -1528,19 +1405,18 @@ app.post('/webhook', async (req, res) => {
     } else if (action.type === 'add_credit') {
       const { customerId, customerName, amount } = action;
       const newTxId = genId('t');
-      db.transactions.push({
+      fullDb.transactions.push({
         id: newTxId,
         customer_id: customerId,
         type: 'credit',
         amount,
         note: `Credit added via Bot by ${activeStaff.name}`,
         staff_phone: staffPhone,
-        timestamp: timestampIso
+        timestamp: timestampIso,
+        store_id: storeId || 'default',
       });
-      await writeDB(db);
-      // Invalidate cache to ensure AI gets fresh data
-      cachedDB = null;
-      dbCacheTimestamp = 0;
+      await writeDB(fullDb);
+      cachedDB = null; dbCacheTimestamp = 0;
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `✅ *Udhar Add Ho Gaya!*\n` +
@@ -1554,19 +1430,18 @@ app.post('/webhook', async (req, res) => {
     } else if (action.type === 'generate_bill') {
       const { customerId, customerName, amount } = action;
       const newBillId = genId('b');
-      db.bills.push({
+      fullDb.bills.push({
         id: newBillId,
         customer_id: customerId,
         items: [{ name: 'General Grocery Item', qty: 1, price: amount }],
         total: amount,
         status: 'unpaid',
+        store_id: storeId || 'default',
         created_at: timestampIso,
         paid_at: null
       });
-      await writeDB(db);
-      // Invalidate cache to ensure AI gets fresh data
-      cachedDB = null;
-      dbCacheTimestamp = 0;
+      await writeDB(fullDb);
+      cachedDB = null; dbCacheTimestamp = 0;
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `📝 *Bill Bana Diya!*\n` +
@@ -1588,17 +1463,16 @@ app.post('/webhook', async (req, res) => {
           items: [],
           total: 0,
           status: 'unpaid',
+          store_id: storeId || 'default',
           created_at: timestampIso,
           paid_at: null
         };
-        db.bills.push(currentBill);
+        fullDb.bills.push(currentBill);
       }
       currentBill.items.push({ name: itemName, qty: 1, price });
       currentBill.total += price;
-      await writeDB(db);
-      // Invalidate cache to ensure AI gets fresh data
-      cachedDB = null;
-      dbCacheTimestamp = 0;
+      await writeDB(fullDb);
+      cachedDB = null; dbCacheTimestamp = 0;
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `🛒 *Item Add Ho Gaya!*\n` +
@@ -1692,10 +1566,8 @@ app.post('/webhook', async (req, res) => {
       } else {
         unpaidBill.status = 'paid';
         unpaidBill.paid_at = timestampIso;
-        await writeDB(db);
-        // Invalidate cache to ensure AI gets fresh data
-        cachedDB = null;
-        dbCacheTimestamp = 0;
+        await writeDB(fullDb);
+        cachedDB = null; dbCacheTimestamp = 0;
         const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
         replyText =
           `✅ *Bill Mark Paid Ho Gaya!*\n` +
@@ -1710,7 +1582,7 @@ app.post('/webhook', async (req, res) => {
     // ── UNKNOWN → AI AGENT WITH TOOL USE ─────────────────────────────────────
     } else {
       console.log(`🤖 Regex did not match. Forwarding to OpenRouter AI Agent: "${bodyText}"`);
-      replyText = await askOpenRouterWithTools(bodyText, staffPhone);
+      replyText = await askOpenRouterWithTools(bodyText, staffPhone, storeId);
       console.log(`🤖 AI Agent reply: "${replyText}"`);
     }
 
@@ -2135,7 +2007,12 @@ app.post('/api/register-store', async (req, res) => {
     // Check if store already exists
     const existingStore = db.stores.find(s => s.phone === normalizePhone(phone) || (email && s.email === email));
     if (existingStore) {
-      return res.status(400).json({ status: 'error', message: 'Store already registered with this phone or email' });
+      // Return the existing store_id so the client can use it for login
+      return res.status(200).json({
+        status: 'exists',
+        store_id: existingStore.id,
+        message: 'Store is already registered with this phone or email'
+      });
     }
     
     // Create new store

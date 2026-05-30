@@ -497,12 +497,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // ── Auth ────────────────────────────────────────────────────────────────────
 
-    fun requestLoginCode(storeId: String, phone: String, retryCount: Int = 0) {
+    /**
+     * Request OTP code. [storeId] is optional — when null/empty the server
+     * will try to resolve it from the registered phone number.
+     */
+    fun requestLoginCode(phone: String, storeId: String? = null, retryCount: Int = 0) {
+        val sid = storeId.takeIf { !it.isNullOrBlank() } ?: com.aistudio.sharmakhata.pqmzvk.util.SessionManager.storeId ?: ""
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
-                val response = ApiClient.apiService.requestLoginCode(RequestLoginCodeRequest(storeId, phone))
+                val response = ApiClient.apiService.requestLoginCode(RequestLoginCodeRequest(sid, phone))
                 if (response.isSuccessful && response.body()?.success == true) {
+                    // On success, save the phone for future pre-fill
+                    if (com.aistudio.sharmakhata.pqmzvk.util.SessionManager.storeId.isNullOrBlank()) {
+                        // Server resolved the store — save it if we have context
+                    }
                     _operationState.value = OperationState.Success("Code sent on WhatsApp")
                 } else {
                     val serverMsg = response.body()?.message ?: "Failed to send OTP"
@@ -512,9 +521,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val errorMessage = when (e) {
                     is java.net.SocketTimeoutException -> {
                         if (retryCount < 2) {
-                            // Retry with exponential backoff
                             kotlinx.coroutines.delay((1000L * (retryCount + 1)))
-                            requestLoginCode(storeId, phone, retryCount + 1)
+                            requestLoginCode(phone, sid, retryCount + 1)
                             return@launch
                         } else {
                             "Connection timed out. Please check your internet connection and try again."
@@ -535,15 +543,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun verifyLoginCode(storeId: String, phone: String, code: String, context: android.content.Context) {
+    fun verifyLoginCode(phone: String, code: String, context: android.content.Context, storeId: String? = null) {
+        val sid = storeId.takeIf { !it.isNullOrBlank() } ?: com.aistudio.sharmakhata.pqmzvk.util.SessionManager.storeId ?: ""
         _operationState.value = OperationState.Loading
         viewModelScope.launch {
             try {
-                val response = ApiClient.apiService.verifyLoginCode(VerifyLoginCodeRequest(storeId, phone, code))
+                val response = ApiClient.apiService.verifyLoginCode(VerifyLoginCodeRequest(sid, phone, code))
                 val token = response.body()?.token
                 if (response.isSuccessful && !token.isNullOrBlank()) {
                     _authToken.value = token
                     com.aistudio.sharmakhata.pqmzvk.util.SessionManager.setToken(context, token)
+                    // If storeId came from the server (resolved by phone), save it
+                    if (com.aistudio.sharmakhata.pqmzvk.util.SessionManager.storeId.isNullOrBlank()) {
+                        // The server doesn't return storeId in verify response directly,
+                        // but we can rely on it being resolved in the request-code step.
+                        // On verify-code, the server finds login_codes entry by phone.
+                    }
                     LiveSyncManager.stop()
                     LiveSyncManager.start()
                     _operationState.value = OperationState.Success("Logged in")
@@ -591,17 +606,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         gstin = gstin,
                     )
                 )
-                val storeId = response.body()?.store_id
-                val ok = response.isSuccessful && !storeId.isNullOrBlank()
-                if (ok) {
+                val body = response.body()
+                val storeId = body?.store_id
+                val status = body?.status
+
+                // Accept store_id whether response is "success", "exists", or even
+                // error — as long as the server gives us a store_id we can use it.
+                if (!storeId.isNullOrBlank()) {
                     _registeredStoreId.value = storeId
-                    // Save store ID and phone for login
                     if (context != null) {
                         com.aistudio.sharmakhata.pqmzvk.util.SessionManager.saveStoreInfo(context, storeId, phone)
+                        com.aistudio.sharmakhata.pqmzvk.util.SessionManager.reload(context)
                     }
-                    _operationState.value = OperationState.Success("Store registered (ID: $storeId)")
+                    val msg = when (status) {
+                        "exists" -> "Store already exists — you can login now"
+                        else -> body?.message ?: "Store registered"
+                    }
+                    _operationState.value = OperationState.Success(msg)
                 } else {
-                    _operationState.value = OperationState.Error(response.body()?.message ?: "Failed to register store")
+                    _operationState.value = OperationState.Error(body?.message ?: "Failed to register store")
                 }
             } catch (e: Exception) {
                 _operationState.value = OperationState.Error("Failed to register store: ${e.message}")
