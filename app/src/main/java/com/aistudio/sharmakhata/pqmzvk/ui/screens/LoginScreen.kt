@@ -407,7 +407,7 @@ fun LoginScreen(
                                     }
                                 }
                             }
-
+                        } else {
                             // ── OTP Stage ──
                             Icon(
                                 Icons.Default.Shield,
