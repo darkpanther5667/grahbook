@@ -39,6 +39,12 @@ const DB_FILE = path.join(__dirname, 'db.json');
 function requiresMobileApiKey(req) {
   if (!req.path.startsWith('/api/')) return false;
 
+  // Auth + registration endpoints should work without the mobile API key.
+  if (req.path === '/api/auth/request-code') return false;
+  if (req.path === '/api/auth/verify-code') return false;
+  if (req.path === '/api/auth/login') return false;
+  if (req.path === '/api/register-store') return false;
+  if (req.path.startsWith('/api/store/')) return false;
   // Allow PDF endpoints to be fetched by WhatsApp/clients without an app key.
   if (req.method === 'GET') {
     if (req.path === '/api/test-db') return false;
