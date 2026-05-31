@@ -3,613 +3,337 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Grahbook - The first AI-powered store bot built for Bharat. Manage billing, UPI payments, and customer chats—all without leaving WhatsApp.">
-  <meta name="keywords" content="WhatsApp bot, AI store bot, Indian merchants, UPI payments, billing automation, WhatsApp commerce">
-  <title>Grahbook | Commerce at the Speed of WhatsApp</title>
-
-  <!-- PWA Meta Tags -->
-  <meta name="theme-color" content="#25d366" id="theme-color-meta">
+  <title>Grahbook — Commerce at the Speed of WhatsApp</title>
+  <meta name="description" content="The first AI-powered store bot built for Bharat. Manage billing, UPI payments, and customer chats—all without leaving WhatsApp.">
+  <meta name="theme-color" id="theme-color" content="#25d366">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Grahbook">
   <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/icon-192x192.png">
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Font Geist and Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Google Material Icons -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: {
-              DEFAULT: '#25d366',
-              container: '#25d366',
-              on: '#ffffff',
-            },
-            secondary: '#0f172a',
-            tertiary: '#64748b',
-            background: '#f7f9fb',
-            surface: '#ffffff',
-            'surface-variant': '#e0e3e5',
-            outline: '#6c7b6b',
-            'outline-variant': '#bbcbb9',
-            'on-background': '#191c1e',
-            'on-surface': '#191c1e',
-            'on-surface-variant': '#3c4a3d',
-          },
-          fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
-            heading: ['Geist', 'ui-sans-serif', 'system-ui'],
-          },
-          borderRadius: {
-            DEFAULT: '0.5rem',
-            lg: '0.75rem',
-            xl: '1rem',
-          }
-        }
-      }
-    }
-  </script>
-
   <style>
-    /* ─── CSS CUSTOM PROPERTIES — LIGHT THEME (default) ─── */
-    :root {
-      --bg-body: #f7f9fb;
-      --bg-white: #ffffff;
-      --bg-surface: #ffffff;
-      --bg-surface-variant: #e0e3e5;
-      --bg-background: #f7f9fb;
-      --bg-card-hover: #ffffff;
-      --bg-strip: #f7f9fb;
-      --bg-footer: #0f172a;
-      --bg-nav: #ffffff;
-      --bg-nav-scrolled: rgba(255,255,255,0.85);
-      --bg-form: #ffffff;
-      --bg-input: #f7f9fb;
-      --bg-mobile-menu: rgba(255,255,255,0.98);
-      --bg-mockup: #ffffff;
-      --bg-chat: #e5ddd6;
-      --bg-phone-frame: #f7f9fb;
-      --bg-phone-screen: #ffffff;
+    /* ───────────── RESET & BASE ───────────── */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;overflow-x:hidden;background:#f7f9fb;color:#191c1e;cursor:none!important}
+    img{max-width:100%;display:block}
+    a,button,input,select,textarea,label{cursor:none!important}
+    h1,h2,h3,h4,h5,h6{font-family:'Inter',sans-serif}
 
-      --text-primary: #25d366;
-      --text-secondary: #0f172a;
-      --text-tertiary: #64748b;
-      --text-on-primary: #ffffff;
-      --text-body: #191c1e;
-      --text-on-bg: #191c1e;
-      --text-muted: #6c7b6b;
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:var(--bg-body)}
+    ::-webkit-scrollbar-thumb{background:#6c7b6b;border-radius:4px}
+    ::-webkit-scrollbar-thumb:hover{background:#25d366}
 
-      --border-color: #e0e3e5;
-      --border-light: #bbcbb9;
-      --border-card-hover: rgba(37,211,102,0.2);
-
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
-      --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
-      --shadow-card-hover: 0 24px 48px rgba(0,0,0,0.08);
-
-      --nav-border: rgba(224,227,229,0.6);
-      --section-divider-bg: linear-gradient(90deg, transparent, rgba(37,211,102,0.3), transparent);
-
-      /* WhatsApp mockup theme-aware colors */
-      --mockup-whatsapp-header: #075e54;
-      --mockup-chat-bg: #e5ddd6;
-      --mockup-bot-msg: #ffffff;
-      --mockup-customer-msg: #dcf8c6;
-      --mockup-input-bar: #ffffff;
-      --mockup-input-bg: #f0f2f5;
-      --mockup-product-card: #f0fdf4;
-      --mockup-product-border: #bbf7d0;
-      --mockup-icon-mic: #25d366;
-      --mockup-place-order: #25d366;
+    /* ───────────── CSS VARIABLES ───────────── */
+    :root{
+      --bg-body:#f7f9fb;--bg-card:#ffffff;--bg-section:#ffffff;--bg-alt:#f7f9fb;
+      --text-primary:#191c1e;--text-secondary:#0f172a;--text-tertiary:#64748b;
+      --border:#e0e3e5;--border-light:#bbcbb9;--primary:#25d366;--primary-dark:#128c7e;
+      --hover-shadow:0 24px 48px rgba(0,0,0,0.08);
+      --nav-bg:rgba(255,255,255,0.82);--nav-border:rgba(224,227,229,0.6);
+      --footer-bg:#0f172a;
+      --mockup-header:#075e54;--mockup-chat:#e5ddd6;--mockup-bot:#fff;--mockup-customer:#dcf8c6;
+      --mockup-input:#fff;--mockup-input-bg:#f0f2f5;--mockup-product:#f0fdf4;--mockup-product-b:#bbf7d0;
+      --phone-bg:#fff;--phone-border:#e0e3e5;
+    }
+    [data-theme=dark]{
+      --bg-body:#080c18;--bg-card:#111827;--bg-section:#0f172a;--bg-alt:#0a0e1a;
+      --text-primary:#e2e8f0;--text-secondary:#f1f5f9;--text-tertiary:#94a3b8;
+      --border:#1e293b;--border-light:#334155;
+      --hover-shadow:0 24px 48px rgba(0,0,0,0.5);
+      --nav-bg:rgba(15,23,42,0.9);--nav-border:rgba(30,41,59,0.8);--footer-bg:#020617;
+      --mockup-chat:#1a1a2e;--mockup-bot:#1e293b;--mockup-customer:#075e54;
+      --mockup-input:#1e293b;--mockup-input-bg:#0f172a;--mockup-product:#0f172a;--mockup-product-b:#1e293b;
+      --phone-bg:#1e293b;--phone-border:#334155;
     }
 
-    /* ─── CSS CUSTOM PROPERTIES — DARK THEME ─── */
-    [data-theme="dark"] {
-      --bg-body: #0a0e1a;
-      --bg-white: #111827;
-      --bg-surface: #111827;
-      --bg-surface-variant: #1e293b;
-      --bg-background: #0f172a;
-      --bg-card-hover: #1e293b;
-      --bg-strip: #0f172a;
-      --bg-footer: #020617;
-      --bg-nav: #0f172a;
-      --bg-nav-scrolled: rgba(15,23,42,0.92);
-      --bg-form: #111827;
-      --bg-input: #1e293b;
-      --bg-mobile-menu: rgba(15,23,42,0.98);
-      --bg-mockup: #1e293b;
-      --bg-chat: #1a1a2e;
-      --bg-phone-frame: #1e293b;
-      --bg-phone-screen: #111827;
+    /* ───────────── CUSTOM CURSOR ───────────── */
+    #cursor-dot{position:fixed;width:8px;height:8px;background:#25d366;border-radius:50%;pointer-events:none;z-index:99999;transition:transform .15s ease,background .3s;transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(37,211,102,0.6)}
+    #cursor-ring{position:fixed;width:40px;height:40px;border:2px solid rgba(37,211,102,0.35);border-radius:50%;pointer-events:none;z-index:99998;transition:width .4s cubic-bezier(.34,1.56,.64,1),height .4s cubic-bezier(.34,1.56,.64,1),border-color .4s,background .4s;transform:translate(-50%,-50%);mix-blend-mode:difference}
+    #cursor-ring.hover{width:64px;height:64px;border-color:rgba(37,211,102,0.6);background:rgba(37,211,102,0.06)}
+    #cursor-ring.click{width:32px;height:32px}
 
-      --text-primary: #4ade80;
-      --text-secondary: #f1f5f9;
-      --text-tertiary: #94a3b8;
-      --text-on-primary: #ffffff;
-      --text-body: #e2e8f0;
-      --text-on-bg: #e2e8f0;
-      --text-muted: #94a3b8;
+    /* ───────────── SCROLL PROGRESS ───────────── */
+    #scroll-progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#25d366,#128c7e);z-index:9999;width:0%;transition:width 50ms linear}
 
-      --border-color: #1e293b;
-      --border-light: #334155;
-      --border-card-hover: rgba(74,222,128,0.25);
+    /* ───────────── SECTION REVEALS ───────────── */
+    .reveal{opacity:0;transform:translateY(50px);transition:all .9s cubic-bezier(.16,1,.3,1)}
+    .reveal.active{opacity:1;transform:translateY(0)}
+    .reveal-l{opacity:0;transform:translateX(-70px);transition:all .9s cubic-bezier(.16,1,.3,1)}
+    .reveal-l.active{opacity:1;transform:translateX(0)}
+    .reveal-r{opacity:0;transform:translateX(70px);transition:all .9s cubic-bezier(.16,1,.3,1)}
+    .reveal-r.active{opacity:1;transform:translateX(0)}
+    .reveal-s{opacity:0;transform:scale(.85);transition:all 1s cubic-bezier(.16,1,.3,1)}
+    .reveal-s.active{opacity:1;transform:scale(1)}
 
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-      --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
-      --shadow-card-hover: 0 24px 48px rgba(0,0,0,0.5);
+    /* ───────────── KEYFRAMES ───────────── */
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+    @keyframes floatSlow{0%,100%{transform:translateY(0)}50%{transform:translateY(-24px)}}
+    @keyframes pulseGlow{0%,100%{box-shadow:0 0 20px rgba(37,211,102,.3)}50%{box-shadow:0 0 50px rgba(37,211,102,.5),0 0 80px rgba(37,211,102,.15)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    @keyframes typingDot{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+    @keyframes ripple{to{transform:scale(4);opacity:0}}
 
-      --nav-border: rgba(30,41,59,0.8);
-      --section-divider-bg: linear-gradient(90deg, transparent, rgba(74,222,128,0.25), transparent);
+    /* ───────────── NAV ───────────── */
+    nav{position:fixed;top:0;left:0;right:0;z-index:9997;padding:0 24px;transition:all .5s cubic-bezier(.16,1,.3,1);background:transparent}
+    nav.scrolled{background:var(--nav-bg);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--nav-border);box-shadow:0 4px 30px rgba(0,0,0,.06)}
+    .nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:68px;transition:height .4s}
+    nav.scrolled .nav-inner{height:60px}
 
-      /* Dark WhatsApp mockup */
-      --mockup-whatsapp-header: #075e54;
-      --mockup-chat-bg: #1a1a2e;
-      --mockup-bot-msg: #1e293b;
-      --mockup-customer-msg: #075e54;
-      --mockup-input-bar: #1e293b;
-      --mockup-input-bg: #0f172a;
-      --mockup-product-card: #0f172a;
-      --mockup-product-border: #1e293b;
-      --mockup-icon-mic: #4ade80;
-      --mockup-place-order: #25d366;
+    .theme-toggle{width:48px;height:28px;border-radius:14px;background:#e0e3e5;cursor:pointer;position:relative;border:none;padding:0;flex-shrink:0;transition:background .3s}
+    [data-theme=dark] .theme-toggle{background:#1e293b}
+    .theme-toggle .thumb{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;transition:transform .4s cubic-bezier(.34,1.56,.64,1),background .3s;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+    [data-theme=dark] .theme-toggle .thumb{transform:translateX(20px);background:#0f172a}
+    .theme-toggle .thumb .material-icons{font-size:14px;transition:opacity .3s}
+    .mobile-menu{position:fixed;top:64px;left:0;right:0;background:var(--nav-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--nav-border);padding:20px 24px;transform:translateY(-120%);opacity:0;visibility:hidden;transition:all .5s cubic-bezier(.16,1,.3,1);z-index:9996}
+    .mobile-menu.active{transform:translateY(0);opacity:1;visibility:visible}
+    .mobile-menu a{transform:translateX(-20px);opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1)}
+    .mobile-menu.active a{transform:translateX(0);opacity:1}
+    .mobile-menu.active a:nth-child(1){transition-delay:.05s}
+    .mobile-menu.active a:nth-child(2){transition-delay:.1s}
+    .mobile-menu.active a:nth-child(3){transition-delay:.15s}
+
+    /* ───────────── HERO ───────────── */
+    .hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;background:linear-gradient(135deg,#25d366,#128c7e,#075e54);background-size:300% 300%;animation:gradientShift 12s ease infinite}
+    #hero-canvas{position:absolute;inset:0;z-index:1;pointer-events:none}
+    .hero-mesh{position:absolute;inset:0;z-index:1;
+      background:radial-gradient(ellipse 80% 50% at 0% 20%,rgba(255,255,255,.1) 0%,transparent 60%),
+                radial-gradient(ellipse 60% 40% at 100% 80%,rgba(255,255,255,.08) 0%,transparent 60%),
+                radial-gradient(ellipse 50% 40% at 50% 50%,rgba(255,255,255,.06) 0%,transparent 60%);
     }
 
-    /* ─── BASE ─── */
-    html { scroll-behavior: smooth; }
+    .hero-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.12;z-index:1}
+    .hero-content{position:relative;z-index:2;width:100%;max-width:1280px;margin:0 auto;padding:120px 24px 80px}
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-body);
-      color: var(--text-body);
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);padding:6px 16px 6px 8px;border-radius:100px;font-size:13px;font-weight:500;color:#fff;margin-bottom:28px;transform:translateY(30px);opacity:0;animation:fadeUp .8s .3s forwards}
+    .hero-badge .dot{width:7px;height:7px;background:#fff;border-radius:50%;animation:pulseDot 2s infinite}
+    @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+    @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
 
-    h1, h2, h3, h4, h5, h6 { font-family: 'Geist', sans-serif; }
+    .hero-title{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:800;line-height:1.05;color:#fff;margin-bottom:20px;letter-spacing:-.03em}
+    .hero-title .line{display:block;overflow:hidden}
+    .hero-title .line span{display:block;transform:translateY(100%);animation:lineUp .8s cubic-bezier(.16,1,.3,1) forwards}
+    .hero-title .line:nth-child(1) span{animation-delay:.5s}
+    .hero-title .line:nth-child(2) span{animation-delay:.7s}
+    .hero-title .line:nth-child(3) span{animation-delay:.9s}
+    .hero-title .highlight{padding:0 12px;position:relative;display:inline-block}
+    .hero-title .highlight::after{content:'';position:absolute;inset:0;background:rgba(220,248,198,.25);border-radius:12px;transform:rotate(-2deg) scaleX(0);transform-origin:left;animation:scaleIn .6s 1.1s cubic-bezier(.16,1,.3,1) forwards}
+    @keyframes lineUp{to{transform:translateY(0)}}
+    @keyframes scaleIn{to{transform:rotate(-2deg) scaleX(1)}}
 
-    /* ─── CUSTOM SCROLLBAR ─── */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg-body); }
-    ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text-primary); }
+    .hero-sub{font-size:clamp(1rem,2vw,1.25rem);color:rgba(255,255,255,.8);max-width:540px;line-height:1.7;margin-bottom:36px;transform:translateY(30px);opacity:0;animation:fadeUp .8s 1s forwards}
 
-    .gradient-bg { background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); }
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;transform:translateY(30px);opacity:0;animation:fadeUp .8s 1.2s forwards}
 
-    /* ─── KEYFRAME ANIMATIONS ─── */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(40px) scale(0.97); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeInScale {
-      from { opacity: 0; transform: scale(0.85); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      33% { transform: translateY(-12px) rotate(1deg); }
-      66% { transform: translateY(5px) rotate(-1deg); }
-    }
-    @keyframes floatSlow {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-18px); }
-    }
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 20px rgba(37,211,102,0.3); }
-      50% { box-shadow: 0 0 40px rgba(37,211,102,0.6), 0 0 60px rgba(37,211,102,0.2); }
-    }
-    @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(60px) scale(0.95); }
-      to { opacity: 1; transform: translateX(0) scale(1); }
-    }
-    @keyframes slideInLeft {
-      from { opacity: 0; transform: translateX(-60px) scale(0.95); }
-      to { opacity: 1; transform: translateX(0) scale(1); }
-    }
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    @keyframes typingDot {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes ripple {
-      to { transform: scale(4); opacity: 0; }
-    }
+    .hero-stats{display:flex;align-items:center;gap:24px;margin-top:48px;padding-top:28px;border-top:1px solid rgba(255,255,255,.1);transform:translateY(30px);opacity:0;animation:fadeUp .8s 1.4s forwards}
 
-    .animate-fade-in-up { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    .animate-fade-in-down { animation: fadeInDown 0.6s ease-out forwards; }
-    .animate-slide-in-right { animation: slideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    .animate-slide-in-left { animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    .animate-float { animation: float 4s ease-in-out infinite; }
-    .animate-float-slow { animation: floatSlow 6s ease-in-out infinite; }
-    .animate-pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
-    .animate-fade-in-scale { animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    .animate-gradient { animation: gradientShift 8s ease infinite; background-size: 200% 200%; }
+    /* ───────────── MAGNETIC BUTTON ───────────── */
+    .magnetic-wrap{display:inline-block;position:relative}
+    .btn-primary,.btn-ghost{padding:14px 32px;border-radius:14px;font-weight:600;font-size:15px;border:none;display:inline-flex;align-items:center;gap:8px;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;position:relative;overflow:hidden;white-space:nowrap}
+    .btn-primary{background:#fff;color:#25d366;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+    .btn-primary:hover{box-shadow:0 12px 32px rgba(0,0,0,.18);transform:translateY(-2px)}
+    .btn-ghost{border:2px solid rgba(255,255,255,.3);color:#fff;background:transparent}
+    .btn-ghost:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5)}
+    .btn-ripple{position:relative;overflow:hidden}
+    .btn-ripple::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.3);border-radius:50%;transform:scale(0);opacity:1}
+    .btn-ripple:active::after{animation:ripple .5s ease-out}
 
-    /* ─── SCROLL REVEAL ─── */
-    .reveal { opacity: 0; transform: translateY(40px) scale(0.97); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-    .reveal.active { opacity: 1; transform: translateY(0) scale(1); }
-    .reveal-left { opacity: 0; transform: translateX(-60px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-    .reveal-left.active { opacity: 1; transform: translateX(0); }
-    .reveal-right { opacity: 0; transform: translateX(60px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-    .reveal-right.active { opacity: 1; transform: translateX(0); }
-    .reveal-scale { opacity: 0; transform: scale(0.85); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-    .reveal-scale.active { opacity: 1; transform: scale(1); }
+    /* ───────────── PHONE MOCKUP ───────────── */
+    .phone-wrapper{position:relative;display:flex;justify-content:center;align-items:center}
+    .phone-glow{position:absolute;width:120%;height:120%;top:-10%;left:-10%;background:radial-gradient(circle,rgba(37,211,102,.3),transparent 70%);border-radius:50%;filter:blur(60px);opacity:.6;animation:pulseGlow 3s ease-in-out infinite}
+    .phone{width:300px;height:540px;border-radius:32px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.3);border:4px solid rgba(255,255,255,.15);display:flex;flex-direction:column;position:relative;background:var(--phone-bg);transition:transform .1s ease-out;transform-style:preserve-3d;perspective:1000px}
+    .phone-notch{width:96px;height:18px;background:#bcbcbc;border-radius:9px;margin:6px auto 0}
 
-    /* ─── THEME TOGGLE ─── */
-    .theme-toggle {
-      width: 48px;
-      height: 28px;
-      border-radius: 14px;
-      background: #e0e3e5;
-      cursor: pointer;
-      position: relative;
-      transition: background 0.3s ease;
-      flex-shrink: 0;
-      border: none;
-      padding: 0;
-    }
-    [data-theme="dark"] .theme-toggle { background: #1e293b; }
+    @keyframes msgIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .msg-anim{animation:msgIn .5s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
 
-    .theme-toggle .thumb {
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-    }
-    [data-theme="dark"] .theme-toggle .thumb {
-      transform: translateX(20px);
-      background: #0f172a;
-    }
-    .theme-toggle .thumb .material-icons {
-      font-size: 14px;
-      line-height: 1;
-      transition: opacity 0.3s ease;
-    }
+    /* ───────────── SECTION COMMON ───────────── */
+    .section{padding:100px 24px}
+    .section-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(37,211,102,.08);padding:5px 14px;border-radius:100px;font-size:13px;font-weight:600;color:#25d366;margin-bottom:16px}
+    .section-title{font-size:clamp(1.8rem,4vw,3rem);font-weight:800;color:var(--text-secondary);margin-bottom:16px;letter-spacing:-.02em;line-height:1.15}
+    .section-sub{font-size:clamp(.95rem,1.2vw,1.1rem);color:var(--text-tertiary);max-width:560px;margin:0 auto 48px;line-height:1.6}
 
-    /* ─── NAVBAR ─── */
-    nav {
-      background: var(--bg-nav);
-      border-bottom: 1px solid var(--border-color);
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    nav.scrolled {
-      background: var(--bg-nav-scrolled) !important;
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border-bottom-color: var(--nav-border) !important;
-      box-shadow: var(--shadow-md);
-    }
-    nav.scrolled .nav-inner { height: 60px; }
+    .section-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(37,211,102,.25),transparent);margin:0}
 
-    /* ─── BUTTON RIPPLE ─── */
-    .btn-ripple { position: relative; overflow: hidden; }
-    .btn-ripple::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(255,255,255,0.3);
-      border-radius: 50%;
-      transform: scale(0);
-      opacity: 1;
-    }
-    .btn-ripple:active::after { animation: ripple 0.5s ease-out; }
+    /* ───────────── FEATURES ───────────── */
+    .feature-card{padding:36px 32px;border-radius:20px;background:var(--bg-card);border:1px solid var(--border);transition:all .5s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+    .feature-card::before{content:'';position:absolute;inset:0;opacity:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(37,211,102,.08),transparent 60%);transition:opacity .5s;pointer-events:none}
+    .feature-card:hover::before{opacity:1}
+    .feature-card:hover{transform:translateY(-8px);box-shadow:var(--hover-shadow);border-color:rgba(37,211,102,.2)}
+    .feature-icon{width:60px;height:60px;border-radius:18px;background:rgba(37,211,102,.1);display:flex;align-items:center;justify-content:center;margin-bottom:24px;transition:all .5s cubic-bezier(.34,1.56,.64,1);position:relative}
+    .feature-card:hover .feature-icon{transform:scale(1.1) rotate(6deg);background:rgba(37,211,102,.15)}
+    .feature-icon .ring{position:absolute;inset:-5px;border-radius:18px;border:2px solid rgba(37,211,102,.12);transition:all .5s}
+    .feature-card:hover .feature-icon .ring{transform:scale(1.2);opacity:0}
 
-    /* ─── CARD 3D TILT ─── */
-    .tilt-card { transform-style: preserve-3d; perspective: 1000px; }
-    .tilt-card-inner { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform-style: preserve-3d; }
-    .tilt-card:hover .tilt-card-inner { transform: rotateX(var(--rotX)) rotateY(var(--rotY)); }
-    .tilt-card .tilt-glow {
-      position: absolute; inset: 0; border-radius: inherit; opacity: 0;
-      transition: opacity 0.4s ease;
-      background: radial-gradient(circle at var(--mouseX) var(--mouseY), rgba(37,211,102,0.12), transparent 60%);
-      pointer-events: none;
-    }
-    .tilt-card:hover .tilt-glow { opacity: 1; }
+    /* ───────────── MARQUEE ───────────── */
+    .marquee{overflow:hidden;position:relative}
+    .marquee-track{display:flex;gap:24px;width:max-content;animation:marquee 30s linear infinite}
+    .marquee-card{padding:20px 28px;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;min-width:340px;transition:all .3s}
+    .marquee-card:hover{transform:translateY(-4px);box-shadow:var(--hover-shadow)}
+    .marquee:hover .marquee-track{animation-play-state:paused}
 
-    /* ─── HERO ─── */
-    .hero-mesh {
-      position: absolute; inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 0% 20%, rgba(255,255,255,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 100% 80%, rgba(255,255,255,0.06) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(18,140,126,0.15) 0%, transparent 60%);
-    }
-    .hero-orb { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.15; }
+    /* ───────────── PRICING ───────────── */
+    .pricing-card{padding:40px 32px;border-radius:20px;background:var(--bg-card);border:1px solid var(--border);transition:all .5s cubic-bezier(.16,1,.3,1);position:relative}
+    .pricing-card.featured{border:2px solid #25d366;box-shadow:0 12px 40px rgba(37,211,102,.12)}
+    .pricing-card:hover{transform:translateY(-8px);box-shadow:var(--hover-shadow)}
+    .pricing-card.featured:hover{box-shadow:0 20px 60px rgba(37,211,102,.18)}
+    .popular-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);padding:4px 20px;background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;font-size:12px;font-weight:600;border-radius:100px;white-space:nowrap;box-shadow:0 4px 16px rgba(37,211,102,.3)}
 
-    /* ─── PRICING GLOW ─── */
-    .pricing-glow {
-      position: absolute; inset: -1px; border-radius: inherit;
-      background: linear-gradient(135deg, #25d366, #128c7e, #25d366);
-      background-size: 200% 200%; z-index: -1; opacity: 0;
-      transition: opacity 0.4s ease; animation: gradientShift 3s ease infinite;
-    }
-    .popular-card:hover .pricing-glow { opacity: 1; }
+    /* ───────────── FORM ───────────── */
+    .form-card{padding:48px 40px;border-radius:24px;background:var(--bg-card);border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.04)}
+    .form-input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--border);background:var(--bg-alt);color:var(--text-primary);font-size:15px;transition:all .3s;outline:none}
+    .form-input:focus{border-color:#25d366;box-shadow:0 0 0 4px rgba(37,211,102,.1);transform:translateY(-2px)}
+    .form-input::placeholder{color:var(--text-tertiary);opacity:.6}
 
-    /* ─── FEATURE ICON ─── */
-    .feature-icon-wrap { position: relative; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    .tilt-card:hover .feature-icon-wrap { transform: scale(1.1) rotate(6deg) translateZ(30px); }
-    .feature-icon-ring {
-      position: absolute; inset: -4px; border-radius: 50%;
-      border: 2px solid rgba(37,211,102,0.15); transition: all 0.5s ease;
-    }
-    .tilt-card:hover .feature-icon-ring { border-color: rgba(37,211,102,0.4); transform: scale(1.15); opacity: 0; }
+    /* ───────────── FOOTER ───────────── */
+    footer{background:var(--footer-bg);color:rgba(255,255,255,.8);padding:80px 24px 40px}
 
-    /* ─── SECTION DIVIDER ─── */
-    .section-divider { height: 1px; background: var(--section-divider-bg); transition: background 0.3s ease; }
+    /* ───────────── BACK TO TOP ───────────── */
+    .back-top{position:fixed;bottom:32px;right:32px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;border:none;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9995;opacity:0;visibility:hidden;transform:scale(.8);transition:all .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 20px rgba(37,211,102,.4)}
+    .back-top.visible{opacity:1;visibility:visible;transform:scale(1)}
+    .back-top:hover{transform:translateY(-6px) scale(1.05);box-shadow:0 12px 32px rgba(37,211,102,.5)}
 
-    /* ─── FORM STYLES ─── */
-    .form-input { transition: all 0.3s ease; }
-    .form-input:focus { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37, 211, 102, 0.12); }
-
-    /* ─── BACK TO TOP ─── */
-    .back-to-top {
-      position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px;
-      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; opacity: 0; visibility: hidden;
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 1000;
-      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
-    }
-    .back-to-top.visible { opacity: 1; visibility: visible; }
-    .back-to-top:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 8px 25px rgba(37, 211, 102, 0.5); }
-
-    /* ─── MOBILE MENU ─── */
-    .mobile-menu {
-      position: fixed; top: 64px; left: 0; right: 0;
-      background: var(--bg-mobile-menu);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--nav-border);
-      padding: 20px; transform: translateY(-110%); opacity: 0;
-      visibility: hidden; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 49;
-    }
-    .mobile-menu.active { transform: translateY(0); opacity: 1; visibility: visible; }
-    .mobile-menu a { transform: translateX(-20px); opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-    .mobile-menu.active a { transform: translateX(0); opacity: 1; }
-    .mobile-menu.active a:nth-child(1) { transition-delay: 0.05s; }
-    .mobile-menu.active a:nth-child(2) { transition-delay: 0.1s; }
-    .mobile-menu.active a:nth-child(3) { transition-delay: 0.15s; }
-
-    /* ─── LOADING SPINNER ─── */
-    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
-
-    /* ─── MISC ─── */
-    .popular-badge { animation: pulseGlow 2s ease-in-out infinite; }
-    .typing-dot { animation: typingDot 1.4s ease-in-out infinite; }
-    .btn-hover { position: relative; overflow: hidden; transition: all 0.3s ease; }
-    .btn-hover::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: left 0.5s ease; }
-    .btn-hover:hover::before { left: 100%; }
-    .card-hover { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-    .card-hover:hover { transform: translateY(-6px); box-shadow: var(--shadow-card-hover); }
-
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
-    .focus\:not-sr-only:focus { position: static; width: auto; height: auto; padding: 0; margin: 0; overflow: visible; clip: auto; white-space: normal; border-width: 0; }
-
-    /* ─── THEME-AWARE UTILITY CLASSES ─── */
-    .bg-themed-surface { background: var(--bg-surface); }
-    .bg-themed-white { background: var(--bg-white); }
-    .bg-themed-background { background: var(--bg-background); }
-    .bg-themed-strip { background: var(--bg-strip); }
-    .bg-themed-form { background: var(--bg-form); }
-    .bg-themed-input { background: var(--bg-input); }
-    .text-themed-secondary { color: var(--text-secondary); }
-    .text-themed-tertiary { color: var(--text-tertiary); }
-    .text-themed-body { color: var(--text-body); }
-    .border-themed { border-color: var(--border-color); }
-    .border-themed-light { border-color: var(--border-light); }
-    .shadow-themed { box-shadow: var(--shadow-md); }
-    .shadow-themed-lg { box-shadow: var(--shadow-lg); }
+    /* ───────────── RESPONSIVE ───────────── */
+    @media(max-width:1024px){.hero .grid{grid-template-columns:1fr}.phone-wrapper{display:none}}
+    @media(max-width:768px){nav{padding:0 16px}.section{padding:60px 16px}.form-card{padding:28px 20px}}
   </style>
 </head>
-<body class="min-h-full" style="background-color: var(--bg-body); color: var(--text-body);">
-  <!-- Skip to main content link for accessibility -->
-  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 !bg-[#25d366] text-white px-4 py-2 rounded-lg z-[100]">
-    Skip to main content
-  </a>
+<body>
 
-  <!-- Navigation -->
-  <nav role="navigation" aria-label="Main navigation" style="background: var(--bg-nav); border-bottom-color: var(--border-color);">
-    <div class="nav-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 transition-all duration-300">
-      <a href="#" class="flex items-center gap-3 group cursor-pointer">
-        <span class="material-icons text-[#25d366] text-3xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">storefront</span>
-        <span class="font-bold text-xl" style="color: var(--text-secondary);">Grahbook</span>
+  <!-- ─── CUSTOM CURSOR ─── -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- ─── SCROLL PROGRESS ─── -->
+  <div id="scroll-progress"></div>
+
+  <!-- ─── NAV ─── -->
+  <nav role="navigation">
+    <div class="nav-inner">
+      <a href="#" class="flex items-center gap-2 group" style="cursor:none">
+        <span class="material-icons" style="font-size:30px;color:#25d366;transition:transform .4s cubic-bezier(.34,1.56,.64,1)">storefront</span>
+        <span class="font-bold" style="font-size:20px;color:var(--text-secondary);transition:color .3s">Grahbook</span>
       </a>
       <div class="hidden md:flex items-center gap-6">
-        <a href="#features" style="color: var(--text-tertiary);" class="hover:color-[var(--text-secondary)] transition-all duration-300 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#25d366] after:transition-all after:duration-300 hover:after:w-full focus:outline-none focus:ring-2 focus:ring-[#25d366] focus:ring-offset-2 rounded-lg px-2 py-1">Features</a>
-        <a href="#pricing" style="color: var(--text-tertiary);" class="hover:color-[var(--text-secondary)] transition-all duration-300 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#25d366] after:transition-all after:duration-300 hover:after:w-full focus:outline-none focus:ring-2 focus:ring-[#25d366] focus:ring-offset-2 rounded-lg px-2 py-1">Pricing</a>
-        <!-- Theme Toggle -->
-        <button id="theme-toggle-btn" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-          <span class="thumb">
-            <span class="material-icons" id="theme-icon" style="color: #f59e0b;">dark_mode</span>
-          </span>
+        <a href="#features" class="nav-link" style="color:var(--text-tertiary);text-decoration:none;font-size:14px;font-weight:500;transition:color .3s;position:relative;padding:4px 0">Features</a>
+        <a href="#pricing" class="nav-link" style="color:var(--text-tertiary);text-decoration:none;font-size:14px;font-weight:500;transition:color .3s;position:relative;padding:4px 0">Pricing</a>
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+          <span class="thumb"><span class="material-icons" id="themeIcon" style="color:#f59e0b">dark_mode</span></span>
         </button>
-        <a href="#register" class="btn-ripple px-4 py-2 bg-[#25d366] text-white rounded-lg font-medium hover:bg-[#25d366]/90 transition-all shadow-lg shadow-[#25d366]/20 hover:shadow-xl hover:shadow-[#25d366]/30 focus:outline-none focus:ring-2 focus:ring-[#25d366] focus:ring-offset-2">Register Your Store</a>
+        <a href="#register" class="btn-ripple" style="padding:10px 22px;background:#25d366;color:#fff;border-radius:12px;font-weight:600;font-size:14px;text-decoration:none;box-shadow:0 4px 16px rgba(37,211,102,.25);transition:all .3s">Register Your Store</a>
       </div>
-      <!-- Mobile: theme toggle + hamburger -->
-      <div class="md:hidden flex items-center gap-2">
-        <button id="theme-toggle-btn-mobile" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-          <span class="thumb">
-            <span class="material-icons" id="theme-icon-mobile" style="color: #f59e0b;">dark_mode</span>
-          </span>
+      <div class="flex md:hidden items-center gap-2">
+        <button id="themeToggleMob" class="theme-toggle" aria-label="Toggle theme">
+          <span class="thumb"><span class="material-icons" id="themeIconMob" style="color:#f59e0b">dark_mode</span></span>
         </button>
-        <button id="mobile-menu-btn" class="p-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#25d366] focus:ring-offset-2" style="color: var(--text-tertiary); background: transparent;" aria-label="Toggle mobile menu" aria-expanded="false">
-          <span class="material-icons transition-transform duration-300">menu</span>
+        <button id="menuBtn" style="background:none;border:none;padding:6px;border-radius:8px;color:var(--text-tertiary)" aria-label="Menu">
+          <span class="material-icons" style="font-size:28px">menu</span>
         </button>
       </div>
     </div>
-
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="mobile-menu md:hidden" aria-hidden="true">
-      <div class="flex flex-col gap-4">
-        <a href="#features" style="color: var(--text-tertiary); border-bottom-color: var(--border-color);" class="hover:color-[var(--text-secondary)] transition-all py-2 border-b focus:outline-none focus:ring-2 focus:ring-[#25d366] focus:ring-offset-2 rounded-lg px-2">Features</a>
-        <a href="#pricing" style="color: var(--text-tertiary); border-bottom-color: var(--border-color);" class="hover:color-[var(--text-secondary)] transition-all py-2 border-b focus:outline-none focus:ring-2 focus:ring-[#25d366] focus:ring-offset-2 rounded-lg px-2">Pricing</a>
-        <a href="#register" class="px-4 py-3 bg-[#25d366] text-white rounded-lg font-medium hover:bg-[#25d366]/90 transition-all text-center focus:outline-none focus:ring-2 focus:ring-[#25d366] focus:ring-offset-2">Register Your Store</a>
+    <div id="mobileMenu" class="mobile-menu md:hidden">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <a href="#features" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">Features</a>
+        <a href="#pricing" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">Pricing</a>
+        <a href="#register" style="padding:14px;background:#25d366;color:#fff;border-radius:12px;text-align:center;font-weight:600;text-decoration:none">Register Your Store</a>
       </div>
     </div>
   </nav>
 
-  <!-- Hero Section -->
-  <section id="main-content" class="gradient-bg text-white py-20 lg:py-28 relative overflow-hidden" aria-labelledby="hero-heading">
+  <!-- ─── HERO ─── -->
+  <section class="hero" id="hero">
+    <canvas id="hero-canvas"></canvas>
     <div class="hero-mesh"></div>
-    <div class="hero-orb w-96 h-96 bg-[#25d366] top-[-100px] left-[-100px] animate-float-slow"></div>
-    <div class="hero-orb w-80 h-80 bg-[#128c7e] bottom-[-80px] right-[-80px] animate-float" style="animation-delay: 2s;"></div>
-    <div class="hero-orb w-64 h-64 bg-white top-1/3 right-1/4 animate-float-slow" style="animation-delay: 1s;"></div>
+    <div class="hero-orb" style="width:500px;height:500px;background:#4ade80;top:-150px;left:-100px;animation:floatSlow 8s ease-in-out infinite"></div>
+    <div class="hero-orb" style="width:400px;height:400px;background:#128c7e;bottom:-120px;right:-100px;animation:float 7s ease-in-out infinite"></div>
+    <div class="hero-orb" style="width:300px;height:300px;background:#fff;top:40%;left:60%;animation:floatSlow 10s ease-in-out infinite"></div>
 
-    <div class="absolute inset-0 opacity-[0.04]">
-      <div class="w-full h-full" style="background-image: radial-gradient(circle, white 1.5px, transparent 1.5px); background-size: 40px 40px;"></div>
-    </div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-        <div class="animate-fade-in-up">
-          <div class="inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-sm mb-6 border border-white/10">
-            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-            <span class="text-sm font-medium text-white/90">Now live for Indian merchants</span>
+    <div class="hero-content">
+      <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center">
+        <div>
+          <div class="hero-badge">
+            <span class="dot"></span>
+            Now live for Indian merchants
           </div>
-          <h1 id="hero-heading" class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Commerce at the<br>Speed of <span class="text-[#dcf8c6]">WhatsApp</span>.
+          <h1 class="hero-title">
+            <span class="line"><span>Commerce at the</span></span>
+            <span class="line"><span>Speed of <span class="highlight" style="color:#dcf8c6">WhatsApp</span>.</span></span>
           </h1>
-          <p class="text-lg md:text-xl mb-8 text-white/85 max-w-xl leading-relaxed">
-            The first AI-powered store bot built for Bharat. Manage billing, UPI payments, and customer chats—all without leaving WhatsApp.
-          </p>
-          <div class="flex items-center gap-4 mb-8">
-            <div class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm border border-white/5">
-              <span class="material-icons text-sm">location_on</span>
-              <span class="text-sm">Joined by merchants in Mumbai, Delhi & Bangalore</span>
+          <p class="hero-sub">The first AI-powered store bot built for Bharat. Manage billing, UPI payments, and customer chats — all without leaving WhatsApp.</p>
+          <div class="hero-actions">
+            <div class="magnetic-wrap" data-strength="15">
+              <a href="#register" class="btn-primary btn-ripple">Start Free Trial <span class="material-icons" style="font-size:18px">arrow_forward</span></a>
+            </div>
+            <div class="magnetic-wrap" data-strength="10">
+              <a href="#features" class="btn-ghost btn-ripple">Learn More</a>
             </div>
           </div>
-          <div class="flex items-center gap-4 flex-wrap">
-            <a href="#register" class="btn-ripple btn-hover px-7 py-3.5 bg-white text-[#25d366] font-bold rounded-xl hover:bg-white/90 transition-all shadow-xl shadow-black/10 hover:shadow-2xl hover:shadow-black/15 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent text-base">
-              Start Free Trial
-            </a>
-            <a href="#features" class="btn-hover px-7 py-3.5 border-2 border-white/30 text-white font-medium rounded-xl hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent text-base">
-              Learn More
-            </a>
-          </div>
-          <div class="flex items-center gap-6 mt-10 pt-8 border-t border-white/10">
-            <div class="flex -space-x-2">
-              <div class="w-8 h-8 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-[9px] font-bold">P</div>
-              <div class="w-8 h-8 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-[9px] font-bold">R</div>
-              <div class="w-8 h-8 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-[9px] font-bold">S</div>
-              <div class="w-8 h-8 rounded-full bg-[#25d366] border-2 border-white/30 flex items-center justify-center text-[9px] font-bold">+</div>
+          <div class="hero-stats">
+            <div style="display:flex;margin-right:8px">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-right:-8px">P</div>
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-right:-8px">R</div>
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-right:-8px">S</div>
+              <div style="width:36px;height:36px;border-radius:50%;background:#25d366;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">+</div>
             </div>
             <div>
-              <p class="text-sm font-medium">Trusted by <span class="font-bold">500+</span> merchants</p>
-              <p class="text-xs text-white/60">Across 12 cities in India</p>
+              <p style="font-size:14px;font-weight:600;color:#fff">Trusted by <strong>500+</strong> merchants</p>
+              <p style="font-size:12px;color:rgba(255,255,255,.6)">Across 12 cities in India</p>
             </div>
           </div>
         </div>
-        <div class="hidden lg:flex justify-center items-center animate-slide-in-right">
-          <div class="relative">
-            <div class="absolute -inset-10 bg-[#25d366]/20 rounded-full blur-3xl"></div>
-            <div class="w-[300px] h-[540px] rounded-[2rem] overflow-hidden shadow-2xl shadow-black/20 border-4 border-white/10 flex flex-col relative animate-float-slow" style="animation-delay: 0.5s; background: var(--bg-mockup);">
-              <div class="w-24 h-4.5 bg-gray-300 rounded-full mx-auto mt-1.5"></div>
-
-              <!-- WhatsApp Header -->
-              <div class="px-3 py-2.5 flex items-center gap-2.5 mt-1" style="background: var(--mockup-whatsapp-header);">
-                <div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-                  <span class="material-icons text-white text-base">storefront</span>
+        <div class="phone-wrapper">
+          <div class="phone-glow"></div>
+          <div class="phone" id="phoneMockup">
+            <div class="phone-notch"></div>
+            <div style="background:#075e54;padding:10px 14px;display:flex;align-items:center;gap:8px;margin-top:4px">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center"><span class="material-icons" style="font-size:16px;color:#fff">storefront</span></div>
+              <div style="flex:1;min-width:0"><p style="color:#fff;font-size:11px;font-weight:600;line-height:1.2">Sharma Electronics</p><p style="color:rgba(255,255,255,.7);font-size:8px">online</p></div>
+              <span class="material-icons" style="color:#fff;font-size:18px">more_vert</span>
+            </div>
+            <div style="flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:6px;overflow:hidden;background:var(--mockup-chat);transition:background .3s">
+              <div style="display:flex;justify-content:flex-start" class="msg-anim" style="animation-delay:.3s">
+                <div style="background:var(--mockup-bot);border-radius:10px 10px 10px 2px;padding:8px 10px;max-width:80%;transition:background .3s">
+                  <p style="color:#075e54;font-size:9px;font-weight:700;margin-bottom:2px">Grahbook Bot</p>
+                  <p style="color:var(--text-primary);font-size:9px;line-height:1.4;transition:color .3s">Namaste! 👋<br>Main aapki help kaise kar sakta hoon?</p>
                 </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-white text-xs font-medium leading-tight truncate">Sharma Electronics</p>
-                  <p class="text-white/70 text-[9px]">online</p>
-                </div>
-                <span class="material-icons text-white text-base">more_vert</span>
               </div>
-
-              <!-- Chat Area -->
-              <div class="flex-1 p-2.5 space-y-2 overflow-hidden relative"
-                   style="background: var(--mockup-chat-bg);">
-                <!-- Bot Message -->
-                <div class="flex justify-start opacity-0 animate-fade-in-up" style="animation-delay: 0.3s; animation-fill-mode: forwards;">
-                  <div class="rounded-lg rounded-bl-none px-2.5 py-1.5 max-w-[80%] shadow-sm" style="background: var(--mockup-bot-msg);">
-                    <p class="text-[#075e54] text-[10px] font-semibold mb-0.5">Grahbook Bot</p>
-                    <p class="text-[10px] leading-snug" style="color: var(--text-body);">Namaste! 👋<br>Main aapki help kaise kar sakta hoon?</p>
-                  </div>
+              <div style="display:flex;justify-content:flex-end" class="msg-anim" style="animation-delay:.6s">
+                <div style="background:var(--mockup-customer);border-radius:10px 10px 2px 10px;padding:8px 10px;max-width:72%;transition:background .3s">
+                  <p style="color:var(--text-primary);font-size:9px;line-height:1.4;transition:color .3s">Mujhe kuch products dekhne hain</p>
                 </div>
-                <!-- Customer Message -->
-                <div class="flex justify-end opacity-0 animate-fade-in-up" style="animation-delay: 0.6s; animation-fill-mode: forwards;">
-                  <div class="rounded-lg rounded-br-none px-2.5 py-1.5 max-w-[75%] shadow-sm" style="background: var(--mockup-customer-msg);">
-                    <p class="text-[10px] leading-snug" style="color: var(--text-body);">Mujhe kuch products dekhne hain</p>
+              </div>
+              <div style="display:flex;justify-content:flex-start" class="msg-anim" style="animation-delay:.9s">
+                <div style="background:var(--mockup-bot);border-radius:10px 10px 10px 2px;padding:8px 10px;max-width:88%;transition:background .3s">
+                  <p style="color:#075e54;font-size:9px;font-weight:700;margin-bottom:4px">Grahbook Bot</p>
+                  <p style="color:var(--text-primary);font-size:9px;line-height:1.4;margin-bottom:6px;transition:color .3s">Zaroor! Yeh dekhiye:</p>
+                  <div style="background:var(--mockup-product);border:1px solid var(--mockup-product-b);border-radius:8px;padding:6px 8px;margin-bottom:4px;transition:all .3s">
+                    <p style="color:var(--text-secondary);font-size:9px;font-weight:600;transition:color .3s">Silk Saree</p>
+                    <p style="color:#25d366;font-size:10px;font-weight:700">₹4,500</p>
                   </div>
-                </div>
-                <!-- Bot Reply with Products -->
-                <div class="flex justify-start opacity-0 animate-fade-in-up" style="animation-delay: 0.9s; animation-fill-mode: forwards;">
-                  <div class="rounded-lg rounded-bl-none px-2.5 py-1.5 max-w-[88%] shadow-sm" style="background: var(--mockup-bot-msg);">
-                    <p class="text-[#075e54] text-[10px] font-semibold mb-1">Grahbook Bot</p>
-                    <p class="text-[10px] leading-snug mb-1.5" style="color: var(--text-body);">Zaroor! Yeh dekhiye hamare popular products:</p>
-                    <div class="rounded-lg p-1.5 mb-1 border" style="background: var(--mockup-product-card); border-color: var(--mockup-product-border);">
-                      <p class="text-[10px] font-semibold" style="color: var(--text-secondary);">Silk Saree</p>
-                      <p class="text-[#25d366] text-xs font-bold">₹4,500.00</p>
-                      <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="material-icons text-gray-400 text-[10px]">remove</span>
-                        <span class="text-[9px] font-medium" style="color: var(--text-body);">1</span>
-                        <span class="material-icons text-gray-400 text-[10px]">add</span>
-                      </div>
-                    </div>
-                    <div class="rounded-lg p-1.5 border" style="background: var(--mockup-product-card); border-color: var(--mockup-product-border);">
-                      <p class="text-[10px] font-semibold" style="color: var(--text-secondary);">Kurta Set</p>
-                      <p class="text-[#25d366] text-xs font-bold">₹2,200.00</p>
-                      <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="material-icons text-gray-400 text-[10px]">remove</span>
-                        <span class="text-[9px] font-medium" style="color: var(--text-body);">2</span>
-                        <span class="material-icons text-gray-400 text-[10px]">add</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!-- Place Order + Typing -->
-                <div class="flex items-end gap-1.5 opacity-0 animate-fade-in-up" style="animation-delay: 1.2s; animation-fill-mode: forwards;">
-                  <div class="rounded-lg px-3 py-1.5 shadow-sm" style="background: var(--mockup-place-order);">
-                    <p class="text-white text-[10px] font-medium">📦 Place Order</p>
-                  </div>
-                  <div class="rounded-full px-3 py-1.5 shadow-sm flex items-center gap-0.5" style="background: var(--mockup-bot-msg);">
-                    <span class="typing-dot w-1.5 h-1.5 bg-gray-400 rounded-full" style="animation-delay: 0s;"></span>
-                    <span class="typing-dot w-1.5 h-1.5 bg-gray-400 rounded-full" style="animation-delay: 0.2s;"></span>
-                    <span class="typing-dot w-1.5 h-1.5 bg-gray-400 rounded-full" style="animation-delay: 0.4s;"></span>
+                  <div style="background:var(--mockup-product);border:1px solid var(--mockup-product-b);border-radius:8px;padding:6px 8px;transition:all .3s">
+                    <p style="color:var(--text-secondary);font-size:9px;font-weight:600;transition:color .3s">Kurta Set</p>
+                    <p style="color:#25d366;font-size:10px;font-weight:700">₹2,200</p>
                   </div>
                 </div>
               </div>
-
-              <!-- Bottom Input -->
-              <div class="px-2.5 py-1.5 flex items-center gap-1.5" style="background: var(--mockup-input-bar); border-top: 1px solid var(--border-color);">
-                <span class="material-icons text-gray-500 text-sm">emoji_emotions</span>
-                <div class="flex-1 rounded-full px-3 py-1" style="background: var(--mockup-input-bg);">
-                  <p class="text-gray-400 text-[9px]">Type a message...</p>
+              <div style="display:flex;align-items:flex-end;gap:6px" class="msg-anim" style="animation-delay:1.2s">
+                <div style="background:#25d366;border-radius:8px;padding:6px 12px"><p style="color:#fff;font-size:9px;font-weight:600">📦 Place Order</p></div>
+                <div style="background:var(--mockup-bot);border-radius:20px;padding:6px 10px;display:flex;gap:3px;transition:background .3s">
+                  <span class="typing-dot" style="width:5px;height:5px;background:#999;border-radius:50%;animation:typingDot 1.4s infinite"></span>
+                  <span class="typing-dot" style="width:5px;height:5px;background:#999;border-radius:50%;animation:typingDot 1.4s .2s infinite"></span>
+                  <span class="typing-dot" style="width:5px;height:5px;background:#999;border-radius:50%;animation:typingDot 1.4s .4s infinite"></span>
                 </div>
-                <span class="material-icons text-gray-500 text-sm">attach_file</span>
-                <span class="material-icons text-base" style="color: var(--mockup-icon-mic);">mic</span>
               </div>
+            </div>
+            <div style="background:var(--mockup-input);padding:8px 12px;display:flex;align-items:center;gap:6px;border-top:1px solid var(--border);transition:all .3s">
+              <span class="material-icons" style="font-size:16px;color:#999">emoji_emotions</span>
+              <div style="flex:1;background:var(--mockup-input-bg);border-radius:20px;padding:6px 12px;transition:background .3s"><p style="color:#999;font-size:8px">Type a message...</p></div>
+              <span class="material-icons" style="font-size:16px;color:#999">attach_file</span>
+              <span class="material-icons" style="font-size:18px;color:#25d366">mic</span>
             </div>
           </div>
         </div>
@@ -617,736 +341,500 @@
     </div>
   </section>
 
-  <!-- Section Divider -->
   <div class="section-divider"></div>
 
-  <!-- Features Section -->
-  <section id="features" class="py-24" aria-labelledby="features-heading" style="background: var(--bg-white);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16 reveal">
-        <span class="inline-block px-3 py-1 bg-[#25d366]/10 text-[#25d366] text-sm font-medium rounded-full mb-4">Why Grahbook</span>
-        <h2 id="features-heading" class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style="color: var(--text-secondary);">For <span class="text-[#25d366]">Bharat</span></h2>
-        <p class="text-lg" style="color: var(--text-tertiary); max-width: 36rem; margin: 0 auto;">Built specifically for Indian merchants — from Chandni Chowk to CPX</p>
-      </div>
+  <!-- ─── FEATURES ─── -->
+  <section id="features" class="section" style="background:var(--bg-section);transition:background .3s">
+    <div style="max-width:1280px;margin:0 auto;text-align:center">
+      <div class="reveal"><span class="section-tag">Why Grahbook</span></div>
+      <div class="reveal" style="transition-delay:.1s"><h2 class="section-title">Built for <span style="color:#25d366">Bharat</span></h2></div>
+      <div class="reveal" style="transition-delay:.2s"><p class="section-sub">From Chandni Chowk to Connaught Place — the first AI store bot that speaks Hinglish.</p></div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="tilt-card card-hover p-8 rounded-xl border transition-all reveal relative" style="background: var(--bg-background); border-color: var(--border-color);">
-          <div class="tilt-glow"></div>
-          <div class="tilt-card-inner">
-            <div class="feature-icon-wrap w-16 h-16 rounded-full bg-[#25d366]/10 flex items-center justify-center mb-6 relative">
-              <div class="feature-icon-ring"></div>
-              <span class="material-icons text-[#25d366] text-3xl relative z-10">chat</span>
-            </div>
-            <h3 class="font-bold text-2xl mb-4" style="color: var(--text-secondary);">WhatsApp-First</h3>
-            <p class="text-lg leading-relaxed" style="color: var(--text-tertiary);">Your customers are on WhatsApp. Now your shop is too. From catalog browsing to checkout, all in one chat.</p>
-          </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-top:16px">
+        <div class="feature-card tilt-card reveal" style="transition-delay:.1s" data-tilt>
+          <div class="feature-icon"><div class="ring"></div><span class="material-icons" style="font-size:30px;color:#25d366">chat</span></div>
+          <h3 style="font-size:22px;font-weight:700;color:var(--text-secondary);margin-bottom:12px;transition:color .3s">WhatsApp-First</h3>
+          <p style="color:var(--text-tertiary);line-height:1.7;font-size:15px;transition:color .3s">Your customer is on WhatsApp. Now your shop is too. Browse catalogs, chat, and checkout — all inside one chat.</p>
         </div>
-
-        <div class="tilt-card card-hover p-8 rounded-xl border transition-all reveal relative" style="transition-delay: 0.1s; background: var(--bg-background); border-color: var(--border-color);">
-          <div class="tilt-glow"></div>
-          <div class="tilt-card-inner">
-            <div class="feature-icon-wrap w-16 h-16 rounded-full bg-[#25d366]/10 flex items-center justify-center mb-6 relative">
-              <div class="feature-icon-ring"></div>
-              <span class="material-icons text-[#25d366] text-3xl relative z-10">account_balance</span>
-            </div>
-            <h3 class="font-bold text-2xl mb-4" style="color: var(--text-secondary);">UPI & Local Payments</h3>
-            <p class="text-lg leading-relaxed" style="color: var(--text-tertiary);">Built for the Indian economy. Accept GPay, PhonePe, and Paytm with automated reconciliation and GST-ready invoices.</p>
-          </div>
+        <div class="feature-card tilt-card reveal" style="transition-delay:.2s" data-tilt>
+          <div class="feature-icon"><div class="ring"></div><span class="material-icons" style="font-size:30px;color:#25d366">account_balance</span></div>
+          <h3 style="font-size:22px;font-weight:700;color:var(--text-secondary);margin-bottom:12px;transition:color .3s">UPI & Local Payments</h3>
+          <p style="color:var(--text-tertiary);line-height:1.7;font-size:15px;transition:color .3s">GPay, PhonePe, Paytm — we accept it all. Auto-reconciliation and GST-ready invoices for your business.</p>
         </div>
-
-        <div class="tilt-card card-hover p-8 rounded-xl border transition-all reveal relative" style="transition-delay: 0.2s; background: var(--bg-background); border-color: var(--border-color);">
-          <div class="tilt-glow"></div>
-          <div class="tilt-card-inner">
-            <div class="feature-icon-wrap w-16 h-16 rounded-full bg-[#25d366]/10 flex items-center justify-center mb-6 relative">
-              <div class="feature-icon-ring"></div>
-              <span class="material-icons text-[#25d366] text-3xl relative z-10">inventory_2</span>
-            </div>
-            <h3 class="font-bold text-2xl mb-4" style="color: var(--text-secondary);">Smart Inventory</h3>
-            <p class="text-lg leading-relaxed" style="color: var(--text-tertiary);">Manage your stock like a pro. AI-driven alerts for low stock and regional trend analysis for your local market.</p>
-          </div>
+        <div class="feature-card tilt-card reveal" style="transition-delay:.3s" data-tilt>
+          <div class="feature-icon"><div class="ring"></div><span class="material-icons" style="font-size:30px;color:#25d366">inventory_2</span></div>
+          <h3 style="font-size:22px;font-weight:700;color:var(--text-secondary);margin-bottom:12px;transition:color .3s">Smart Inventory</h3>
+          <p style="color:var(--text-tertiary);line-height:1.7;font-size:15px;transition:color .3s">AI-powered low-stock alerts and regional trend analysis for your local market. Stock management, simplified.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Stats Strip -->
-  <section class="py-16 border-y" style="background: var(--bg-strip); border-color: var(--border-color);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-        <div class="text-center reveal">
-          <p class="text-3xl md:text-4xl font-bold text-[#25d366] count-up" data-target="500">0</p>
-          <p class="mt-1 font-medium" style="color: var(--text-tertiary);">Active Merchants</p>
+  <!-- ─── STATS ─── -->
+  <section style="padding:60px 24px;background:var(--bg-alt);border-block:1px solid var(--border);transition:all .3s">
+    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:24px">
+      <div class="reveal" style="text-align:center"><p class="count-up" data-target="500" style="font-size:clamp(2rem,3vw,3rem);font-weight:800;color:#25d366">0</p><p style="color:var(--text-tertiary);font-weight:500;margin-top:4px;transition:color .3s">Active Merchants</p></div>
+      <div class="reveal" style="text-align:center;transition-delay:.1s"><p class="count-up" data-target="50" style="font-size:clamp(2rem,3vw,3rem);font-weight:800;color:#25d366">0</p><p style="color:var(--text-tertiary);font-weight:500;margin-top:4px;transition:color .3s">Cities Covered</p></div>
+      <div class="reveal" style="text-align:center;transition-delay:.2s"><p class="count-up" data-target="12" style="font-size:clamp(2rem,3vw,3rem);font-weight:800;color:#25d366">0</p><p style="color:var(--text-tertiary);font-weight:500;margin-top:4px;transition:color .3s">Orders Processed <span style="font-size:.6em">K+</span></p></div>
+      <div class="reveal" style="text-align:center;transition-delay:.3s"><p class="count-up" data-target="99" style="font-size:clamp(2rem,3vw,3rem);font-weight:800;color:#25d366">0</p><p style="color:var(--text-tertiary);font-weight:500;margin-top:4px;transition:color .3s">Uptime</p></div>
+    </div>
+  </section>
+
+  <!-- ─── TESTIMONIALS MARQUEE ─── -->
+  <section style="padding:80px 0;background:var(--bg-section);overflow:hidden;transition:background .3s">
+    <div style="text-align:center;padding:0 24px;margin-bottom:48px">
+      <div class="reveal"><span class="section-tag">Testimonials</span></div>
+      <div class="reveal" style="transition-delay:.1s"><h2 class="section-title">What Merchants Say</h2></div>
+    </div>
+    <div class="marquee">
+      <div class="marquee-track" id="marqueeTrack">
+        <!-- Cloned via JS -->
+        <div class="marquee-card">
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#25d366,#128c7e);display:flex;align-items:center;justify-content:center"><span class="material-icons" style="color:#fff;font-size:22px">person</span></div>
+            <div><p style="font-weight:700;color:var(--text-secondary);transition:color .3s">Priya Sharma</p><p style="font-size:13px;color:var(--text-tertiary);transition:color .3s">Elegance Ethnic Wear</p></div>
+          </div>
+          <p style="font-style:italic;line-height:1.6;font-size:14px;color:var(--text-tertiary);transition:color .3s">"Grahbook transformed my boutique. The WhatsApp bot handles everything — catalog to payment."</p>
+          <div style="display:flex;gap:2px;margin-top:10px"><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span></div>
         </div>
-        <div class="text-center reveal" style="transition-delay: 0.1s;">
-          <p class="text-3xl md:text-4xl font-bold text-[#25d366] count-up" data-target="50">0</p>
-          <p class="mt-1 font-medium" style="color: var(--text-tertiary);">Cities Covered</p>
+        <div class="marquee-card">
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#25d366,#128c7e);display:flex;align-items:center;justify-content:center"><span class="material-icons" style="color:#fff;font-size:22px">person</span></div>
+            <div><p style="font-weight:700;color:var(--text-secondary);transition:color .3s">Rahul Verma</p><p style="font-size:13px;color:var(--text-tertiary);transition:color .3s">Verma Electronics</p></div>
+          </div>
+          <p style="font-style:italic;line-height:1.6;font-size:14px;color:var(--text-tertiary);transition:color .3s">"My customers love ordering via WhatsApp. Sales went up 40% in the first month itself."</p>
+          <div style="display:flex;gap:2px;margin-top:10px"><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span></div>
         </div>
-        <div class="text-center reveal" style="transition-delay: 0.2s;">
-          <p class="text-3xl md:text-4xl font-bold text-[#25d366] count-up" data-target="12">0K+</p>
-          <p class="mt-1 font-medium" style="color: var(--text-tertiary);">Orders Processed</p>
-        </div>
-        <div class="text-center reveal" style="transition-delay: 0.3s;">
-          <p class="text-3xl md:text-4xl font-bold text-[#25d366] count-up" data-target="99">0%</p>
-          <p class="mt-1 font-medium" style="color: var(--text-tertiary);">Uptime</p>
+        <div class="marquee-card">
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#25d366,#128c7e);display:flex;align-items:center;justify-content:center"><span class="material-icons" style="color:#fff;font-size:22px">person</span></div>
+            <div><p style="font-weight:700;color:var(--text-secondary);transition:color .3s">Anjali Gupta</p><p style="font-size:13px;color:var(--text-tertiary);transition:color .3s">Gupta Kirana Store</p></div>
+          </div>
+          <p style="font-style:italic;line-height:1.6;font-size:14px;color:var(--text-tertiary);transition:color .3s">"Finally a tool that works in Hinglish! My customers feel comfortable ordering in their own language."</p>
+          <div style="display:flex;gap:2px;margin-top:10px"><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span><span class="material-icons" style="font-size:16px;color:#25d366">star</span></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Testimonial Section -->
-  <section class="py-24" aria-labelledby="testimonial-heading" style="background: var(--bg-white);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12 reveal">
-        <span class="inline-block px-3 py-1 bg-[#25d366]/10 text-[#25d366] text-sm font-medium rounded-full mb-4">Testimonials</span>
-        <h2 id="testimonial-heading" class="text-3xl md:text-4xl font-bold" style="color: var(--text-secondary);">Empowering Bharat's Merchants</h2>
-      </div>
+  <div class="section-divider"></div>
 
-      <div class="max-w-3xl mx-auto">
-        <div class="reveal-scale">
-          <div class="p-8 md:p-10 rounded-2xl border shadow-lg relative" style="background: var(--bg-background); border-color: var(--border-color);">
-            <div class="absolute -top-3 left-8 text-6xl text-[#25d366]/10 font-heading font-bold">"</div>
-            <div class="flex items-center gap-4 mb-6 relative">
-              <div class="w-16 h-16 rounded-full gradient-bg flex items-center justify-center shadow-lg" style="box-shadow: 0 8px 20px rgba(37,211,102,0.25);">
-                <span class="material-icons text-white text-3xl">person</span>
-              </div>
-              <div>
-                <p class="font-bold text-lg" style="color: var(--text-secondary);">Priya Sharma</p>
-                <p style="color: var(--text-tertiary);">Owner, Elegance Ethnic Wear</p>
-              </div>
-              <div class="ml-auto flex gap-1">
-                <span class="material-icons text-[#25d366] text-lg">star</span>
-                <span class="material-icons text-[#25d366] text-lg">star</span>
-                <span class="material-icons text-[#25d366] text-lg">star</span>
-                <span class="material-icons text-[#25d366] text-lg">star</span>
-                <span class="material-icons text-[#25d366] text-lg">star</span>
-              </div>
-            </div>
-            <blockquote class="text-lg italic leading-relaxed" style="color: var(--text-secondary);">"Grahbook transformed how I manage my boutique. The WhatsApp bot handles everything — from catalog sharing to payment collection. My customers love it!"</blockquote>
-          </div>
+  <!-- ─── HOW IT WORKS ─── -->
+  <section style="padding:100px 24px;background:var(--bg-alt);transition:background .3s">
+    <div style="max-width:1280px;margin:0 auto">
+      <div class="reveal" style="text-align:center"><span class="section-tag">How It Works</span></div>
+      <div class="reveal" style="text-align:center;transition-delay:.1s"><h2 class="section-title">The Store Bot That Handles Everything</h2></div>
+      <div class="reveal" style="text-align:center;transition-delay:.2s"><p class="section-sub">Focus on your craft, let Grahbook handle the commerce.</p></div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:8px">
+        <div class="feature-card tilt-card reveal-l" data-tilt>
+          <div class="feature-icon" style="width:48px;height:48px;border-radius:14px;margin-bottom:20px"><div class="ring" style="border-radius:14px"></div><span class="material-icons" style="font-size:24px;color:#25d366">auto_awesome</span></div>
+          <h3 style="font-size:18px;font-weight:700;color:var(--text-secondary);margin-bottom:8px;transition:color .3s">AI-Powered Catalogs</h3>
+          <p style="color:var(--text-tertiary);line-height:1.7;font-size:14px;transition:color .3s">Send interactive WhatsApp catalogs or PDFs. AI syncs with your physical inventory in real-time.</p>
+        </div>
+        <div class="feature-card tilt-card reveal" style="transition-delay:.1s" data-tilt>
+          <div class="feature-icon" style="width:48px;height:48px;border-radius:14px;margin-bottom:20px"><div class="ring" style="border-radius:14px"></div><span class="material-icons" style="font-size:24px;color:#25d366">translate</span></div>
+          <h3 style="font-size:18px;font-weight:700;color:var(--text-secondary);margin-bottom:8px;transition:color .3s">Hinglish AI Support</h3>
+          <p style="color:var(--text-tertiary);line-height:1.7;font-size:14px;transition:color .3s">Speaks Hindi, English, and Hinglish. Handles FAQs like a local shop assistant.</p>
+        </div>
+        <div class="feature-card tilt-card reveal-r" style="transition-delay:.2s" data-tilt>
+          <div class="feature-icon" style="width:48px;height:48px;border-radius:14px;margin-bottom:20px"><div class="ring" style="border-radius:14px"></div><span class="material-icons" style="font-size:24px;color:#25d366">payment</span></div>
+          <h3 style="font-size:18px;font-weight:700;color:var(--text-secondary);margin-bottom:8px;transition:color .3s">Instant UPI Settle</h3>
+          <p style="color:var(--text-tertiary);line-height:1.7;font-size:14px;transition:color .3s">Money goes straight to your bank. No middleman, no delay — pure commerce.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- How It Works Section -->
-  <section class="py-24" aria-labelledby="how-it-works-heading" style="background: var(--bg-background);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16 reveal">
-        <span class="inline-block px-3 py-1 bg-[#25d366]/10 text-[#25d366] text-sm font-medium rounded-full mb-4">How It Works</span>
-        <h2 id="how-it-works-heading" class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style="color: var(--text-secondary);">The Store Bot That Handles Everything</h2>
-        <p class="text-lg" style="color: var(--text-tertiary);">Focus on your craft, let Grahbook handle the commerce.</p>
-      </div>
+  <!-- ─── PRICING ─── -->
+  <section id="pricing" class="section" style="background:var(--bg-section);transition:background .3s">
+    <div style="max-width:1280px;margin:0 auto;text-align:center">
+      <div class="reveal"><span class="section-tag">Pricing</span></div>
+      <div class="reveal" style="transition-delay:.1s"><h2 class="section-title">Pricing for Every Stage</h2></div>
+      <div class="reveal" style="transition-delay:.2s"><p class="section-sub">Start free, scale as your business grows across Bharat.</p></div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="tilt-card card-hover p-6 md:p-8 rounded-xl border transition-all reveal relative" style="background: var(--bg-surface); border-color: var(--border-color);">
-          <div class="tilt-glow"></div>
-          <div class="tilt-card-inner">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="flex items-center justify-center w-10 h-10 rounded-lg bg-[#25d366]/10 text-[#25d366]">
-                <span class="material-icons text-2xl">auto_awesome</span>
-              </span>
-              <h3 class="font-bold text-xl" style="color: var(--text-secondary);">AI-Powered Catalogs</h3>
-            </div>
-            <p class="mb-4 leading-relaxed" style="color: var(--text-tertiary);">Send beautiful PDFs or interactive WhatsApp catalogs. Our AI automatically syncs with your physical inventory.</p>
-            <div class="flex gap-4">
-              <div class="flex-1 p-3 rounded-lg border" style="background: var(--bg-background); border-color: var(--border-color);">
-                <p class="font-semibold text-sm" style="color: var(--text-secondary);">Silk Saree</p>
-                <p class="text-[#25d366] font-bold">₹4,500.00</p>
-              </div>
-              <div class="flex-1 p-3 rounded-lg border" style="background: var(--bg-background); border-color: var(--border-color);">
-                <p class="font-semibold text-sm" style="color: var(--text-secondary);">Kurta Set</p>
-                <p class="text-[#25d366] font-bold">₹2,200.00</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="tilt-card card-hover p-6 md:p-8 rounded-xl border transition-all reveal relative" style="transition-delay: 0.1s; background: var(--bg-surface); border-color: var(--border-color);">
-          <div class="tilt-glow"></div>
-          <div class="tilt-card-inner">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="flex items-center justify-center w-10 h-10 rounded-lg bg-[#25d366]/10 text-[#25d366]">
-                <span class="material-icons text-2xl">translate</span>
-              </span>
-              <h3 class="font-bold text-xl" style="color: var(--text-secondary);">Hinglish AI Support</h3>
-            </div>
-            <p class="leading-relaxed" style="color: var(--text-tertiary);">Our bot understands Hindi, English, and regional dialects. It handles FAQs like a local expert.</p>
-          </div>
-        </div>
-
-        <div class="tilt-card card-hover p-6 md:p-8 rounded-xl border transition-all reveal relative" style="transition-delay: 0.2s; background: var(--bg-surface); border-color: var(--border-color);">
-          <div class="tilt-glow"></div>
-          <div class="tilt-card-inner">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="flex items-center justify-center w-10 h-10 rounded-lg bg-[#25d366]/10 text-[#25d366]">
-                <span class="material-icons text-2xl">payment</span>
-              </span>
-              <h3 class="font-bold text-xl" style="color: var(--text-secondary);">Instant UPI Settle</h3>
-            </div>
-            <p class="leading-relaxed" style="color: var(--text-tertiary);">Money goes straight to your bank account. No middle-man delays, just pure commerce.</p>
-          </div>
-        </div>
-
-        <div class="tilt-card card-hover p-6 md:p-8 rounded-xl border transition-all reveal relative" style="transition-delay: 0.3s; background: var(--bg-surface); border-color: var(--border-color);">
-          <div class="tilt-glow"></div>
-          <div class="tilt-card-inner">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="flex items-center justify-center w-10 h-10 rounded-lg bg-[#25d366]/10 text-[#25d366]">
-                <span class="material-icons text-2xl">dashboard</span>
-              </span>
-              <h3 class="font-bold text-xl" style="color: var(--text-secondary);">Merchant HUD</h3>
-            </div>
-            <p class="leading-relaxed" style="color: var(--text-tertiary);">A bird's eye view of your business. Track sales across WhatsApp, Instagram, and walk-ins in one unified dashboard.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pricing Section -->
-  <section id="pricing" class="py-24" aria-labelledby="pricing-heading" style="background: var(--bg-white);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16 reveal">
-        <span class="inline-block px-3 py-1 bg-[#25d366]/10 text-[#25d366] text-sm font-medium rounded-full mb-4">Pricing</span>
-        <h2 id="pricing-heading" class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style="color: var(--text-secondary);">Pricing for Every Stage</h2>
-        <p class="text-lg" style="color: var(--text-tertiary); max-width: 36rem; margin: 0 auto;">Start free, scale as your business grows across Bharat.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="card-hover p-8 rounded-xl border hover:shadow-xl transition-all reveal relative" style="background: var(--bg-background); border-color: var(--border-color);">
-          <h3 class="font-bold text-xl mb-2" style="color: var(--text-secondary);">MUKHIYA <span class="text-sm font-normal" style="color: var(--text-tertiary);">(BASIC)</span></h3>
-          <p class="text-5xl font-bold text-[#25d366] mb-6">Free</p>
-          <ul class="space-y-4 mb-8">
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">1,000 orders/mo</span>
-            </li>
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">Basic AI (Hinglish)</span>
-            </li>
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">UPI QR Integration</span>
-            </li>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:8px;align-items:start">
+        <!-- Basic -->
+        <div class="pricing-card reveal" style="transition-delay:.1s">
+          <h3 style="font-size:20px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;transition:color .3s">Mukhiya <span style="font-size:14px;font-weight:400;color:var(--text-tertiary)">(Basic)</span></h3>
+          <p style="font-size:48px;font-weight:800;color:#25d366;margin:20px 0">Free</p>
+          <ul style="list-style:none;text-align:left;margin-bottom:32px;display:flex;flex-direction:column;gap:12px">
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> 1,000 orders/mo</li>
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> Basic AI (Hinglish)</li>
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> UPI QR Integration</li>
           </ul>
-          <button onclick="showRegisterForm('basic')" class="btn-ripple btn-hover w-full px-4 py-3 border-2 border-[#25d366] text-[#25d366] font-semibold rounded-xl hover:bg-[#25d366] hover:text-white transition-all">
-            Get Started
-          </button>
+          <button onclick="showForm('basic')" class="btn-ripple" style="width:100%;padding:14px;background:transparent;border:2px solid #25d366;color:#25d366;border-radius:14px;font-weight:600;font-size:15px;transition:all .3s">Get Started</button>
         </div>
-
-        <div class="popular-card card-hover p-8 rounded-xl border-2 shadow-xl relative reveal" style="transition-delay: 0.1s; background: var(--bg-background); border-color: #25d366;">
-          <div class="pricing-glow"></div>
-          <div class="popular-badge absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#25d366] text-white text-xs font-semibold rounded-full shadow-lg shadow-[#25d366]/20 z-10">Most Popular</div>
-          <h3 class="font-bold text-xl mb-2" style="color: var(--text-secondary);">BHANDARI <span class="text-sm font-normal" style="color: var(--text-tertiary);">(PRO)</span></h3>
-          <div class="flex items-baseline gap-1 mb-6">
-            <span class="text-5xl font-bold text-[#25d366]">₹499</span>
-            <span class="text-lg" style="color: var(--text-tertiary);">/mo</span>
-          </div>
-          <ul class="space-y-4 mb-8">
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">Unlimited orders</span>
-            </li>
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">Advanced AI Personalization</span>
-            </li>
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">GST Invoicing + Tally Export</span>
-            </li>
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">Multi-Store Access</span>
-            </li>
+        <!-- Pro -->
+        <div class="pricing-card featured reveal" style="transition-delay:.2s">
+          <div class="popular-badge">Most Popular</div>
+          <h3 style="font-size:20px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;transition:color .3s">Bhandari <span style="font-size:14px;font-weight:400;color:var(--text-tertiary)">(Pro)</span></h3>
+          <div style="display:flex;align-items:baseline;gap:4px;margin:20px 0"><span style="font-size:48px;font-weight:800;color:#25d366">₹499</span><span style="color:var(--text-tertiary);font-size:18px;transition:color .3s">/mo</span></div>
+          <ul style="list-style:none;text-align:left;margin-bottom:32px;display:flex;flex-direction:column;gap:12px">
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> Unlimited orders</li>
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> Advanced AI Personalization</li>
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> GST Invoicing + Tally Export</li>
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> Multi-Store Access</li>
           </ul>
-          <button onclick="showRegisterForm('pro')" class="btn-ripple btn-hover w-full px-4 py-3 bg-[#25d366] text-white font-semibold rounded-xl hover:bg-[#25d366]/90 transition-all shadow-lg shadow-[#25d366]/20 relative z-10">
-            Get Started
-          </button>
+          <button onclick="showForm('pro')" class="btn-ripple" style="width:100%;padding:14px;background:#25d366;color:#fff;border:none;border-radius:14px;font-weight:600;font-size:15px;box-shadow:0 4px 16px rgba(37,211,102,.25);transition:all .3s">Get Started</button>
         </div>
-
-        <div class="card-hover p-8 rounded-xl border hover:shadow-xl transition-all reveal relative" style="transition-delay: 0.2s; background: var(--bg-background); border-color: var(--border-color);">
-          <h3 class="font-bold text-xl mb-2" style="color: var(--text-secondary);">SAMRAT <span class="text-sm font-normal" style="color: var(--text-tertiary);">(ENTERPRISE)</span></h3>
-          <p class="text-5xl font-bold text-[#25d366] mb-6">Custom</p>
-          <ul class="space-y-4 mb-8">
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">Full White-label</span>
-            </li>
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">Dedicated CRM Integrations</span>
-            </li>
-            <li class="flex items-center gap-3" style="color: var(--text-secondary);">
-              <span class="material-icons text-[#25d366] text-sm">check_circle</span>
-              <span class="text-base">API & Webhook Access</span>
-            </li>
+        <!-- Enterprise -->
+        <div class="pricing-card reveal" style="transition-delay:.3s">
+          <h3 style="font-size:20px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;transition:color .3s">Samrat <span style="font-size:14px;font-weight:400;color:var(--text-tertiary)">(Enterprise)</span></h3>
+          <p style="font-size:48px;font-weight:800;color:#25d366;margin:20px 0">Custom</p>
+          <ul style="list-style:none;text-align:left;margin-bottom:32px;display:flex;flex-direction:column;gap:12px">
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> Full White-label</li>
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> Dedicated CRM Integrations</li>
+            <li style="display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:15px;transition:color .3s"><span class="material-icons" style="font-size:18px;color:#25d366">check_circle</span> API & Webhook Access</li>
           </ul>
-          <button onclick="showRegisterForm('enterprise')" class="btn-ripple btn-hover w-full px-4 py-3 border-2 border-[#25d366] text-[#25d366] font-semibold rounded-xl hover:bg-[#25d366] hover:text-white transition-all">
-            Contact Sales
-          </button>
+          <button onclick="showForm('enterprise')" class="btn-ripple" style="width:100%;padding:14px;background:transparent;border:2px solid #25d366;color:#25d366;border-radius:14px;font-weight:600;font-size:15px;transition:all .3s">Contact Sales</button>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Register Section -->
-  <section id="register" class="py-24" aria-labelledby="register-heading" style="background: var(--bg-background);">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12 reveal">
-        <span class="inline-block px-3 py-1 bg-[#25d366]/10 text-[#25d366] text-sm font-medium rounded-full mb-4">Get Started</span>
-        <h2 id="register-heading" class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style="color: var(--text-secondary);">Ready to grow your shop?</h2>
-        <p class="text-lg" style="color: var(--text-tertiary);">Join thousands of Indian merchants scaling their dreams through WhatsApp automation.</p>
-      </div>
+  <!-- ─── REGISTER ─── -->
+  <section id="register" style="padding:100px 24px;background:var(--bg-alt);transition:background .3s">
+    <div style="max-width:680px;margin:0 auto">
+      <div class="reveal" style="text-align:center"><span class="section-tag">Get Started</span></div>
+      <div class="reveal" style="text-align:center;transition-delay:.1s"><h2 class="section-title">Ready to grow your shop?</h2></div>
+      <div class="reveal" style="text-align:center;transition-delay:.2s"><p class="section-sub">Join thousands of Indian merchants scaling through WhatsApp automation.</p></div>
 
-      <div class="p-8 md:p-10 rounded-2xl border shadow-lg reveal-scale" style="background: var(--bg-form); border-color: var(--border-color);">
-        <form id="register-form" onsubmit="handleRegister(event)" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium mb-2" for="store-name" style="color: var(--text-secondary);">Store Name</label>
-              <input type="text" id="store-name" required placeholder="e.g., Sharma Electronics" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none focus:border-[#25d366] focus:ring-2 focus:ring-[#25d366]/20" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-body);">
+      <div class="reveal-s" style="transition-delay:.3s">
+        <div class="form-card">
+          <form id="registerForm" onsubmit="handleRegister(event)" style="display:flex;flex-direction:column;gap:20px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div><label style="display:block;font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Store Name</label><input type="text" id="storeName" required placeholder="Sharma Electronics" class="form-input"></div>
+              <div><label style="display:block;font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Owner Name</label><input type="text" id="ownerName" required placeholder="Rajesh Sharma" class="form-input"></div>
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-2" for="owner-name" style="color: var(--text-secondary);">Owner Name</label>
-              <input type="text" id="owner-name" required placeholder="e.g., Rajesh Sharma" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none focus:border-[#25d366] focus:ring-2 focus:ring-[#25d366]/20" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-body);">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div><label style="display:block;font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Phone</label><input type="tel" id="phone" required pattern="[6-9]{1}[0-9]{9}" placeholder="9876543210" class="form-input"></div>
+              <div><label style="display:block;font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Email</label><input type="email" id="email" required placeholder="rajesh@example.com" class="form-input"></div>
             </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium mb-2" for="phone" style="color: var(--text-secondary);">Phone Number</label>
-              <input type="tel" id="phone" required pattern="[6-9]{1}[0-9]{9}" placeholder="e.g., 9876543210" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none focus:border-[#25d366] focus:ring-2 focus:ring-[#25d366]/20" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-body);">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2" for="email" style="color: var(--text-secondary);">Email</label>
-              <input type="email" id="email" required placeholder="e.g., rajesh@example.com" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none focus:border-[#25d366] focus:ring-2 focus:ring-[#25d366]/20" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-body);">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2" for="business-type" style="color: var(--text-secondary);">Business Type</label>
-            <select id="business-type" required class="form-input w-full px-4 py-3 rounded-xl focus:outline-none focus:border-[#25d366] focus:ring-2 focus:ring-[#25d366]/20" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-body);">
-              <option value="">Select business type...</option>
-              <option value="retail">Retail Store</option>
-              <option value="wholesale">Wholesale</option>
-              <option value="service">Service Business</option>
-              <option value="restaurant">Restaurant/Food</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-2" for="plan" style="color: var(--text-secondary);">Plan</label>
-            <select id="plan" required class="form-input w-full px-4 py-3 rounded-xl focus:outline-none focus:border-[#25d366] focus:ring-2 focus:ring-[#25d366]/20" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-body);">
-              <option value="basic">Mukhiya (Basic) - Free</option>
-              <option value="pro">Bhandari (Pro) - ₹499/mo</option>
-              <option value="enterprise">Samrat (Enterprise) - Custom</option>
-            </select>
-          </div>
-
-          <div class="flex items-start gap-2">
-            <input type="checkbox" id="terms" required class="mt-1 rounded border-[#25d366] text-[#25d366] focus:ring-[#25d366]/20" style="background: var(--bg-input); border-color: var(--border-color);">
-            <label for="terms" class="text-sm" style="color: var(--text-tertiary);">I agree to the Terms of Service and Privacy Policy</label>
-          </div>
-
-          <button type="submit" id="submit-btn" class="btn-ripple btn-hover w-full px-4 py-3.5 bg-[#25d366] text-white font-bold rounded-xl hover:bg-[#25d366]/90 transition-all shadow-lg shadow-[#25d366]/20 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#25d366]/20 text-base">
-            <span>Register Your Store</span>
-          </button>
-
-          <p class="text-center text-sm" style="color: var(--text-tertiary);">No credit card required. Cancel anytime.</p>
-        </form>
-
-        <div id="success-message" class="hidden text-center py-8">
-          <div class="w-16 h-16 rounded-full bg-[#25d366]/10 flex items-center justify-center mx-auto mb-4 animate-fade-in-scale">
-            <span class="material-icons text-[#25d366] text-4xl">check_circle</span>
-          </div>
-          <h3 class="font-bold text-xl mb-2" style="color: var(--text-secondary);">Registration Successful!</h3>
-          <p class="mb-4" style="color: var(--text-tertiary);">Your store has been registered. Check your WhatsApp for your unique store link.</p>
-          <p class="text-sm" style="color: var(--text-tertiary);">Store ID: <span id="store-id" class="font-mono font-bold text-[#25d366]"></span></p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Mobile App Section -->
-  <section class="py-24" aria-labelledby="mobile-app-heading" style="background: var(--bg-white);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-        <div class="reveal-left">
-          <span class="inline-block px-3 py-1 bg-[#25d366]/10 text-[#25d366] text-sm font-medium rounded-full mb-4">Mobile App</span>
-          <h2 id="mobile-app-heading" class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style="color: var(--text-secondary);">Commerce on the Go</h2>
-          <p class="text-lg mb-8 leading-relaxed" style="color: var(--text-tertiary);">Manage your entire shop, track inventory, and reply to customers from our dedicated mobile app.</p>
-          <div class="flex gap-4">
-            <button class="btn-ripple btn-hover px-6 py-3.5 bg-black text-white rounded-xl flex items-center gap-3 hover:bg-gray-800 transition-all shadow-lg">
-              <span class="material-icons text-xl">apple</span>
-              <div class="text-left">
-                <p class="text-[10px] text-gray-400">Download on the</p>
-                <p class="text-sm font-semibold -mt-0.5">App Store</p>
-              </div>
+            <div><label style="display:block;font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Business Type</label><select id="businessType" required class="form-input"><option value="">Select...</option><option value="retail">Retail Store</option><option value="wholesale">Wholesale</option><option value="service">Service Business</option><option value="restaurant">Restaurant/Food</option><option value="other">Other</option></select></div>
+            <div><label style="display:block;font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Plan</label><select id="planSelect" required class="form-input"><option value="basic">Mukhiya (Basic) - Free</option><option value="pro">Bhandari (Pro) - ₹499/mo</option><option value="enterprise">Samrat (Enterprise) - Custom</option></select></div>
+            <div style="display:flex;align-items:flex-start;gap:8px"><input type="checkbox" id="terms" required style="margin-top:3px"><label for="terms" style="font-size:13px;color:var(--text-tertiary)">I agree to the Terms of Service and Privacy Policy</label></div>
+            <button type="submit" id="submitBtn" class="btn-ripple" style="width:100%;padding:16px;background:#25d366;color:#fff;border:none;border-radius:14px;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .3s;box-shadow:0 4px 16px rgba(37,211,102,.25)">
+              Register Your Store
             </button>
-            <button class="btn-ripple btn-hover px-6 py-3.5 bg-black text-white rounded-xl flex items-center gap-3 hover:bg-gray-800 transition-all shadow-lg">
-              <span class="material-icons text-xl">android</span>
-              <div class="text-left">
-                <p class="text-[10px] text-gray-400">Get it on</p>
-                <p class="text-sm font-semibold -mt-0.5">Google Play</p>
-              </div>
-            </button>
-          </div>
-        </div>
-        <div class="flex justify-center reveal-right" style="transition-delay: 0.2s;">
-          <div class="w-72 h-[580px] rounded-[3rem] border-8 p-3 flex flex-col animate-float shadow-2xl" style="background: var(--bg-phone-frame); border-color: var(--text-secondary);">
-            <div class="w-32 h-6 rounded-full mx-auto mb-2" style="background: var(--text-secondary);"></div>
-            <div class="flex-1 rounded-[2rem] overflow-hidden flex flex-col" style="background: var(--bg-phone-screen);">
-              <!-- Status Bar -->
-              <div class="gradient-bg px-4 py-3 flex items-center justify-between">
-                <span class="text-white text-xs font-medium">9:41</span>
-                <div class="flex items-center gap-1">
-                  <span class="material-icons text-white text-sm">signal_cellular_alt</span>
-                  <span class="material-icons text-white text-sm">wifi</span>
-                  <span class="material-icons text-white text-sm">battery_full</span>
-                </div>
-              </div>
-
-              <!-- App Content -->
-              <div class="flex-1 p-4" style="background: var(--bg-background);">
-                <div class="flex items-center gap-2 mb-4">
-                  <div class="w-8 h-8 rounded-full bg-[#25d366]/10 flex items-center justify-center">
-                    <span class="material-icons text-[#25d366] text-lg">storefront</span>
-                  </div>
-                  <span class="font-bold text-sm" style="color: var(--text-secondary);">Grahbook</span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 mb-3">
-                  <div class="p-3 rounded-xl border" style="background: var(--bg-surface); border-color: var(--border-color);">
-                    <p class="text-xs mb-1" style="color: var(--text-tertiary);">Today's Sales</p>
-                    <p class="text-lg font-bold" style="color: var(--text-secondary);">₹4,250</p>
-                  </div>
-                  <div class="p-3 rounded-xl border" style="background: var(--bg-surface); border-color: var(--border-color);">
-                    <p class="text-xs mb-1" style="color: var(--text-tertiary);">Orders</p>
-                    <p class="text-lg font-bold text-[#25d366]">12</p>
-                  </div>
-                </div>
-
-                <div class="p-3 rounded-xl border mb-2" style="background: var(--bg-surface); border-color: var(--border-color);">
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-medium" style="color: var(--text-secondary);">New Order #1234</span>
-                    <span class="text-xs text-[#25d366] font-medium">Paid</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-[#25d366]/10 flex items-center justify-center">
-                      <span class="material-icons text-[#25d366] text-sm">person</span>
-                    </div>
-                    <div class="flex-1">
-                      <p class="text-xs font-medium" style="color: var(--text-secondary);">Rahul Kumar</p>
-                      <p class="text-xs" style="color: var(--text-tertiary);">2 items • ₹850</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="flex gap-2">
-                  <div class="flex-1 gradient-bg p-2 rounded-xl text-center">
-                    <span class="material-icons text-white text-sm">add</span>
-                    <p class="text-xs text-white font-medium mt-1">New Order</p>
-                  </div>
-                  <div class="flex-1 p-2 rounded-xl border text-center" style="background: var(--bg-surface); border-color: var(--border-color);">
-                    <span class="material-icons text-[#25d366] text-sm">inventory_2</span>
-                    <p class="text-xs font-medium mt-1" style="color: var(--text-secondary);">Stock</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p style="text-align:center;font-size:13px;color:var(--text-tertiary)">No credit card required. Cancel anytime.</p>
+          </form>
+          <div id="successMsg" style="display:none;text-align:center;padding:24px 0">
+            <div style="width:64px;height:64px;border-radius:50%;background:rgba(37,211,102,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><span class="material-icons" style="font-size:36px;color:#25d366">check_circle</span></div>
+            <h3 style="font-size:22px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">Registration Successful!</h3>
+            <p style="color:var(--text-tertiary);margin-bottom:8px">Check your WhatsApp for your unique store link.</p>
+            <p style="font-size:13px;color:var(--text-tertiary)">Store ID: <strong id="storeId" style="color:#25d366;font-family:monospace"></strong></p>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer style="background: var(--bg-footer);" class="py-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
-        <div>
-          <div class="flex items-center gap-3 mb-4">
-            <span class="material-icons text-[#25d366] text-2xl">storefront</span>
-            <span class="font-bold text-lg text-white">Grahbook</span>
-          </div>
-          <p class="text-sm text-gray-400 leading-relaxed">© 2025 Grahbook India. High-velocity commerce for the modern Indian merchant. Proudly built in Bharat.</p>
-        </div>
-        <div>
-          <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-wider">Platform</h4>
-          <ul class="space-y-3">
-            <li><a href="#" class="text-gray-400 hover:text-[#25d366] transition-all text-sm">Privacy Policy</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-[#25d366] transition-all text-sm">Terms of Service</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-[#25d366] transition-all text-sm">API Docs</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-wider">Support</h4>
-          <ul class="space-y-3">
-            <li><a href="#" class="text-gray-400 hover:text-[#25d366] transition-all text-sm">WhatsApp Support</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-[#25d366] transition-all text-sm">Seller Guide</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-[#25d366] transition-all text-sm">UPI FAQs</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-bold text-white mb-4 text-sm uppercase tracking-wider">Connect</h4>
-          <div class="flex gap-3">
-            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#25d366] transition-all text-gray-400 hover:text-white">
-              <span class="material-icons text-lg">facebook</span>
-            </a>
-            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#25d366] transition-all text-gray-400 hover:text-white">
-              <span class="material-icons text-lg">photo_camera</span>
-            </a>
-            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#25d366] transition-all text-gray-400 hover:text-white">
-              <span class="material-icons text-lg">alternate_email</span>
-            </a>
-          </div>
-        </div>
-      </div>
-      <div class="pt-8 border-t border-white/10 text-center">
-        <p class="text-sm text-gray-500">Made with ❤️ in Bharat 🇮🇳</p>
-      </div>
+  <!-- ─── FOOTER ─── -->
+  <footer>
+    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:48px;margin-bottom:48px">
+      <div><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span class="material-icons" style="font-size:28px;color:#25d366">storefront</span><span style="font-weight:700;font-size:18px;color:#fff">Grahbook</span></div><p style="font-size:14px;line-height:1.7;color:rgba(255,255,255,.5)">© 2025 Grahbook India. High-velocity commerce for the modern Indian merchant. Proudly built in Bharat.</p></div>
+      <div><h4 style="font-weight:600;color:#fff;margin-bottom:16px;font-size:13px;text-transform:uppercase;letter-spacing:.05em">Platform</h4><div style="display:flex;flex-direction:column;gap:10px"><a href="#" style="color:rgba(255,255,255,.5);text-decoration:none;font-size:14px;transition:color .3s">Privacy Policy</a><a href="#" style="color:rgba(255,255,255,.5);text-decoration:none;font-size:14px;transition:color .3s">Terms of Service</a><a href="#" style="color:rgba(255,255,255,.5);text-decoration:none;font-size:14px;transition:color .3s">API Docs</a></div></div>
+      <div><h4 style="font-weight:600;color:#fff;margin-bottom:16px;font-size:13px;text-transform:uppercase;letter-spacing:.05em">Support</h4><div style="display:flex;flex-direction:column;gap:10px"><a href="#" style="color:rgba(255,255,255,.5);text-decoration:none;font-size:14px;transition:color .3s">WhatsApp Support</a><a href="#" style="color:rgba(255,255,255,.5);text-decoration:none;font-size:14px;transition:color .3s">Seller Guide</a><a href="#" style="color:rgba(255,255,255,.5);text-decoration:none;font-size:14px;transition:color .3s">UPI FAQs</a></div></div>
+      <div><h4 style="font-weight:600;color:#fff;margin-bottom:16px;font-size:13px;text-transform:uppercase;letter-spacing:.05em">Connect</h4><div style="display:flex;gap:8px"><a href="#" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);text-decoration:none;transition:all .3s"><span class="material-icons" style="font-size:18px">facebook</span></a><a href="#" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);text-decoration:none;transition:all .3s"><span class="material-icons" style="font-size:18px">photo_camera</span></a><a href="#" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);text-decoration:none;transition:all .3s"><span class="material-icons" style="font-size:18px">alternate_email</span></a></div></div>
     </div>
+    <div style="max-width:1280px;margin:0 auto;padding-top:32px;border-top:1px solid rgba(255,255,255,.08);text-align:center;font-size:14px;color:rgba(255,255,255,.4)">Made with ❤️ in Bharat 🇮🇳</div>
   </footer>
 
-  <!-- Back to Top Button -->
-  <button id="back-to-top" class="back-to-top" aria-label="Back to top">
-    <span class="material-icons">arrow_upward</span>
-  </button>
+  <!-- ─── BACK TO TOP ─── -->
+  <button id="backTop" class="back-top" aria-label="Back to top"><span class="material-icons">arrow_upward</span></button>
 
   <script>
-    // ─── THEME TOGGLE ───
-    const themeToggleBtn = document.getElementById('theme-toggle-btn');
-    const themeToggleBtnMobile = document.getElementById('theme-toggle-btn-mobile');
-    const themeIcon = document.getElementById('theme-icon');
-    const themeIconMobile = document.getElementById('theme-icon-mobile');
-    const themeColorMeta = document.getElementById('theme-color-meta');
+    /* ============================================================
+       CUSTOM CURSOR
+       ============================================================ */
+    const dot = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    let cursorEnabled = window.matchMedia('(pointer:fine)').matches &&
+                        !('ontouchstart' in window) &&
+                        !navigator.maxTouchPoints;
 
-    function getPreferredTheme() {
-      const saved = localStorage.getItem('theme');
-      if (saved) return saved;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    if (cursorEnabled) {
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx+'px'; dot.style.top = my+'px'; });
+      const smoothRing = () => { rx += (mx - rx) * .12; ry += (my - ry) * .12; ring.style.left = rx+'px'; ring.style.top = ry+'px'; requestAnimationFrame(smoothRing); };
+      smoothRing();
+
+      document.querySelectorAll('a,button,input,select,textarea,label,.tilt-card,.feature-card,.pricing-card,.marquee-card').forEach(el => {
+        el.addEventListener('mouseenter', () => ring.classList.add('hover'));
+        el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
+      });
+      document.addEventListener('mousedown', () => ring.classList.add('click'));
+      document.addEventListener('mouseup', () => ring.classList.remove('click'));
+    } else {
+      dot.style.display = 'none';
+      ring.style.display = 'none';
     }
 
-    function applyTheme(theme) {
-      if (theme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        themeIcon.textContent = 'light_mode';
-        themeIconMobile.textContent = 'light_mode';
-        themeIcon.style.color = '#fbbf24';
-        themeIconMobile.style.color = '#fbbf24';
-        themeColorMeta.content = '#0f172a';
+    /* ============================================================
+       SCROLL PROGRESS
+       ============================================================ */
+    const progress = document.getElementById('scroll-progress');
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.width = Math.min((window.scrollY / h) * 100, 100) + '%';
+    });
+
+    /* ============================================================
+       THEME TOGGLE
+       ============================================================ */
+    function getTheme() { return localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'); }
+    function applyTheme(t) {
+      if (t === 'dark') { document.documentElement.setAttribute('data-theme','dark');
+        document.getElementById('themeIcon').textContent = 'light_mode';
+        document.getElementById('themeIconMob').textContent = 'light_mode';
+        document.getElementById('themeIcon').style.color = '#fbbf24';
+        document.getElementById('themeIconMob').style.color = '#fbbf24';
+        document.getElementById('theme-color').content = '#0f172a';
       } else {
         document.documentElement.removeAttribute('data-theme');
-        themeIcon.textContent = 'dark_mode';
-        themeIconMobile.textContent = 'dark_mode';
-        themeIcon.style.color = '#f59e0b';
-        themeIconMobile.style.color = '#f59e0b';
-        themeColorMeta.content = '#25d366';
+        document.getElementById('themeIcon').textContent = 'dark_mode';
+        document.getElementById('themeIconMob').textContent = 'dark_mode';
+        document.getElementById('themeIcon').style.color = '#f59e0b';
+        document.getElementById('themeIconMob').style.color = '#f59e0b';
+        document.getElementById('theme-color').content = '#25d366';
       }
-      localStorage.setItem('theme', theme);
+      localStorage.setItem('theme', t);
+    }
+    applyTheme(getTheme());
+    document.getElementById('themeToggle').addEventListener('click', () => applyTheme(getTheme() === 'dark' ? 'light' : 'dark'));
+    document.getElementById('themeToggleMob').addEventListener('click', () => applyTheme(getTheme() === 'dark' ? 'light' : 'dark'));
+    window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change', e => { if (!localStorage.getItem('theme')) applyTheme(e.matches ? 'dark' : 'light'); });
+
+    /* ============================================================
+       CANVAS PARTICLES (HERO)
+       ============================================================ */
+    const canvas = document.getElementById('hero-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
+    const MAX = 80;
+
+    function resizeCanvas() { W = canvas.width = canvas.parentElement.offsetWidth; H = canvas.height = canvas.parentElement.offsetHeight; }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * W; this.y = Math.random() * H;
+        this.vx = (Math.random() - .5) * .6; this.vy = (Math.random() - .5) * .6;
+        this.r = Math.random() * 2 + 1; this.a = Math.random() * .4 + .1;
+      }
+      update() {
+        this.x += this.vx; this.y += this.vy;
+        if (this.x < 0 || this.x > W) this.vx *= -1;
+        if (this.y < 0 || this.y > H) this.vy *= -1;
+      }
+      draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2); ctx.fillStyle = `rgba(255,255,255,${this.a})`; ctx.fill(); }
     }
 
-    // Init theme
-    applyTheme(getPreferredTheme());
+    for (let i = 0; i < MAX; i++) particles.push(new Particle());
 
-    // Toggle both buttons
-    function toggleTheme() {
-      const current = document.documentElement.getAttribute('data-theme');
-      applyTheme(current === 'dark' ? 'light' : 'dark');
-    }
+    let mousePX = -1000, mousePY = -1000;
+    canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mousePX = e.clientX - r.left; mousePY = e.clientY - r.top; });
+    canvas.addEventListener('mouseleave', () => { mousePX = -1000; mousePY = -1000; });
 
-    themeToggleBtn.addEventListener('click', toggleTheme);
-    themeToggleBtnMobile.addEventListener('click', toggleTheme);
-
-    // Watch system preference changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!localStorage.getItem('theme')) {
-        applyTheme(e.matches ? 'dark' : 'light');
-      }
-    });
-
-    // ─── MOBILE MENU ───
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-
-    mobileMenuBtn.addEventListener('click', () => {
-      const isActive = mobileMenu.classList.toggle('active');
-      const icon = mobileMenuBtn.querySelector('.material-icons');
-      icon.textContent = isActive ? 'close' : 'menu';
-      icon.style.transform = isActive ? 'rotate(90deg)' : 'rotate(0deg)';
-      mobileMenuBtn.setAttribute('aria-expanded', isActive);
-      mobileMenu.setAttribute('aria-hidden', !isActive);
-    });
-
-    mobileMenu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        mobileMenu.classList.remove('active');
-        const icon = mobileMenuBtn.querySelector('.material-icons');
-        icon.textContent = 'menu';
-        icon.style.transform = 'rotate(0deg)';
-        mobileMenuBtn.setAttribute('aria-expanded', 'false');
-        mobileMenu.setAttribute('aria-hidden', 'true');
-      });
-    });
-
-    // ─── SCROLL REVEAL ───
-    const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
-
-    const revealOnScroll = () => {
-      const windowHeight = window.innerHeight;
-      const elementVisible = 120;
-      revealElements.forEach((element) => {
-        const elementTop = element.getBoundingClientRect().top;
-        if (elementTop < windowHeight - elementVisible) {
-          element.classList.add('active');
-        }
-      });
-    };
-
-    window.addEventListener('scroll', revealOnScroll);
-    window.addEventListener('load', revealOnScroll);
-
-    // ─── NAVBAR SCROLL EFFECT ───
-    const nav = document.querySelector('nav');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 50) {
-        nav.classList.add('scrolled');
-      } else {
-        nav.classList.remove('scrolled');
-      }
-    });
-
-    // ─── 3D TILT CARDS ───
-    document.querySelectorAll('.tilt-card').forEach(card => {
-      card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotX = ((y - centerY) / centerY) * -6;
-        const rotY = ((x - centerX) / centerX) * 6;
-        card.style.setProperty('--rotX', rotX + 'deg');
-        card.style.setProperty('--rotY', rotY + 'deg');
-        card.style.setProperty('--mouseX', x + 'px');
-        card.style.setProperty('--mouseY', y + 'px');
-      });
-      card.addEventListener('mouseleave', () => {
-        card.style.setProperty('--rotX', '0deg');
-        card.style.setProperty('--rotY', '0deg');
-      });
-    });
-
-    // ─── COUNT UP ANIMATION ───
-    const countUps = document.querySelectorAll('.count-up');
-    let countUpStarted = false;
-
-    const animateCountUp = () => {
-      countUps.forEach(el => {
-        const target = parseInt(el.dataset.target);
-        const suffix = el.textContent.replace(/[0-9]/g, '');
-        let current = 0;
-        const increment = Math.ceil(target / 60);
-        const timer = setInterval(() => {
-          current += increment;
-          if (current >= target) {
-            current = target;
-            clearInterval(timer);
+    function animateParticles() {
+      ctx.clearRect(0, 0, W, H);
+      for (let p of particles) { p.update(); p.draw(); }
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 130) {
+            ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(255,255,255,${.06 * (1 - dist / 130)})`; ctx.stroke();
           }
-          el.textContent = current + suffix;
-        }, 20);
-      });
-    };
-
-    const countUpObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && !countUpStarted) {
-          countUpStarted = true;
-          animateCountUp();
         }
-      });
-    }, { threshold: 0.5 });
-
-    countUps.forEach(el => countUpObserver.observe(el));
-
-    // ─── SMOOTH ANCHOR SCROLL ───
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Connect to mouse
+        const dx = particles[i].x - mousePX, dy = particles[i].y - mousePY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 180) {
+          ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(mousePX, mousePY);
+          ctx.strokeStyle = `rgba(255,255,255,${.1 * (1 - dist / 180)})`; ctx.stroke();
         }
-      });
-    });
-
-    // ─── BACK TO TOP ───
-    const backToTopBtn = document.getElementById('back-to-top');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 300) {
-        backToTopBtn.classList.add('visible');
-      } else {
-        backToTopBtn.classList.remove('visible');
       }
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    /* ============================================================
+       3D PHONE MOCKUP
+       ============================================================ */
+    const phone = document.getElementById('phoneMockup');
+    document.querySelector('.phone-wrapper').addEventListener('mousemove', e => {
+      const r = phone.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - .5;
+      const y = (e.clientY - r.top) / r.height - .5;
+      phone.style.transform = `perspective(1000px) rotateY(${x * 12}deg) rotateX(${y * -12}deg) translateZ(20px)`;
     });
-    backToTopBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('.phone-wrapper').addEventListener('mouseleave', () => {
+      phone.style.transform = 'perspective(1000px) rotateY(0) rotateX(0) translateZ(0)';
     });
 
-    // ─── SERVICE WORKER ───
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(registration => console.log('Service Worker registered:', registration))
-          .catch(error => console.log('Service Worker registration failed:', error));
+    /* ============================================================
+       MAGNETIC BUTTONS
+       ============================================================ */
+    document.querySelectorAll('.magnetic-wrap').forEach(w => {
+      const btn = w.querySelector('a,button');
+      const strength = parseInt(w.dataset.strength) || 10;
+      w.addEventListener('mousemove', e => {
+        const r = w.getBoundingClientRect();
+        const x = (e.clientX - r.left - r.width/2) * strength / r.width;
+        const y = (e.clientY - r.top - r.height/2) * strength / r.height;
+        btn.style.transform = `translate(${x}px, ${y}px)`;
       });
+      w.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+    });
+
+    /* ============================================================
+       TILT CARDS
+       ============================================================ */
+    document.querySelectorAll('[data-tilt]').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width;
+        const y = (e.clientY - r.top) / r.height;
+        card.style.setProperty('--mx', (x*100)+'%');
+        card.style.setProperty('--my', (y*100)+'%');
+        card.querySelector('.tilt-card-inner')?.style?.transform || card.style.transform;
+        const rotX = (y - .5) * -8, rotY = (x - .5) * 8;
+        card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(10px)`;
+      });
+      card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+    });
+
+    /* ============================================================
+       SCROLL REVEAL
+       ============================================================ */
+    const revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('active'); revealObserver.unobserve(e.target); } });
+    }, { threshold: .1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal,.reveal-l,.reveal-r,.reveal-s').forEach(el => revealObserver.observe(el));
+
+    /* ============================================================
+       COUNT UP
+       ============================================================ */
+    const countObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.target);
+          const suffix = el.textContent.replace(/[0-9]/g, '') || '';
+          let current = 0;
+          const step = Math.ceil(target / 60);
+          const timer = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(timer); }
+            el.textContent = current + suffix;
+          }, 20);
+          countObserver.unobserve(el);
+        }
+      });
+    }, { threshold: .5 });
+    document.querySelectorAll('.count-up').forEach(el => countObserver.observe(el));
+
+    /* ============================================================
+       MARQUEE CLONE
+       ============================================================ */
+    const track = document.getElementById('marqueeTrack');
+    if (track) {
+      const cards = track.innerHTML;
+      track.innerHTML = cards + cards;
     }
 
-    function showRegisterForm(plan) {
-      document.getElementById('plan').value = plan;
+    /* ============================================================
+       NAVBAR SCROLL
+       ============================================================ */
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 60));
+
+    /* ============================================================
+       MOBILE MENU
+       ============================================================ */
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn?.addEventListener('click', () => {
+      const a = mobileMenu.classList.toggle('active');
+      menuBtn.querySelector('.material-icons').textContent = a ? 'close' : 'menu';
+    });
+    mobileMenu?.querySelectorAll('a').forEach(l => l.addEventListener('click', () => {
+      mobileMenu.classList.remove('active');
+      menuBtn.querySelector('.material-icons').textContent = 'menu';
+    }));
+
+    /* ============================================================
+       SMOOTH ANCHORS
+       ============================================================ */
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const t = document.querySelector(a.getAttribute('href'));
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    /* ============================================================
+       BACK TO TOP
+       ============================================================ */
+    const backTop = document.getElementById('backTop');
+    window.addEventListener('scroll', () => backTop.classList.toggle('visible', window.scrollY > 400));
+    backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    /* ============================================================
+       FORM
+       ============================================================ */
+    function showForm(plan) {
+      document.getElementById('planSelect').value = plan;
       document.getElementById('register').scrollIntoView({ behavior: 'smooth' });
     }
 
-    async function handleRegister(event) {
-      event.preventDefault();
-      const submitBtn = document.getElementById('submit-btn');
-      const originalText = submitBtn.innerHTML;
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="spinner"></span><span>Registering...</span>';
-
-      const storeData = {
-        store_name: document.getElementById('store-name').value,
-        owner_name: document.getElementById('owner-name').value,
-        phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        business_type: document.getElementById('business-type').value,
-        plan: document.getElementById('plan').value
-      };
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner" style="display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite"></span> Registering...';
 
       try {
-        const response = await fetch('/api/register-store', {
+        const res = await fetch('/api/register-store', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(storeData)
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            store_name: document.getElementById('storeName').value,
+            owner_name: document.getElementById('ownerName').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+            business_type: document.getElementById('businessType').value,
+            plan: document.getElementById('planSelect').value
+          })
         });
-        if (response.ok) {
-          const result = await response.json();
-          document.getElementById('register-form').classList.add('hidden');
-          document.getElementById('success-message').classList.remove('hidden');
-          document.getElementById('store-id').textContent = result.store_id;
-        } else {
-          alert('Registration failed. Please try again.');
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalText;
-        }
-      } catch (error) {
-        console.error('Error registering store:', error);
+        if (res.ok) {
+          const d = await res.json();
+          document.getElementById('registerForm').style.display = 'none';
+          document.getElementById('successMsg').style.display = 'block';
+          document.getElementById('storeId').textContent = d.store_id;
+        } else { throw new Error(); }
+      } catch(err) {
         alert('Registration failed. Please try again.');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.innerHTML = orig;
       }
+    }
+
+    /* ============================================================
+       SERVICE WORKER
+       ============================================================ */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
     }
   </script>
 </body>
