@@ -131,9 +131,13 @@ class MainActivity : ComponentActivity() {
 
       // Trigger biometric prompt when the composable tree is ready
       LaunchedEffect(Unit) {
-        if (BiometricAuthHelper.isAvailable(context) &&
-            !BiometricAuthHelper.isAuthenticated(context)) {
-          BiometricAuthHelper.showPrompt(context as FragmentActivity)
+        try {
+          if (BiometricAuthHelper.isAvailable(context) &&
+              !BiometricAuthHelper.isAuthenticated(context)) {
+            BiometricAuthHelper.showPrompt(context as FragmentActivity)
+          }
+        } catch (e: Exception) {
+          android.util.Log.w("MainActivity", "Biometric prompt failed (non-fatal)", e)
         }
       }
 

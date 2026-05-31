@@ -57,57 +57,67 @@ object BiometricAuthHelper {
     }
 
     fun showPrompt(activity: FragmentActivity) {
-        if (isAuthenticated(activity)) return
+        try {
+            if (isAuthenticated(activity)) return
 
-        val authenticators: Int
-        val title: String
-        val subtitle: String
+            val authenticators: Int
+            val title: String
+            val subtitle: String
 
-        when {
-            isAvailable(activity) -> {
-                authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG
-                title = "Fingerprint / Face Unlock"
-                subtitle = "Touch the fingerprint sensor or use face unlock"
-            }
-            isDeviceCredentialAvailable(activity) -> {
-                authenticators = BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                title = "Screen Lock"
-                subtitle = "Enter your device PIN, pattern, or password"
-            }
-            else -> return
-        }
-
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(title)
-            .setSubtitle(subtitle)
-            .setNegativeButtonText("Cancel")
-            .setConfirmationRequired(false)
-            .setAllowedAuthenticators(authenticators)
-            .build()
-
-        val executor = ContextCompat.getMainExecutor(activity)
-        val prompt = BiometricPrompt(activity, executor,
-            object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    setAuthenticated(activity, true)
+            when {
+                isAvailable(activity) -> {
+                    authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG
+                    title = "Fingerprint / Face Unlock"
+                    subtitle = "Touch the fingerprint sensor or use face unlock"
                 }
+                isDeviceCredentialAvailable(activity) -> {
+                    authenticators = BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                    title = "Screen Lock"
+                    subtitle = "Enter your device PIN, pattern, or password"
+                }
+                else -> return
+            }
 
-                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                    if (errorCode != BiometricPrompt.ERROR_USER_CANCELED) {
-                        android.util.Log.e("BiometricAuth", "Auth error: $errString")
+            val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .setNegativeButtonText("Cancel")
+                .setConfirmationRequired(false)
+                .setAllowedAuthenticators(authenticators)
+                .build()
+
+            val executor = getMainExecutor(activity)
+            val prompt = BiometricPrompt(activity, executor,
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        setAuthenticated(activity, true)
+                    }
+
+                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                        if (errorCode != BiometricPrompt.ERROR_USER_CANCELED) {
+                            android.util.Log.e("BiometricAuth", "Auth error: $errString")
+                        }
+                    }
+
+                    override fun onAuthenticationFailed() {
+                        android.util.Log.d("BiometricAuth", "Auth failed — retry available")
                     }
                 }
+            )
 
-                override fun onAuthenticationFailed() {
-                    android.util.Log.d("BiometricAuth", "Auth failed — retry available")
-                }
+            prompt.authenticate(promptInfo)
+        } catch (e: Exception) {
+            android.util.Log.w("BiometricAuth", "showPrompt failed, skipping biometric", e)
+            // Fall through — user proceeds to app without biometric lock
+        }
+    }
+
+    private fun getMainExecutor(context: Context) =
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            context.mainExecutor
+        } else {
+            android.os.Handler(context.mainLooper).let { handler ->
+                java.util.concurrent.Executor { r -> handler.post(r) }
             }
-        )
-
-        prompt.authenticate(promptInfo)
-    }
-
-    private object ContextCompat {
-        fun getMainExecutor(context: Context) = context.mainExecutor
-    }
+        }
 }
