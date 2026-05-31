@@ -2997,11 +2997,14 @@ app.use(express.static(nextStaticDir, {
 }));
 
 // SPA fallback: for any non-API GET that express.static didn't handle,
-// serve the dashboard page as the app entry (client-side routing takes over)
+// serve the dashboard page as the app entry (client-side routing takes over).
+// Falls through silently if Next.js hasn't been built yet.
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();
   if (req.path.startsWith('/api/') || req.path.startsWith('/webhook')) return next();
-  res.sendFile(path.join(nextStaticDir, 'dashboard', 'index.html'));
+  res.sendFile(path.join(nextStaticDir, 'dashboard', 'index.html'), { dotfiles: 'deny' }, (err) => {
+    if (err) next(); // silently pass through if files don't exist
+  });
 });
 
 // ─── START SERVER ──────────────────────────────────────────────────────────────

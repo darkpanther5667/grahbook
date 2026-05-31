@@ -8,9 +8,7 @@ services:
     runtime: node
     plan: free
     # rootDir omitted — server.js is at repo root
-    buildCommand: |-
-      npm install &&
-      cd client-web && npm install && npm run build && cd ..
+    buildCommand: npm run build
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
