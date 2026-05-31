@@ -1,5 +1,6 @@
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://wpapp-xz9l.onrender.com";
+  // ⚠️ Update fallback to real API URL after deploying the API service.
 
 export const CURRENCY = "₹";
 export const DATE_FORMAT = "dd MMM yyyy";

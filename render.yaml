@@ -1,13 +1,28 @@
 services:
+  # ─── SINGLE SERVICE: API backend + Next.js web panel ──────────────────
+  # Express (server.js) serves all /api/* endpoints at root.
+  # Next.js is pre-built to client-web/out/ and served as static files by Express.
+  # Everything lives at ONE URL — no split services.
   - type: web
-    name: grahbook-web
+    name: wpapp
     runtime: node
     plan: free
-    rootDir: client-web
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    # rootDir omitted — server.js is at repo root
+    buildCommand: |-
+      npm install &&
+      cd client-web && npm install && npm run build && cd ..
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: NEXT_PUBLIC_API_URL
-        value: https://wpapp-xz9l.onrender.com
+      - key: PORT
+        value: "3000"
+      - key: MOBILE_API_KEY
+        value: b7c3f1f6c9b84c4ea2a9f0c0f4c9a7d1
+      - key: ALLOWED_ORIGIN
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      # ⚠️ Set these secrets in Render Dashboard:
+      #   WHATSAPP_TOKEN, PHONE_NUMBER_ID, VERIFY_TOKEN, ADMIN_KEY
+      #   MONGODB_URI, OPENROUTER_API_KEY, ALLOWED_ORIGIN, PUBLIC_BASE_URL

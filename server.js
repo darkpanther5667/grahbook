@@ -22,11 +22,19 @@ const app = express();
 app.use(express.json());
 app.set('trust proxy', 1);
 
-// Allow the local dashboard (file:// origin) to call the API
+// CORS: allow only configured origins; allow null origin for native mobile apps
+const corsAllowedOrigins = (process.env.ALLOWED_ORIGIN || '').split(',').map(o => o.trim()).filter(Boolean);
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  const origin = req.get('Origin');
+  // Allow same-origin, configured origins, or null origin (native apps, curl)
+  if (!origin || corsAllowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'null');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-KEY, X-ADMIN-KEY');
+  res.setHeader('Access-Control-Max-Age', '86400');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -280,11 +288,21 @@ async function readDB() {
 
 // Write lock to prevent concurrent DB corruption
 let dbWriteLock = false;
-async function writeDB(data) {
+let lastDbVersion = 0;
+
+async function writeDB(data, expectedVersion) {
+  // Optimistic locking: reject if version mismatch (concurrent write hazard)
+  if (expectedVersion !== undefined && expectedVersion !== lastDbVersion) {
+    const err = new Error('Conflict: database was modified by another write. Please retry.');
+    err.code = 'CONFLICT';
+    err.expectedVersion = expectedVersion;
+    err.currentVersion = lastDbVersion;
+    throw err;
+  }
+
   if (dbWriteLock) {
-    // Wait 50ms and retry
     await new Promise(r => setTimeout(r, 50));
-    return await writeDB(data);
+    return await writeDB(data, expectedVersion);
   }
   dbWriteLock = true;
   try {
@@ -292,10 +310,10 @@ async function writeDB(data) {
     if (!database) {
       fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
       cachedDB = data;
+      lastDbVersion++;
       return;
     }
 
-    // Overwrite collections (mimics the db.json full overwrite behavior for backwards compatibility)
     for (const col of ['shop', 'customers', 'transactions', 'bills', 'staff', 'stores']) {
       if (data[col]) {
         await database.collection(col).deleteMany({});
@@ -304,8 +322,10 @@ async function writeDB(data) {
       }
     }
     cachedDB = data;
+    lastDbVersion++;
   } catch (error) {
     console.error('Error writing to MongoDB:', error);
+    throw error; // Propagate errors — callers must handle failures
   } finally {
     dbWriteLock = false;
   }
@@ -314,12 +334,33 @@ async function writeDB(data) {
 // POST /api/admin/clear-all — Wipe all stores, customers, staff, bills, transactions
 app.post('/api/admin/clear-all', async (req, res) => {
   try {
+    // Require X-ADMIN-KEY header
+    const adminKey = process.env.ADMIN_KEY;
+    if (!adminKey) {
+      return res.status(500).json({ success: false, message: 'Server misconfigured: ADMIN_KEY not set' });
+    }
+    const providedKey = req.get('X-ADMIN-KEY');
+    if (!providedKey || providedKey !== adminKey) {
+      // Log the attempt but don't reveal if the key is correct
+      console.warn(`⚠️ Unauthorized /api/admin/clear-all attempt from ${req.ip}`);
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    // Require explicit confirmation in request body
+    const { confirm, storeId } = req.body || {};
+    if (confirm !== true || !storeId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Confirmation required. Send { confirm: true, storeId: "<your-store-id>" } in the body.'
+      });
+    }
+
     const empty = { shop: {}, customers: [], transactions: [], bills: [], staff: [], stores: [] };
     await writeDB(empty);
-    // Also reset local cache
     cachedDB = empty;
-    console.log('🗑️ All data cleared successfully');
-    return res.json({ success: true, message: 'All data cleared. Everyone starts fresh.' });
+    const timestamp = new Date().toISOString();
+    console.warn(`🗑️ ALL DATA CLEARED at ${timestamp} by ${req.ip} for store ${storeId}`);
+    return res.json({ success: true, message: 'All data cleared. Everyone starts fresh.', timestamp });
   } catch (error) {
     console.error('Error clearing data:', error);
     return res.status(500).json({ success: false, message: 'Failed to clear data' });
@@ -1149,7 +1190,7 @@ async function sendDailyReport() {
 
 // GET /webhook — Meta verification
 app.get('/webhook', (req, res) => {
-  const verifyToken = process.env.VERIFY_TOKEN || 'sharma_store_token';
+  const verifyToken = process.env.VERIFY_TOKEN;
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
@@ -2939,6 +2980,28 @@ app.get('/api/report/:date/pdf', async (req, res) => {
     console.error('Error generating report PDF:', error);
     res.status(500).json({ status: 'error', message: 'Failed to generate report PDF' });
   }
+});
+
+// ─── SERVE NEXT.JS WEB PANEL (static export) ───────────────────────────────────
+// The Next.js app is built to client-web/out/ and served as static files.
+// Dynamic routes (e.g. /customers/abc123) fall back to the SPA entry point
+// so client-side Next.js routing handles them.
+const nextStaticDir = path.join(__dirname, 'client-web', 'out');
+
+app.use(express.static(nextStaticDir, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+  }
+}));
+
+// SPA fallback: for any non-API GET that express.static didn't handle,
+// serve the dashboard page as the app entry (client-side routing takes over)
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  if (req.path.startsWith('/api/') || req.path.startsWith('/webhook')) return next();
+  res.sendFile(path.join(nextStaticDir, 'dashboard', 'index.html'));
 });
 
 // ─── START SERVER ──────────────────────────────────────────────────────────────

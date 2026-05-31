@@ -28,8 +28,8 @@ async function connectDB() {
 
 // Helper to get backwards compatible full DB dump for dashboard.html and regex fallback
 async function getFullDB() {
-  if (useLocalFallback) {
-    // Read from local JSON file
+  // Fallback to local db.json when MONGODB_URI is not set or connectDB() returns null
+  const localFallback = () => {
     try {
       const data = fs.readFileSync(DB_FILE, 'utf8');
       return JSON.parse(data);
@@ -37,9 +37,18 @@ async function getFullDB() {
       console.error('Error reading local db.json:', error);
       return { shop: {}, customers: [], transactions: [], bills: [], staff: [], stores: [] };
     }
+  };
+
+  if (useLocalFallback) {
+    return localFallback();
   }
 
   const database = await connectDB();
+  if (!database) {
+    useLocalFallback = true;
+    return localFallback();
+  }
+
   const shop = await database.collection('shop').findOne({});
   const customers = await database.collection('customers').find({}).toArray();
   const transactions = await database.collection('transactions').find({}).toArray();
