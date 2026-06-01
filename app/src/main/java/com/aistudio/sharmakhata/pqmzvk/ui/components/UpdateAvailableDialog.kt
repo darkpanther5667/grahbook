@@ -24,12 +24,16 @@ import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.util.DownloadState
 import com.aistudio.sharmakhata.pqmzvk.util.UpdateInfo
 
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.ui.platform.LocalUriHandler
+
 @Composable
 fun UpdateAvailableDialog(
     updateInfo: UpdateInfo,
     downloadState: DownloadState,
     onUpdate: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: (() -> Unit)?   // null = mandatory, cannot be dismissed
 ) {
     val isDownloading = downloadState is DownloadState.Downloading
     val isDone = downloadState is DownloadState.Done
@@ -48,8 +52,10 @@ fun UpdateAvailableDialog(
         label = "iconPulse"
     )
 
+    val uriHandler = LocalUriHandler.current
+
     Dialog(
-        onDismissRequest = { if (!updateInfo.isMandatory && !isDownloading) onDismiss() },
+        onDismissRequest = { if (!updateInfo.isMandatory && !isDownloading) onDismiss?.invoke() },
         properties = DialogProperties(
             dismissOnBackPress = !updateInfo.isMandatory && !isDownloading,
             dismissOnClickOutside = !updateInfo.isMandatory && !isDownloading
@@ -210,7 +216,7 @@ fun UpdateAvailableDialog(
                             )
                         }
 
-                        if (!updateInfo.isMandatory) {
+                        if (onDismiss != null && !updateInfo.isMandatory) {
                             TextButton(
                                 onClick = onDismiss,
                                 modifier = Modifier.fillMaxWidth()
@@ -229,12 +235,29 @@ fun UpdateAvailableDialog(
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )
+                            // Browser fallback for users whose in-app download fails
+                            TextButton(
+                                onClick = { uriHandler.openUri(updateInfo.apkUrl) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    Icons.Default.OpenInBrowser,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    "Download via Browser instead",
+                                    fontSize = 12.sp,
+                                    color = StitchTeal
+                                )
+                            }
                         }
                     }
                 }
 
                 if (isDone) {
-                    TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    TextButton(onClick = { onDismiss?.invoke() }, modifier = Modifier.fillMaxWidth()) {
                         Text("Close", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }

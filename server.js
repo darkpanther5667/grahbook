@@ -1742,11 +1742,11 @@ app.use('/downloads', express.static(path.join(__dirname, 'public', 'downloads')
  */
 app.get('/api/app/version', (req, res) => {
   res.json({
-    versionCode: 4,          // ← BUMP THIS on every new release (must be integer, always increasing)
-    versionName: '2.0.1',    // ← Human-readable version shown in the update dialog
+    versionCode: 5,
+    versionName: '2.0.2',
     apkUrl: 'https://wpapp-xz9l.onrender.com/downloads/grahbook-latest.apk',
-    releaseNotes: '🔧 v2.0.1 — Crash Fix\n\n✅ Fixed app crash on Quick Bill screen\n✅ All v2.0 features still included (delete entries, autocomplete, templates)',
-    mandatory: true           // Force update since v2.0 has a crash
+    releaseNotes: '🔧 v2.0.2 — Stability Fix\n\n✅ Mandatory update dialog cannot be skipped\n✅ Browser download fallback added\n✅ All features from v2.0 included',
+    mandatory: true
   });
 });
 

@@ -260,10 +260,10 @@ class MainActivity : ComponentActivity() {
               AppUpdateManager.downloadAndInstall(context, pendingUpdate!!)
             }
           },
-          onDismiss = {
+          onDismiss = if (pendingUpdate?.isMandatory == true) null else {{
             showUpdateDialog = false
             AppUpdateManager.resetDownloadState()
-          }
+          }}
         )
       }
     }
