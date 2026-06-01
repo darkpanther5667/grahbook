@@ -506,19 +506,18 @@ fun QuickBillScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
+                            // Single hoisted state for which row's autocomplete is open
+                            // (must NOT use remember/mutableStateOf inside forEachIndexed - Compose rules violation)
+                            var activeSuggestionIndex by remember { mutableStateOf<Int?>( null) }
+
                             // Item rows
                             items.forEachIndexed { index, item ->
                                 val itemTotal = (item.price.toDoubleOrNull() ?: 0.0) * (item.qty.toIntOrNull() ?: 1)
 
-                                // Autocomplete suggestions for this item slot
-                                val suggestions = remember(item.name, storedItems) {
-                                    if (item.name.length >= 1)
-                                        storedItems.filter {
-                                            it.name.contains(item.name, ignoreCase = true)
-                                        }.take(5)
-                                    else emptyList()
-                                }
-                                var showSuggestions by remember { mutableStateOf(false) }
+                                // Compute suggestions inline — no remember inside loop
+                                val suggestions = if (activeSuggestionIndex == index && item.name.length >= 1)
+                                    storedItems.filter { it.name.contains(item.name, ignoreCase = true) }.take(5)
+                                else emptyList()
 
                                 Row(
                                     modifier = Modifier
@@ -532,9 +531,9 @@ fun QuickBillScreen(
                                             value = item.name,
                                             onValueChange = { newName ->
                                                 items = items.toMutableList().also { it[index] = item.copy(name = newName) }
-                                                showSuggestions = newName.isNotEmpty() && storedItems.any {
+                                                activeSuggestionIndex = if (newName.isNotEmpty() && storedItems.any {
                                                     it.name.contains(newName, ignoreCase = true)
-                                                }
+                                                }) index else null
                                             },
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -551,7 +550,7 @@ fun QuickBillScreen(
                                             )
                                         )
                                         // Dropdown of suggestions
-                                        if (showSuggestions && suggestions.isNotEmpty()) {
+                                        if (activeSuggestionIndex == index && suggestions.isNotEmpty()) {
                                             Card(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
@@ -572,7 +571,7 @@ fun QuickBillScreen(
                                                                             price = suggestion.lastPrice.toString()
                                                                         )
                                                                     }
-                                                                    showSuggestions = false
+                                                                    activeSuggestionIndex = null
                                                                 }
                                                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                                                             horizontalArrangement = Arrangement.SpaceBetween,
