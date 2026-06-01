@@ -6,8 +6,10 @@ import com.aistudio.sharmakhata.pqmzvk.data.model.DeltaChanges
 import com.aistudio.sharmakhata.pqmzvk.data.model.FullDatabase
 import com.squareup.moshi.Json
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -22,6 +24,10 @@ interface ApiService {
 
     @POST("api/register-store")
     suspend fun registerStore(@Body request: RegisterStoreRequest): retrofit2.Response<RegisterStoreResponse>
+
+    @POST("api/store/update")
+    suspend fun updateStoreProfile(@Body request: UpdateStoreProfileRequest): retrofit2.Response<BasicSuccessResponse>
+
     @GET("api/db")
     suspend fun getFullDatabase(): retrofit2.Response<FullDatabase>
 
@@ -59,6 +65,12 @@ interface ApiService {
 
     @GET("api/items")
     suspend fun getStoredItems(): StoredItemsResponse
+
+    @DELETE("api/transaction/{id}")
+    suspend fun deleteTransaction(@Path("id") id: String): retrofit2.Response<BasicSuccessResponse>
+
+    @DELETE("api/bill/{id}")
+    suspend fun deleteBill(@Path("id") id: String): retrofit2.Response<BasicSuccessResponse>
 }
 
 data class AddCustomerRequest(
@@ -184,4 +196,13 @@ data class StoredItem(
     val price: Double,
     val count: Int = 0,
     val lastPrice: Double = 0.0
+)
+
+data class UpdateStoreProfileRequest(
+    val store_name: String?,
+    val owner_name: String?,
+    val address: String?,
+    val upi_id: String?,
+    val gstin: String?,
+    val invoice_template: String? = null
 )

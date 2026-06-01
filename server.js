@@ -167,8 +167,11 @@ async function readStoreDB(storeId) {
           phone: store.phone,
           address: store.address,
           store_id: sid,
+          upi_id: store.upi_id || '',
+          gstin: store.gstin || '',
+          invoice_template: store.invoice_template || 'modern',
         }
-      : (sid === 'default' && db.shop ? db.shop : {});
+      : (sid === 'default' && db.shop ? { ...db.shop, upi_id: db.shop.upi_id || '', gstin: db.shop.gstin || '', invoice_template: db.shop.invoice_template || 'modern' } : {});
 
   const OVERDUE_DAYS = 30;
   const now = new Date();
@@ -1154,37 +1157,66 @@ function scheduleDaily(hour, minuteIST, fn) {
 
 async function sendDailyReport() {
   const db = await readDB();
-  const shop = db.shop || {};
   const todayString = new Date().toISOString().substring(0, 10);
 
-  const billsToday = (db.bills || []).filter(b => b.created_at && b.created_at.startsWith(todayString));
-  const billsTotal = billsToday.reduce((sum, b) => sum + (b.total || 0), 0);
-  const paidToday = billsToday.filter(b => b.status === 'paid').reduce((sum, b) => sum + (b.total || 0), 0);
+  // Group staff by store_id
+  const staffByStore = {};
+  for (const staff of (db.staff || [])) {
+    const sid = staff.store_id || 'default';
+    if (!staffByStore[sid]) staffByStore[sid] = [];
+    staffByStore[sid].push(staff);
+  }
 
-  const collectionsToday = (db.transactions || []).filter(t => t.type === 'payment' && t.timestamp && t.timestamp.startsWith(todayString));
-  const paymentTotal = collectionsToday.reduce((sum, t) => sum + (t.amount || 0), 0);
+  // Iterate over each store to send their specific report
+  const storeIdsToReport = Object.keys(staffByStore);
 
-  const totalOutstanding = (db.customers || []).reduce((sum, c) => {
-    const bal = getCustomerOutstanding(c.id, db.transactions, db.bills);
-    return sum + (bal > 0 ? bal : 0);
-  }, 0);
+  for (const sid of storeIdsToReport) {
+    const store = (db.stores || []).find(s => s.id === sid);
+    const shop = store
+      ? {
+          name: store.store_name,
+          owner: store.owner_name,
+          phone: store.phone,
+          address: store.address,
+          store_id: sid,
+        }
+      : (sid === 'default' && db.shop ? db.shop : {});
 
-  const report =
-    `🌅 *${shop.name || 'General Store'} — Subah ki Report*\n` +
-    `📅 ${fmtDate(new Date().toISOString())}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 Aaj ki total sales: *${fmtRs(billsTotal)}*\n` +
-    `📥 Aaj ka collection: *${fmtRs(paymentTotal)}*\n` +
-    `🧾 Bills today: ${billsToday.length} (Paid: ${billsToday.filter(b => b.status === 'paid').length})\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `📊 Total outstanding (sab customers): *${fmtRs(totalOutstanding)}*\n` +
-    `👥 Total customers: ${(db.customers || []).length}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `_${shop.name || 'General Store'} Bot 🤖_`;
+    const storeBills = (db.bills || []).filter(b => (b.store_id || 'default') === sid);
+    const storeTransactions = (db.transactions || []).filter(t => (t.store_id || 'default') === sid);
+    const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === sid);
 
-  for (const staff of db.staff) {
-    await sendWhatsAppMessage(staff.phone, report);
-    console.log(`📨 Daily report sent to ${staff.name} (${staff.phone})`);
+    const billsToday = storeBills.filter(b => b.created_at && b.created_at.startsWith(todayString));
+    const billsTotal = billsToday.reduce((sum, b) => sum + (b.total || 0), 0);
+
+    const collectionsToday = storeTransactions.filter(t => t.type === 'payment' && t.timestamp && t.timestamp.startsWith(todayString));
+    const paymentTotal = collectionsToday.reduce((sum, t) => sum + (t.amount || 0), 0);
+
+    const totalOutstanding = storeCustomers.reduce((sum, c) => {
+      const bal = getCustomerOutstanding(c.id, storeTransactions, storeBills);
+      return sum + (bal > 0 ? bal : 0);
+    }, 0);
+
+    const report =
+      `🌅 *${shop.name || 'General Store'} — Subah ki Report*\n` +
+      `📅 ${fmtDate(new Date().toISOString())}\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `💰 Aaj ki total sales: *${fmtRs(billsTotal)}*\n` +
+      `📥 Aaj ka collection: *${fmtRs(paymentTotal)}*\n` +
+      `🧾 Bills today: ${billsToday.length} (Paid: ${billsToday.filter(b => b.status === 'paid').length})\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `📊 Total outstanding (sab customers): *${fmtRs(totalOutstanding)}*\n` +
+      `👥 Total customers: ${storeCustomers.length}\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `_${shop.name || 'General Store'} Bot 🤖_`;
+
+    const staffList = staffByStore[sid] || [];
+    for (const staff of staffList) {
+      if (staff.phone) {
+        await sendWhatsAppMessage(staff.phone, report);
+        console.log(`📨 Daily report sent to ${staff.name} (${staff.phone}) for store ${sid}`);
+      }
+    }
   }
 }
 
@@ -1369,7 +1401,7 @@ app.post('/webhook', async (req, res) => {
     } else if (action.type === 'daily_report_pdf') {
       const todayString = new Date().toISOString().substring(0, 10);
       const baseUrl = getPublicBaseUrl(req);
-      const pdfUrl = `${baseUrl}/api/report/${todayString}/pdf`;
+      const pdfUrl = `${baseUrl}/api/report/${todayString}/pdf?storeId=${storeId}`;
       
       // Send PDF to all staff members
       let sentCount = 0;
@@ -1710,10 +1742,10 @@ app.use('/downloads', express.static(path.join(__dirname, 'public', 'downloads')
  */
 app.get('/api/app/version', (req, res) => {
   res.json({
-    versionCode: 2,          // ← BUMP THIS on every new release (must be integer, always increasing)
-    versionName: '1.1',      // ← Human-readable version shown in the update dialog
-    apkUrl: 'https://github.com/darkpanther5667/WPAPP/releases/download/v1.1/app-debug.apk',
-    releaseNotes: 'Fixed: App no longer gets stuck on the "Verify your identity" screen on launch.',
+    versionCode: 3,          // ← BUMP THIS on every new release (must be integer, always increasing)
+    versionName: '2.0',      // ← Human-readable version shown in the update dialog
+    apkUrl: 'https://wpapp-xz9l.onrender.com/downloads/grahbook-latest.apk',
+    releaseNotes: '🚀 v2.0 — Major Update\n\n✅ Delete bills & ledger entries\n⌨️ Smart product autocomplete in Quick Bill\n💾 Invoice template persistence\n🛡️ Confirmation dialogs before deletion\n🔧 Backend DELETE APIs for bills & transactions',
     mandatory: false          // ← Set true to force all users to update before using the app
   });
 });
@@ -1942,11 +1974,16 @@ app.post('/api/customer/add', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Name and phone are required' });
     }
     const np = normalizePhone(phone);
+    const sid = req.storeId || 'default';
 
-    const db = await readStoreDB(req.storeId);
+    const fullDb = await readDB();
+    if (!fullDb.customers) fullDb.customers = [];
 
-    // Check if customer already exists
-    const existingCustomer = db.customers.find(c => c.name.toLowerCase() === name.toLowerCase() || normalizePhone(c.phone) === np);
+    // Check if customer already exists for this store
+    const existingCustomer = fullDb.customers.find(c => 
+      (c.store_id || 'default') === sid && 
+      (c.name.toLowerCase() === name.toLowerCase() || normalizePhone(c.phone) === np)
+    );
     if (existingCustomer) {
       return res.status(400).json({ success: false, message: 'Customer already exists' });
     }
@@ -1956,11 +1993,11 @@ app.post('/api/customer/add', async (req, res) => {
       name: name.replace(/\b\w/g, c => c.toUpperCase()),
       phone: np,
       created_at: new Date().toISOString().substring(0, 10),
-      store_id: req.storeId || 'default',
+      store_id: sid,
     };
 
-    db.customers.push(newCustomer);
-    await writeDB(db);
+    fullDb.customers.push(newCustomer);
+    await writeDB(fullDb);
     // Invalidate cache to ensure AI gets fresh data
     cachedDB = null;
     dbCacheTimestamp = 0;
@@ -1981,32 +2018,37 @@ app.post('/api/payment/add', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Customer ID and valid positive amount are required' });
     }
     const parsedAmount = Number(amount);
+    const sid = req.storeId || 'default';
 
-    const db = await readStoreDB(req.storeId);
-    const customer = db.customers.find(c => c.id === customerId);
+    const fullDb = await readDB();
+    if (!fullDb.transactions) fullDb.transactions = [];
+    if (!fullDb.customers) fullDb.customers = [];
+    if (!fullDb.bills) fullDb.bills = [];
+
+    const customer = fullDb.customers.find(c => c.id === customerId && (c.store_id || 'default') === sid);
     if (!customer) {
       return res.status(404).json({ success: false, message: 'Customer not found' });
     }
 
     const newTxId = genId('t');
-    db.transactions.push({
+    fullDb.transactions.push({
       id: newTxId,
       customer_id: customerId,
       type: txType,
-      amount: Number(amount),
+      amount: parsedAmount,
       payment_mode: payment_mode || 'cash',
       note: note || 'Payment recorded via Mobile App',
       staff_phone: 'mobile_app',
       timestamp: new Date().toISOString(),
-      store_id: req.storeId || 'default',
+      store_id: sid,
     });
 
-    await writeDB(db);
+    await writeDB(fullDb);
     // Invalidate cache to ensure AI gets fresh data
     cachedDB = null;
     dbCacheTimestamp = 0;
 
-    const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
+    const balance = getCustomerOutstanding(customerId, fullDb.transactions, fullDb.bills);
     res.json({ success: true, customerName: customer.name, amount: parsedAmount, remainingOutstanding: balance });
   } catch (error) {
     console.error('Error adding payment:', error);
@@ -2021,9 +2063,14 @@ app.post('/api/bill/create', async (req, res) => {
     if (!customerId || amount === undefined || amount === null || isNaN(Number(amount))) {
       return res.status(400).json({ success: false, message: 'Customer ID and valid amount are required' });
     }
+    const sid = req.storeId || 'default';
 
-    const db = await readStoreDB(req.storeId);
-    const customer = db.customers.find(c => c.id === customerId);
+    const fullDb = await readDB();
+    if (!fullDb.bills) fullDb.bills = [];
+    if (!fullDb.customers) fullDb.customers = [];
+    if (!fullDb.transactions) fullDb.transactions = [];
+
+    const customer = fullDb.customers.find(c => c.id === customerId && (c.store_id || 'default') === sid);
     if (!customer) {
       return res.status(404).json({ success: false, message: 'Customer not found' });
     }
@@ -2049,7 +2096,7 @@ app.post('/api/bill/create', async (req, res) => {
     // Always calculate total from items (server is source of truth)
     const calculatedTotal = billItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-    db.bills.push({
+    fullDb.bills.push({
       id: newBillId,
       customer_id: customerId,
       items: billItems,
@@ -2057,14 +2104,14 @@ app.post('/api/bill/create', async (req, res) => {
       status: 'unpaid',
       created_at: timestampIso,
       paid_at: null,
-      store_id: req.storeId || 'default',
+      store_id: sid,
     });
 
-    await writeDB(db);
+    await writeDB(fullDb);
     cachedDB = null;
     dbCacheTimestamp = 0;
 
-    const balance = getCustomerOutstanding(customerId, db.transactions, db.bills);
+    const balance = getCustomerOutstanding(customerId, fullDb.transactions, fullDb.bills);
     res.json({ success: true, customerName: customer.name, billId: newBillId, amount: calculatedTotal, netOutstanding: balance });
   } catch (error) {
     console.error('Error creating bill:', error);
@@ -2105,9 +2152,12 @@ app.post('/api/bill/mark-paid', async (req, res) => {
     if (!billId) {
       return res.status(400).json({ success: false, message: 'billId is required' });
     }
+    const sid = req.storeId || 'default';
 
-    const db = await readStoreDB(req.storeId);
-    const bill = db.bills.find(b => b.id === billId);
+    const fullDb = await readDB();
+    if (!fullDb.bills) fullDb.bills = [];
+
+    const bill = fullDb.bills.find(b => b.id === billId && (b.store_id || 'default') === sid);
     if (!bill) {
       return res.status(404).json({ success: false, message: 'Bill not found' });
     }
@@ -2119,7 +2169,7 @@ app.post('/api/bill/mark-paid', async (req, res) => {
     bill.status = 'paid';
     bill.paid_at = new Date().toISOString();
 
-    await writeDB(db);
+    await writeDB(fullDb);
     cachedDB = null;
     dbCacheTimestamp = 0;
 
@@ -2208,7 +2258,7 @@ app.post('/api/db', async (req, res) => {
 // POST /api/register-store - Register a new store
 app.post('/api/register-store', async (req, res) => {
   try {
-    const { store_name, owner_name, phone, email, business_type, plan, address, password } = req.body;
+    const { store_name, owner_name, phone, email, business_type, plan, address, password, gstin, upi_id } = req.body;
 
     if (!store_name || !owner_name || !phone) {
       return res.status(400).json({ status: 'error', message: 'store_name, owner_name, and phone are required' });
@@ -2261,6 +2311,8 @@ app.post('/api/register-store', async (req, res) => {
       business_type: business_type || 'retail',
       plan: plan || 'basic',
       address: address || '',
+      gstin: gstin || '',
+      upi_id: upi_id || '',
       created_at: new Date().toISOString(),
       status: 'active'
     };
@@ -2323,6 +2375,77 @@ app.get('/api/store/:storeId', async (req, res) => {
   }
 });
 
+// POST /api/store/update - Update store details (needs bearer token)
+app.post('/api/store/update', sessionAuthMiddleware, async (req, res) => {
+  try {
+    const { store_name, owner_name, phone, address, upi_id, gstin, invoice_template } = req.body;
+    const db = await readDB();
+    const store = (db.stores || []).find(s => s.id === req.storeId);
+    
+    if (!store) {
+      return res.status(404).json({ success: false, message: 'Store not found' });
+    }
+
+    if (store_name) store.store_name = store_name;
+    if (owner_name) store.owner_name = owner_name;
+    if (phone) store.phone = normalizePhone(phone);
+    if (address !== undefined) store.address = address;
+    if (upi_id !== undefined) store.upi_id = upi_id;
+    if (gstin !== undefined) store.gstin = gstin;
+    if (invoice_template !== undefined) store.invoice_template = invoice_template;
+
+    await writeDB(db);
+    res.json({ success: true, message: 'Store details updated successfully' });
+  } catch (error) {
+    console.error('Error updating store details:', error);
+    res.status(500).json({ success: false, message: 'Failed to update store details' });
+  }
+});
+
+// DELETE /api/transaction/:id - Delete a ledger transaction
+app.delete('/api/transaction/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sid = req.storeId || 'default';
+    const fullDb = await readDB();
+    if (!fullDb.transactions) fullDb.transactions = [];
+    const idx = fullDb.transactions.findIndex(t => t.id === id && (t.store_id || 'default') === sid);
+    if (idx === -1) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+    fullDb.transactions.splice(idx, 1);
+    await writeDB(fullDb);
+    cachedDB = null;
+    dbCacheTimestamp = 0;
+    return res.json({ success: true, message: 'Transaction deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting transaction:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete transaction' });
+  }
+});
+
+// DELETE /api/bill/:id - Delete a bill
+app.delete('/api/bill/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sid = req.storeId || 'default';
+    const fullDb = await readDB();
+    if (!fullDb.bills) fullDb.bills = [];
+    const idx = fullDb.bills.findIndex(b => b.id === id && (b.store_id || 'default') === sid);
+    if (idx === -1) {
+      return res.status(404).json({ success: false, message: 'Bill not found' });
+    }
+    fullDb.bills.splice(idx, 1);
+    await writeDB(fullDb);
+    cachedDB = null;
+    dbCacheTimestamp = 0;
+    return res.json({ success: true, message: 'Bill deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting bill:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete bill' });
+  }
+});
+
 // Helper function to generate unique store ID
 function generateStoreId(storeName) {
   const cleanName = storeName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -2337,14 +2460,35 @@ app.post('/api/send-reminders', async (req, res) => {
   const db = await readDB();
   let sentCount = 0;
   const results = [];
+  const baseUrl = getPublicBaseUrl(req);
   for (const c of db.customers) {
-    const bal = getCustomerOutstanding(c.id, db.transactions, db.bills);
+    const sid = c.store_id || 'default';
+    const storeTrans = (db.transactions || []).filter(t => (t.store_id || 'default') === sid);
+    const storeBills = (db.bills || []).filter(b => (b.store_id || 'default') === sid);
+    const bal = getCustomerOutstanding(c.id, storeTrans, storeBills);
     if (bal > 0 && c.phone) {
+      const store = (db.stores || []).find(s => s.id === sid);
+      const shop = store
+        ? {
+            name: store.store_name,
+            upi_id: store.upi_id || 'sharmakhata@upi'
+          }
+        : {
+            name: db.shop?.name || 'General Store',
+            upi_id: db.shop?.upi_id || 'sharmakhata@upi'
+          };
+      const cleanShopName = (shop.name || 'Store').replace(/[^a-zA-Z0-9 ]/g, '').trim();
+      const viewUrl = `${baseUrl}/view/customer/${encodeURIComponent(c.id)}/statement`;
+      const upiLink = `upi://pay?pa=${encodeURIComponent(shop.upi_id)}&pn=${encodeURIComponent(cleanShopName)}&am=${bal.toFixed(2)}&cu=INR&tn=Reminder`;
+
       const msg =
-        `🙏 *${(db.shop || {}).name || 'General Store'}*\n\n` +
+        `🙏 *${shop.name}*\n\n` +
         `Namaste *${c.name}* ji,\n\n` +
-        `Aapka ${fmtRs(bal)} ka baaki hai hamare yahan.\n` +
-        `Kripya jald hi chukta karein.\n\nShukriya 🙏`;
+        `Aapka *${fmtRs(bal)}* ka baaki hai hamare yahan.\n` +
+        `Kripya jald hi chukta karein.\n\n` +
+        `📊 *View Statement & Pay:* ${viewUrl}\n` +
+        `📱 *Direct UPI Payment:* ${upiLink}\n\n` +
+        `Shukriya 🙏`;
       const sent = await sendWhatsAppMessage(c.phone, msg);
       if (sent) { sentCount++; results.push({ name: c.name, amount: bal }); }
     }
@@ -2385,11 +2529,12 @@ app.post('/api/whatsapp/send-invoice', async (req, res) => {
     const shop = db.shop || {};
     const baseUrl = getPublicBaseUrl(req);
     const pdfUrl = `${baseUrl}/api/bill/${encodeURIComponent(billId)}/pdf`;
+    const viewUrl = `${baseUrl}/view/bill/${encodeURIComponent(billId)}`;
     const ok = await sendWhatsAppDocument(
       customer.phone,
       pdfUrl,
       `invoice-${billId}.pdf`,
-      `🧾 Invoice from ${shop.name || 'Store'}`
+      `🧾 Invoice from ${shop.name || 'Store'}\n\nView & Pay Online: ${viewUrl}`
     );
 
     return res.json({ success: ok, billId, customerPhone: customer.phone });
@@ -2413,11 +2558,12 @@ app.post('/api/whatsapp/send-statement', async (req, res) => {
     const shop = db.shop || {};
     const baseUrl = getPublicBaseUrl(req);
     const pdfUrl = `${baseUrl}/api/customer/${encodeURIComponent(customerId)}/statement/pdf`;
+    const viewUrl = `${baseUrl}/view/customer/${encodeURIComponent(customerId)}/statement`;
     const ok = await sendWhatsAppDocument(
       customer.phone,
       pdfUrl,
       `statement-${customerId}.pdf`,
-      `📊 Account statement from ${shop.name || 'Store'}`
+      `📊 Account statement from ${shop.name || 'Store'}\n\nView Online: ${viewUrl}`
     );
 
     return res.json({ success: ok, customerId, customerPhone: customer.phone });
@@ -2440,9 +2586,15 @@ app.post('/api/whatsapp/send-reminder', async (req, res) => {
 
     const shop = db.shop || {};
     const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
+    const baseUrl = getPublicBaseUrl(req);
+    const viewUrl = `${baseUrl}/view/customer/${encodeURIComponent(customerId)}/statement`;
+    const upiId = shop.upi_id || 'sharmakhata@upi';
+    const cleanShopName = (shop.name || 'Store').replace(/[^a-zA-Z0-9 ]/g, '').trim();
+    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(cleanShopName)}&am=${bal.toFixed(2)}&cu=INR&tn=Reminder`;
+
     const text =
       (message && String(message).trim()) ||
-      `🙏 *${shop.name || 'Store'}*\n\nNamaste *${customer.name}* ji,\nAapka ${fmtRs(bal)} ka baaki hai.\nKripya jald hi chukta karein.`;
+      `🙏 *${shop.name || 'Store'}*\n\nNamaste *${customer.name}* ji,\n\nAapka *${fmtRs(bal)}* ka baaki (outstanding) hai.\nKripya jald hi chukta karein.\n\n📊 *View Statement & Pay:* ${viewUrl}\n📱 *Direct UPI Payment:* ${upiLink}\n\nShukriya 🙏`;
 
     const ok = await sendWhatsAppMessage(customer.phone, text);
     return res.json({ success: ok, customerId, customerPhone: customer.phone, outstanding: bal });
@@ -2457,11 +2609,22 @@ app.get('/api/bill/:id/pdf', async (req, res) => {
   try {
     const db = await readDB();
     const bill = db.bills.find(b => b.id === req.params.id);
-    const shop = db.shop || {};
 
     if (!bill) {
       return res.status(404).json({ status: 'error', message: 'Bill not found' });
     }
+
+    const sid = bill.store_id || 'default';
+    const store = (db.stores || []).find(s => s.id === sid);
+    const shop = store
+      ? {
+          name: store.store_name,
+          owner: store.owner_name,
+          phone: store.phone,
+          address: store.address,
+          store_id: sid,
+        }
+      : (sid === 'default' && db.shop ? db.shop : {});
 
     const customer = db.customers.find(c => c.id === bill.customer_id) || {
       name: 'Walk-in Customer',
@@ -2493,19 +2656,29 @@ app.get('/api/bill/:id/pdf', async (req, res) => {
     const contentWidth = pageWidth - (margin * 2);
 
     // ── HEADER BANNER ────────────────────────────────────────
-    doc.rect(0, 0, pageWidth, 110).fill(INDIGO);
-    doc.fontSize(24).fillColor('#FFFFFF')
-       .text(shop.name || 'GENERAL STORE', margin, 25, { width: contentWidth, align: 'center' });
-    doc.fontSize(10).fillColor('#C7D2FE')
-       .text(shop.address || '', margin, 55, { width: contentWidth, align: 'center' });
+    const headerHeight = shop.gstin ? 125 : 110;
+    doc.rect(0, 0, pageWidth, headerHeight).fill(INDIGO);
+    doc.fontSize(22).fillColor('#FFFFFF')
+       .text(shop.name || 'GENERAL STORE', margin, 20, { width: contentWidth, align: 'center' });
+    doc.fontSize(9).fillColor('#C7D2FE')
+       .text(shop.address || '', margin, 48, { width: contentWidth, align: 'center' });
+    
+    let subHeaderY = 62;
     if (shop.phone) {
-      doc.text(`WhatsApp: +91 ${shop.phone}`, margin, 70, { width: contentWidth, align: 'center' });
+      doc.fontSize(9).fillColor('#C7D2FE')
+         .text(`WhatsApp: +91 ${shop.phone}`, margin, subHeaderY, { width: contentWidth, align: 'center' });
+      subHeaderY += 13;
+    }
+    if (shop.gstin) {
+      doc.fontSize(9).fillColor('#E0E7FF')
+         .text(`GSTIN: ${shop.gstin}`, margin, subHeaderY, { width: contentWidth, align: 'center' });
+      subHeaderY += 13;
     }
     doc.fontSize(9).fillColor('#A5B4FC')
-       .text('TAX INVOICE', margin, 90, { width: contentWidth, align: 'center' });
+       .text('TAX INVOICE', margin, subHeaderY, { width: contentWidth, align: 'center' });
 
-    // ── INVOICE META (right-aligned) ─────────────────────────
-    let y = 130;
+    // ── INVOICE META ─────────────────────────
+    let y = headerHeight + 20;
     doc.fontSize(10).fillColor(SLATE_400).text('Invoice #', margin, y);
     doc.fontSize(11).fillColor(SLATE_900).text(bill.id, margin, y + 14);
 
@@ -2566,22 +2739,46 @@ app.get('/api/bill/:id/pdf', async (req, res) => {
     // ── TOTALS SECTION ───────────────────────────────────────
     const totalsX = margin + 300;
     const totalsW = 215;
+    const isGst = bill.gst_rate > 0;
+    const finalTotal = isGst ? (bill.grand_total || bill.total) : bill.total;
 
-    // Subtotal
-    doc.fontSize(10).fillColor(SLATE_600).text('Subtotal', totalsX, y, { width: 120, align: 'left' });
-    doc.fontSize(10).fillColor(SLATE_800).text(`₹${bill.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, totalsX + 120, y, { width: 95, align: 'right' });
-    y += 22;
+    if (isGst) {
+      // Subtotal (Taxable Value)
+      doc.fontSize(10).fillColor(SLATE_600).text('Taxable Value', totalsX, y, { width: 120, align: 'left' });
+      doc.fontSize(10).fillColor(SLATE_800).text(`₹${(bill.taxable_amount || bill.total).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, totalsX + 120, y, { width: 95, align: 'right' });
+      y += 18;
+
+      if (bill.gst_type === 'cgst_sgst') {
+        const halfRate = bill.gst_rate / 2;
+        doc.fontSize(9).fillColor(SLATE_500).text(`CGST (${halfRate}%)`, totalsX, y, { width: 120, align: 'left' });
+        doc.fontSize(9).fillColor(SLATE_700).text(`₹${(bill.total_cgst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, totalsX + 120, y, { width: 95, align: 'right' });
+        y += 16;
+        
+        doc.fontSize(9).fillColor(SLATE_500).text(`SGST (${halfRate}%)`, totalsX, y, { width: 120, align: 'left' });
+        doc.fontSize(9).fillColor(SLATE_700).text(`₹${(bill.total_sgst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, totalsX + 120, y, { width: 95, align: 'right' });
+        y += 16;
+      } else if (bill.gst_type === 'igst') {
+        doc.fontSize(9).fillColor(SLATE_500).text(`IGST (${bill.gst_rate}%)`, totalsX, y, { width: 120, align: 'left' });
+        doc.fontSize(9).fillColor(SLATE_700).text(`₹${(bill.total_igst || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, totalsX + 120, y, { width: 95, align: 'right' });
+        y += 16;
+      }
+    } else {
+      // Subtotal
+      doc.fontSize(10).fillColor(SLATE_600).text('Subtotal', totalsX, y, { width: 120, align: 'left' });
+      doc.fontSize(10).fillColor(SLATE_800).text(`₹${bill.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, totalsX + 120, y, { width: 95, align: 'right' });
+      y += 22;
+    }
 
     // Grand Total box
     doc.roundedRect(totalsX - 10, y, totalsW + 20, 36, 6).fill(INDIGO_LIGHT);
     doc.fontSize(12).fillColor(INDIGO_DARK).text('Grand Total', totalsX, y + 10, { width: 120, align: 'left' });
-    doc.fontSize(16).fillColor(INDIGO).text(`₹${bill.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, totalsX + 100, y + 8, { width: 115, align: 'right' });
+    doc.fontSize(16).fillColor(INDIGO).text(`₹${finalTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, totalsX + 100, y + 8, { width: 115, align: 'right' });
 
     y += 55;
 
     // ── OUTSTANDING ──────────────────────────────────────────
     const outstanding = getCustomerOutstanding(customer.id, db.transactions || [], db.bills || []);
-    if (outstanding !== bill.total || bill.status === 'paid') {
+    if (outstanding !== finalTotal || bill.status === 'paid') {
       doc.fontSize(9).fillColor(SLATE_400).text('Total Outstanding (incl. previous):', margin, y);
       const outColor = outstanding > 0 ? RED : GREEN;
       doc.fontSize(11).fillColor(outColor).text(`₹${Math.abs(outstanding).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, margin, y + 14);
@@ -2611,11 +2808,22 @@ app.get('/api/customer/:id/statement/pdf', async (req, res) => {
   try {
     const db = await readDB();
     const customer = db.customers.find(c => c.id === req.params.id);
-    const shop = db.shop || {};
 
     if (!customer) {
       return res.status(404).json({ status: 'error', message: 'Customer not found' });
     }
+
+    const sid = customer.store_id || 'default';
+    const store = (db.stores || []).find(s => s.id === sid);
+    const shop = store
+      ? {
+          name: store.store_name,
+          owner: store.owner_name,
+          phone: store.phone,
+          address: store.address,
+          store_id: sid,
+        }
+      : (sid === 'default' && db.shop ? db.shop : {});
 
     const customerTransactions = db.transactions.filter(t => t.customer_id === customer.id);
     const customerBills = db.bills.filter(b => b.customer_id === customer.id);
@@ -2767,26 +2975,474 @@ app.get('/api/customer/:id/statement/pdf', async (req, res) => {
   }
 });
 
+// ─── PUBLIC GUEST WEB VIEWERS (No Auth Required) ────────────────────────────────
+
+// GET /view/bill/:id — Public customer invoice viewer
+app.get('/view/bill/:id', async (req, res) => {
+  try {
+    const db = await readDB();
+    const bill = db.bills.find(b => b.id === req.params.id);
+    if (!bill) {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Invoice Not Found / इनवॉइस नहीं मिला</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+          <style>body { font-family: 'Outfit', sans-serif; }</style>
+        </head>
+        <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4 text-center">
+          <div class="max-w-md bg-white rounded-3xl p-8 shadow-xl border border-slate-100 animate-scale-in">
+            <div class="h-16 w-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h1 class="text-2xl font-extrabold text-slate-800 mb-2">Invoice Not Found</h1>
+            <p class="text-slate-500 mb-6">Aapka manga hua invoice system me nahi mila. Kripya dukan se sampark karein.</p>
+            <a href="https://grahbook.com" class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white rounded-full font-bold shadow-md hover:bg-indigo-700 transition-colors">Go to Grahbook</a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    const sid = bill.store_id || 'default';
+    const store = (db.stores || []).find(s => s.id === sid);
+    const shop = store
+      ? {
+          name: store.store_name,
+          owner: store.owner_name,
+          phone: store.phone,
+          address: store.address,
+          upi_id: store.upi_id || 'sharmakhata@upi',
+          gstin: store.gstin || ''
+        }
+      : {
+          name: db.shop?.name || 'General Store',
+          owner: db.shop?.owner || '',
+          phone: db.shop?.phone || '',
+          address: db.shop?.address || '',
+          upi_id: db.shop?.upi_id || 'sharmakhata@upi',
+          gstin: db.shop?.gstin || ''
+        };
+
+    const customer = db.customers.find(c => c.id === bill.customer_id) || {
+      name: 'Walk-in Customer',
+      phone: '0000000000'
+    };
+
+    const isPaid = bill.status === 'paid';
+    const grandTotal = bill.grand_total || bill.total;
+    const cleanShopName = (shop.name || 'Store').replace(/[^a-zA-Z0-9 ]/g, '').trim();
+    const upiUri = `upi://pay?pa=${encodeURIComponent(shop.upi_id)}&pn=${encodeURIComponent(cleanShopName)}&am=${grandTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Bill ' + bill.id.substring(0,8))}`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Invoice #${bill.id.substring(0, 8).toUpperCase()} — ${shop.name}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <style>
+          body { font-family: 'Outfit', sans-serif; }
+          .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+          }
+        </style>
+      </head>
+      <body class="bg-gradient-to-tr from-slate-50 to-slate-100 min-h-screen text-slate-800 pb-20">
+        <div class="max-w-xl mx-auto px-4 pt-6">
+          
+          <!-- Back header / Status -->
+          <div class="flex items-center justify-between mb-6">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Invoice Viewer</span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
+              isPaid
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-rose-50 text-rose-700 border border-rose-200 animate-pulse'
+            }">
+              <span class="h-2 w-2 rounded-full ${isPaid ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+              ${isPaid ? 'Paid / भुगतान हो गया' : 'Unpaid / बकाया है'}
+            </span>
+          </div>
+
+          <!-- Main Card -->
+          <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden mb-6">
+            
+            <!-- Store Profile Header -->
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 p-6 text-white text-center sm:text-left">
+              <h2 class="text-2xl font-extrabold tracking-tight">${shop.name}</h2>
+              ${shop.owner ? `<p class="text-indigo-200 text-sm mt-0.5">Prop: ${shop.owner}</p>` : ''}
+              <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-indigo-100 border-t border-indigo-500/30 pt-3">
+                ${shop.phone ? `<span class="flex items-center justify-center sm:justify-start gap-1">📞 ${shop.phone}</span>` : ''}
+                ${shop.address ? `<span class="flex items-center justify-center sm:justify-start gap-1">📍 ${shop.address}</span>` : ''}
+                ${shop.gstin ? `<span class="flex items-center justify-center sm:justify-start gap-1">🧾 GSTIN: ${shop.gstin}</span>` : ''}
+              </div>
+            </div>
+
+            <!-- Details Block -->
+            <div class="p-6 border-b border-slate-100">
+              <div class="flex justify-between items-start mb-6">
+                <div>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bill To / ग्राहक</p>
+                  <h3 class="text-base font-extrabold text-slate-800 mt-1">${customer.name}</h3>
+                  ${customer.phone ? `<p class="text-xs text-slate-500 mt-0.5">📞 ${customer.phone}</p>` : ''}
+                </div>
+                <div class="text-right">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Invoice Date / तारीख</p>
+                  <p class="text-sm font-semibold text-slate-800 mt-1">${new Date(bill.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                  <p class="text-[10px] font-mono text-slate-400 mt-1 uppercase">#${bill.id.substring(0,12)}</p>
+                </div>
+              </div>
+
+              <!-- Items Table -->
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Items list / सामान सूची</p>
+              <div class="space-y-2.5">
+                ${bill.items.map(item => `
+                  <div class="flex justify-between items-center bg-slate-50/70 p-3 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                    <div class="min-w-0 pr-2">
+                      <p class="text-sm font-bold text-slate-800 truncate">${item.name}</p>
+                      <p class="text-[11px] text-slate-400 font-medium">
+                        ${item.qty} × ₹${item.price.toFixed(2)}
+                        ${item.hsn_code ? ` | HSN: ${item.hsn_code}` : ''}
+                        ${item.gst_rate > 0 ? ` | GST: ${item.gst_rate}%` : ''}
+                      </p>
+                    </div>
+                    <span class="text-sm font-extrabold text-slate-800">₹${(item.qty * item.price).toFixed(2)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Totals block -->
+            <div class="p-6 bg-slate-50/50">
+              <div class="space-y-2 text-sm text-slate-600">
+                <div class="flex justify-between">
+                  <span>Subtotal / कुल सामान मूल्य</span>
+                  <span class="font-semibold">₹${bill.total.toFixed(2)}</span>
+                </div>
+                
+                ${bill.gst_rate > 0 ? `
+                  <div class="flex justify-between text-xs text-slate-400">
+                    <span>Taxable Amount</span>
+                    <span>₹${(bill.taxable_amount || bill.total).toFixed(2)}</span>
+                  </div>
+                  <div class="flex justify-between text-xs text-slate-400">
+                    <span>GST (${bill.gst_rate}%)</span>
+                    <span>₹${((bill.total_cgst || 0) + (bill.total_sgst || 0) + (bill.total_igst || 0)).toFixed(2)}</span>
+                  </div>
+                ` : ''}
+                
+                <div class="flex justify-between items-end pt-3 border-t border-slate-200/60 text-slate-900">
+                  <span class="font-bold">Total Amount Due / कुल देय राशि</span>
+                  <span class="text-2xl font-extrabold text-indigo-600">₹${grandTotal.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive UPI Payment Section -->
+          ${!isPaid ? `
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl border border-amber-200/60 p-6 shadow-md mb-6 text-center animate-scale-in">
+              <h3 class="text-lg font-bold text-amber-900 mb-1 flex items-center justify-center gap-1.5">
+                ⚡ Instant Payment / तुरंत भुगतान
+              </h3>
+              <p class="text-xs text-amber-700/80 mb-5">Click below to pay via GPay, PhonePe, Paytm, or scan QR code</p>
+
+              <!-- Mobile Pay Now Button -->
+              <a href="${upiUri}" class="w-full flex items-center justify-center gap-2 py-4 bg-emerald-600 text-white font-extrabold rounded-2xl shadow-lg hover:bg-emerald-700 hover:shadow-emerald-200 active:scale-95 transition-all text-base mb-6">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                PAY NOW VIA UPI (₹${grandTotal.toFixed(2)})
+              </a>
+
+              <!-- Desktop QR code -->
+              <div class="hidden sm:block border-t border-amber-200/60 pt-5">
+                <div class="bg-white p-4 inline-block rounded-2xl shadow-inner border border-amber-100 mb-2">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUri)}" alt="UPI QR Code" class="h-36 w-36">
+                </div>
+                <p class="text-[10px] text-amber-600 font-bold tracking-wide uppercase">Scan with GPay/PhonePe/Paytm</p>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- PDF & Action Footer -->
+          <div class="flex gap-3">
+            <a href="/api/bill/${bill.id}/pdf" class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-slate-800 text-white font-bold rounded-2xl hover:bg-slate-900 active:scale-95 transition-all shadow-md text-sm">
+              📥 Download PDF
+            </a>
+            ${customer.phone ? `
+              <a href="https://wa.me/91${customer.phone}" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-white text-slate-700 border border-slate-200 font-bold rounded-2xl hover:bg-slate-50 active:scale-95 transition-all shadow-sm text-sm">
+                💬 Contact Store
+              </a>
+            ` : ''}
+          </div>
+
+          <p class="text-center text-[10px] text-slate-400 mt-12 tracking-wide uppercase">
+            Powered by Grahbook Pro — Digital Ledger System
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+    res.send(html);
+  } catch (error) {
+    console.error('Error rendering web invoice:', error);
+    res.status(500).send('Server Error');
+  }
+});
+
+// GET /view/customer/:id/statement — Public customer statement viewer
+app.get('/view/customer/:id/statement', async (req, res) => {
+  try {
+    const db = await readDB();
+    const customer = db.customers.find(c => c.id === req.params.id);
+    if (!customer) {
+      return res.status(404).send('<h1>Customer Not Found / ग्राहक नहीं मिला</h1>');
+    }
+
+    const sid = customer.store_id || 'default';
+    const store = (db.stores || []).find(s => s.id === sid);
+    const shop = store
+      ? {
+          name: store.store_name,
+          owner: store.owner_name,
+          phone: store.phone,
+          address: store.address,
+          upi_id: store.upi_id || 'sharmakhata@upi',
+          gstin: store.gstin || ''
+        }
+      : {
+          name: db.shop?.name || 'General Store',
+          owner: db.shop?.owner || '',
+          phone: db.shop?.phone || '',
+          address: db.shop?.address || '',
+          upi_id: db.shop?.upi_id || 'sharmakhata@upi',
+          gstin: db.shop?.gstin || ''
+        };
+
+    const customerTransactions = (db.transactions || []).filter(t => t.customer_id === customer.id);
+    const customerBills = (db.bills || []).filter(b => b.customer_id === customer.id);
+    const balance = getCustomerOutstanding(customer.id, db.transactions || [], db.bills || []);
+
+    const cleanShopName = (shop.name || 'Store').replace(/[^a-zA-Z0-9 ]/g, '').trim();
+    const upiUri = `upi://pay?pa=${encodeURIComponent(shop.upi_id)}&pn=${encodeURIComponent(cleanShopName)}&am=${balance.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Statement Pay')}`;
+
+    // Combine bills & transactions chronologically
+    const ledgerItems = [];
+    customerBills.forEach(b => {
+      ledgerItems.push({
+        date: new Date(b.created_at),
+        type: 'bill',
+        id: b.id,
+        desc: `Bill #${b.id.substring(0,8).toUpperCase()}`,
+        amount: b.total,
+        isCredit: true,
+        status: b.status
+      });
+    });
+    customerTransactions.forEach(t => {
+      ledgerItems.push({
+        date: new Date(t.timestamp),
+        type: t.type,
+        id: t.id,
+        desc: t.note || (t.type === 'payment' ? 'Payment Received' : 'Credit Entry'),
+        amount: t.amount,
+        isCredit: t.type === 'credit',
+        status: 'completed'
+      });
+    });
+
+    // Sort chronologically (oldest first or newest first, let's do newest first for statement readability)
+    ledgerItems.sort((a, b) => b.date - a.date);
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Ledger Statement — ${customer.name}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <style>
+          body { font-family: 'Outfit', sans-serif; }
+          .balance-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+          }
+        </style>
+      </head>
+      <body class="bg-slate-50 min-h-screen text-slate-800 pb-20">
+        <div class="max-w-xl mx-auto px-4 pt-6">
+
+          <!-- Header / Status -->
+          <div class="flex items-center justify-between mb-5">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Statement Viewer</span>
+            <span class="text-xs font-semibold text-slate-500">${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          </div>
+
+          <!-- Shop Details Block -->
+          <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 mb-6 flex flex-col sm:flex-row justify-between items-start gap-4">
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-800">${shop.name}</h2>
+              ${shop.owner ? `<p class="text-xs text-slate-400 mt-0.5">Prop: ${shop.owner}</p>` : ''}
+              ${shop.address ? `<p class="text-xs text-slate-500 mt-2">📍 ${shop.address}</p>` : ''}
+              ${shop.gstin ? `<p class="text-xs text-slate-500 mt-1">🧾 GSTIN: ${shop.gstin}</p>` : ''}
+            </div>
+            ${shop.phone ? `
+              <div class="sm:text-right border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0 w-full sm:w-auto">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Support Contact</p>
+                <p class="text-sm font-semibold text-indigo-600 mt-0.5">📞 ${shop.phone}</p>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Customer details & Outstanding Balance -->
+          <div class="balance-card rounded-3xl p-6 shadow-xl text-white mb-6">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Statement For / ग्राहक</p>
+            <h3 class="text-lg font-extrabold mt-1">${customer.name}</h3>
+            ${customer.phone ? `<p class="text-xs text-slate-400 mt-0.5">📞 ${customer.phone}</p>` : ''}
+
+            <div class="mt-6 pt-5 border-t border-slate-700/60 flex justify-between items-end">
+              <div>
+                <p class="text-xs text-slate-400 font-medium">Outstanding Balance / बाकी राशि</p>
+                <p class="text-3xl font-extrabold mt-1 ${balance > 0 ? 'text-rose-400' : 'text-emerald-400'}">
+                  ₹${balance.toFixed(2)}
+                </p>
+              </div>
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                balance > 0 ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'
+              }">
+                ${balance > 0 ? 'Due / देय' : 'No Due / चुकता'}
+              </span>
+            </div>
+          </div>
+
+          <!-- Interactive UPI Payment Section -->
+          ${balance > 0 ? `
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl border border-amber-200/60 p-6 shadow-md mb-6 text-center animate-scale-in">
+              <h3 class="text-lg font-bold text-amber-900 mb-1 flex items-center justify-center gap-1.5">
+                ⚡ Instant Payment / तुरंत भुगतान
+              </h3>
+              <p class="text-xs text-amber-700/80 mb-5">Click below to pay via GPay, PhonePe, Paytm, or scan QR code</p>
+
+              <!-- Mobile Pay Now Button -->
+              <a href="${upiUri}" class="w-full flex items-center justify-center gap-2 py-4 bg-emerald-600 text-white font-extrabold rounded-2xl shadow-lg hover:bg-emerald-700 hover:shadow-emerald-200 active:scale-95 transition-all text-base mb-6">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                PAY OUTSTANDING (₹${balance.toFixed(2)})
+              </a>
+
+              <!-- Desktop QR code -->
+              <div class="hidden sm:block border-t border-amber-200/60 pt-5">
+                <div class="bg-white p-4 inline-block rounded-2xl shadow-inner border border-amber-100 mb-2">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUri)}" alt="UPI QR Code" class="h-36 w-36">
+                </div>
+                <p class="text-[10px] text-amber-600 font-bold tracking-wide uppercase">Scan with GPay/PhonePe/Paytm</p>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Ledger List -->
+          <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 mb-6">
+            <h4 class="text-base font-extrabold text-slate-800 mb-4">Transaction History / हिसाब किताब</h4>
+
+            <div class="space-y-3.5">
+              ${ledgerItems.length === 0 ? `
+                <p class="text-center text-sm text-slate-400 py-6">No transactions found / कोई लेन-देन नहीं है</p>
+              ` : ledgerItems.map(item => {
+                const isDebit = !item.isCredit;
+                const statusColor = item.status === 'unpaid' ? 'text-rose-500' : 'text-slate-400';
+                return `
+                  <div class="flex justify-between items-center border-b border-slate-100/80 pb-3 last:border-b-0 last:pb-0">
+                    <div>
+                      <span class="text-xs font-semibold text-slate-400">
+                        ${new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      </span>
+                      <p class="text-sm font-bold text-slate-800 mt-0.5">${item.desc}</p>
+                      ${item.type === 'bill' ? `
+                        <span class="text-[10px] uppercase font-bold tracking-wider ${statusColor}">
+                          ${item.status === 'paid' ? 'Paid' : 'Unpaid'}
+                        </span>
+                      ` : ''}
+                    </div>
+                    <div class="text-right">
+                      <span class="text-sm font-extrabold ${isDebit ? 'text-emerald-600' : 'text-rose-500'}">
+                        ${isDebit ? '-' : '+'}${item.amount.toFixed(2)}
+                      </span>
+                      <p class="text-[10px] text-slate-400 font-medium mt-0.5">${isDebit ? 'Payment' : 'Credit Given'}</p>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- PDF & Action Footer -->
+          <div class="flex gap-3">
+            <a href="/api/customer/${customer.id}/statement/pdf" class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-slate-800 text-white font-bold rounded-2xl hover:bg-slate-900 active:scale-95 transition-all shadow-md text-sm">
+              📥 Download PDF
+            </a>
+            ${customer.phone ? `
+              <a href="https://wa.me/91${customer.phone}" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-white text-slate-700 border border-slate-200 font-bold rounded-2xl hover:bg-slate-50 active:scale-95 transition-all shadow-sm text-sm">
+                💬 Contact Store
+              </a>
+            ` : ''}
+          </div>
+
+          <p class="text-center text-[10px] text-slate-400 mt-12 tracking-wide uppercase">
+            Powered by Grahbook Pro — Digital Ledger System
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+    res.send(html);
+  } catch (error) {
+    console.error('Error rendering web statement:', error);
+    res.status(500).send('Server Error');
+  }
+});
+
 // GET /api/report/:date/pdf — Generate daily report PDF
 app.get('/api/report/:date/pdf', async (req, res) => {
   try {
     const targetDate = req.params.date;
+    const storeId = req.query.storeId || 'default';
     const db = await readDB();
-    const shop = db.shop || {};
 
-    const billsToday = db.bills.filter(b => b.created_at.startsWith(targetDate));
-    const billsTotal = billsToday.reduce((sum, b) => sum + b.total, 0);
-    const collectionsToday = db.transactions.filter(t => t.type === 'payment' && t.timestamp.startsWith(targetDate));
-    const paymentTotal = collectionsToday.reduce((sum, t) => sum + t.amount, 0);
-    const creditsToday = db.transactions.filter(t => t.type === 'credit' && t.timestamp.startsWith(targetDate));
-    const creditTotal = creditsToday.reduce((sum, t) => sum + t.amount, 0);
+    const store = (db.stores || []).find(s => s.id === storeId);
+    const shop = store
+      ? {
+          name: store.store_name,
+          owner: store.owner_name,
+          phone: store.phone,
+          address: store.address,
+          store_id: storeId,
+        }
+      : (storeId === 'default' && db.shop ? db.shop : {});
+
+    const storeBills = (db.bills || []).filter(b => (b.store_id || 'default') === storeId);
+    const storeTransactions = (db.transactions || []).filter(t => (t.store_id || 'default') === storeId);
+    const storeCustomers = (db.customers || []).filter(c => (c.store_id || 'default') === storeId);
+
+    const billsToday = storeBills.filter(b => b.created_at && b.created_at.startsWith(targetDate));
+    const billsTotal = billsToday.reduce((sum, b) => sum + (b.total || 0), 0);
+    const collectionsToday = storeTransactions.filter(t => t.type === 'payment' && t.timestamp && t.timestamp.startsWith(targetDate));
+    const paymentTotal = collectionsToday.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const creditsToday = storeTransactions.filter(t => t.type === 'credit' && t.timestamp && t.timestamp.startsWith(targetDate));
+    const creditTotal = creditsToday.reduce((sum, t) => sum + (t.amount || 0), 0);
     const paidBills = billsToday.filter(b => b.status === 'paid').length;
     const unpaidBills = billsToday.length - paidBills;
     const netCollection = paymentTotal - creditTotal;
 
-    // Overall outstanding
-    const totalOutstanding = db.customers.reduce((sum, c) => {
-      const bal = getCustomerOutstanding(c.id, db.transactions, db.bills);
+    // Overall outstanding for this store
+    const totalOutstanding = storeCustomers.reduce((sum, c) => {
+      const bal = getCustomerOutstanding(c.id, storeTransactions, storeBills);
       return sum + (bal > 0 ? bal : 0);
     }, 0);
 

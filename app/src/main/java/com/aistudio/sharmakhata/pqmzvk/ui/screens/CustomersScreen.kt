@@ -72,25 +72,27 @@ fun CustomersScreen(
                 shopInitial = shopInitial,
                 actions = {
                     IconButton(onClick = onNavigateToSearch) {
-                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search), tint = Ink100)
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search), tint = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             )
         },
-        containerColor = Ink800,
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
+            val primaryColor = MaterialTheme.colorScheme.primary
+            val primaryVariant = if (primaryColor == Brand500) Brand700 else Saffron600
             Box(
                 modifier = Modifier
                     .height(52.dp)
-                    .clip(RoundedCornerShape(GrahbookRadius.pill))
-                    .background(Brush.horizontalGradient(listOf(Saffron500, Saffron600)))
+                    .clip(RoundedCornerShape(GrahbookRadius.md))
+                    .background(Brush.horizontalGradient(listOf(primaryColor, primaryVariant)))
                     .clickable { onAddCustomer() }
                     .padding(horizontal = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Default.PersonAdd, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                    Text("+ Naya Customer", style = MaterialTheme.typography.labelLarge, color = Color.White)
+                    Icon(Icons.Default.PersonAdd, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
+                    Text("+ Naya Customer", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         },
@@ -105,7 +107,7 @@ fun CustomersScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Ink800)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             when (dbState) {
                 is UiState.Loading -> {
@@ -362,6 +364,16 @@ private fun CustomerItemRow(
     val billTotal = bills.sumOf { it.total }
     val balance = credits + billTotal - payments
 
+    val latestTimestamp = remember(transactions, bills, customer) {
+        val txTime = transactions.mapNotNull { it.timestamp }.maxOrNull()
+        val billTime = bills.mapNotNull { it.createdAt }.maxOrNull()
+        val cTime = customer.createdAt
+        listOfNotNull(txTime, billTime, cTime).maxOrNull()
+    }
+    val relativeTime = remember(latestTimestamp) {
+        FormatUtils.getRelativeTimeSpan(latestTimestamp)
+    }
+
     val balanceType = when {
         balance > 0 -> GrahbookAmountType.OUTSTANDING
         balance < 0 -> GrahbookAmountType.RECEIVED
@@ -373,7 +385,7 @@ private fun CustomerItemRow(
             .fillMaxWidth()
             .height(72.dp)
             .clickable(onClick = onClick)
-            .background(Ink800)
+            .background(MaterialTheme.colorScheme.background)
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -389,7 +401,7 @@ private fun CustomerItemRow(
             Text(
                 text = customer.name,
                 style = MaterialTheme.typography.titleLarge,
-                color = Ink000,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -401,13 +413,13 @@ private fun CustomerItemRow(
                 Icon(
                     Icons.Default.Phone,
                     contentDescription = null,
-                    tint = Ink300,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(12.dp)
                 )
                 Text(
                     text = customer.phone ?: stringResource(R.string.no_phone),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Ink300,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -426,9 +438,9 @@ private fun CustomerItemRow(
                 size = 16.sp
             )
             Text(
-                text = "2 din pehle",
+                text = relativeTime,
                 style = MaterialTheme.typography.bodySmall,
-                color = Ink400
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
     }

@@ -505,6 +505,41 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun updateStoreProfile(
+        storeName: String,
+        ownerName: String,
+        address: String?,
+        upiId: String?,
+        gstin: String?,
+        context: android.content.Context
+    ) {
+        _operationState.value = OperationState.Loading
+        viewModelScope.launch {
+            try {
+                val response = ApiClient.apiService.updateStoreProfile(
+                    com.aistudio.sharmakhata.pqmzvk.data.remote.UpdateStoreProfileRequest(
+                        store_name = storeName,
+                        owner_name = ownerName,
+                        address = address,
+                        upi_id = upiId,
+                        gstin = gstin
+                    )
+                )
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _operationState.value = OperationState.Success("Store profile updated successfully")
+                    // Force refresh to pull updated store info
+                    LiveSyncManager.forceRefresh()
+                    fetchData(context)
+                } else {
+                    val serverMsg = response.body()?.message ?: "Failed to update profile"
+                    _operationState.value = OperationState.Error(serverMsg)
+                }
+            } catch (e: Exception) {
+                _operationState.value = OperationState.Error("Network error. Failed to update profile.")
+            }
+        }
+    }
+
     companion object {
         const val CACHE_KEY_DB = "full_database"
         const val CACHE_KEY_REPORT = "daily_report"

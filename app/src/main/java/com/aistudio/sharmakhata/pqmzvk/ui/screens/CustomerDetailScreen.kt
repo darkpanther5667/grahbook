@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.aistudio.sharmakhata.pqmzvk.data.model.Bill
 import com.aistudio.sharmakhata.pqmzvk.data.model.Customer
 import com.aistudio.sharmakhata.pqmzvk.data.model.FullDatabase
 import com.aistudio.sharmakhata.pqmzvk.data.model.Transaction
@@ -148,11 +149,20 @@ fun CustomerDetailScreen(
                                 val billTotal = db.bills.filter { it.customerId == customer.id }.sumOf { it.total }
                                 val outstanding = credits + billTotal - payments
                                 val shopName = db.shop?.name ?: "Grahbook"
-                                val msg = com.aistudio.sharmakhata.pqmzvk.util.WhatsAppUtils.buildReminderMessage(customer.name, outstanding, shopName)
+                                val upiId = db.shop?.upiId
+                                val msg = com.aistudio.sharmakhata.pqmzvk.util.WhatsAppUtils.buildReminderMessage(
+                                    customerId = customer.id,
+                                    customerName = customer.name,
+                                    outstanding = outstanding,
+                                    shopName = shopName,
+                                    upiId = upiId
+                                )
                                 com.aistudio.sharmakhata.pqmzvk.util.WhatsAppUtils.sendMessage(context, customer.phone ?: "", msg)
                             },
                             onViewBills = onViewBills,
                             onViewLedger = onViewLedger,
+                            onDeleteBill = { billId -> billingVm.deleteBill(context, billId) },
+                            onDeleteTransaction = { txId -> billingVm.deleteTransaction(context, txId) },
                         )
                     }
                 }
@@ -172,6 +182,8 @@ fun CustomerDetailContent(
     onWhatsAppDirect: () -> Unit,
     onViewBills: () -> Unit,
     onViewLedger: () -> Unit,
+    onDeleteBill: (String) -> Unit = {},
+    onDeleteTransaction: (String) -> Unit = {},
 ) {
     val transactions = db.transactions.filter { it.customerId == customer.id }
     val bills = db.bills.filter { it.customerId == customer.id }
@@ -401,6 +413,31 @@ fun CustomerDetailContent(
                 // ===== BILLS TAB =====
                 0 -> {
                     val sortedBills = bills.sortedByDescending { it.createdAt }
+                    var billToDelete by remember { mutableStateOf<String?>(null) }
+
+                    // Delete Confirmation Dialog for Bills
+                    if (billToDelete != null) {
+                        AlertDialog(
+                            onDismissRequest = { billToDelete = null },
+                            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = ErrorRed) },
+                            title = { Text("Delete Bill?", fontWeight = FontWeight.Bold) },
+                            text = { Text("This will permanently remove this bill and cannot be undone.") },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        billToDelete?.let { onDeleteBill(it) }
+                                        billToDelete = null
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
+                                ) { Text("Delete", color = Color.White) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { billToDelete = null }) { Text("Cancel") }
+                            },
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                    }
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = CardShape,
@@ -434,7 +471,12 @@ fun CustomerDetailContent(
                                 }
                             } else {
                                 sortedBills.take(5).forEachIndexed { index, bill ->
-                                    BillRowItem(bill = bill, index = index, isLast = index == sortedBills.take(5).lastIndex)
+                                    BillRowItem(
+                                        bill = bill,
+                                        index = index,
+                                        isLast = index == sortedBills.take(5).lastIndex,
+                                        onDeleteClick = { billToDelete = bill.id }
+                                    )
                                 }
                             }
                         }
@@ -444,6 +486,31 @@ fun CustomerDetailContent(
                 // ===== LEDGER TAB =====
                 1 -> {
                     val sortedTransactions = transactions.sortedByDescending { it.timestamp }
+                    var txToDelete by remember { mutableStateOf<String?>(null) }
+
+                    // Delete Confirmation Dialog for Transactions
+                    if (txToDelete != null) {
+                        AlertDialog(
+                            onDismissRequest = { txToDelete = null },
+                            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = ErrorRed) },
+                            title = { Text("Delete Entry?", fontWeight = FontWeight.Bold) },
+                            text = { Text("This will permanently remove this ledger entry and cannot be undone.") },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        txToDelete?.let { onDeleteTransaction(it) }
+                                        txToDelete = null
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
+                                ) { Text("Delete", color = Color.White) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { txToDelete = null }) { Text("Cancel") }
+                            },
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                    }
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = CardShape,
@@ -480,7 +547,8 @@ fun CustomerDetailContent(
                                 sortedTransactions.take(5).forEachIndexed { index, tx ->
                                     TransactionTimelineItem(
                                         transaction = tx,
-                                        isLast = index == sortedTransactions.take(5).lastIndex
+                                        isLast = index == sortedTransactions.take(5).lastIndex,
+                                        onDeleteClick = { txToDelete = tx.id }
                                     )
                                 }
                             }
@@ -530,7 +598,8 @@ fun CustomerDetailContent(
 private fun BillRowItem(
     bill: com.aistudio.sharmakhata.pqmzvk.data.model.Bill,
     index: Int,
-    isLast: Boolean
+    isLast: Boolean,
+    onDeleteClick: () -> Unit = {}
 ) {
     val isPaid = bill.status == "paid"
     val statusColor = if (isPaid) SuccessGreen else ErrorRed
@@ -586,6 +655,17 @@ private fun BillRowItem(
                     label = statusLabel,
                     bgColor = statusBg,
                     textColor = statusText
+                )
+            }
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    Icons.Default.DeleteOutline,
+                    contentDescription = "Delete bill",
+                    tint = ErrorRed.copy(alpha = 0.7f),
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -675,7 +755,8 @@ fun QuickActionIconButton(
 @Composable
 fun TransactionTimelineItem(
     transaction: Transaction,
-    isLast: Boolean
+    isLast: Boolean,
+    onDeleteClick: () -> Unit = {}
 ) {
     val isPayment = transaction.type == "payment"
     val color = if (isPayment) SuccessGreen else ErrorRed
@@ -753,6 +834,17 @@ fun TransactionTimelineItem(
                 fontWeight = FontWeight.Bold,
                 color = color
             )
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    Icons.Default.DeleteOutline,
+                    contentDescription = "Delete entry",
+                    tint = ErrorRed.copy(alpha = 0.6f),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
     }
 }

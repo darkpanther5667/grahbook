@@ -43,7 +43,9 @@ private fun String?.baseRoute(): String? {
 fun AppNavGraph(
     mainViewModel: MainViewModel = hiltViewModel(),
     isDarkTheme: Boolean,
-    onToggleTheme: (Boolean) -> Unit
+    onToggleTheme: (Boolean) -> Unit,
+    currentLanguage: String = "en",
+    onLanguageChange: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val navController = rememberNavController()
@@ -545,6 +547,8 @@ fun AppNavGraph(
                         viewModel = mainViewModel,
                         isDarkTheme = isDarkTheme,
                         onToggleTheme = onToggleTheme,
+                        currentLanguage = currentLanguage,
+                        onLanguageChange = onLanguageChange,
                         onLogout = {
                             SessionManager.clear(context)
                             navController.navigate(NavRoutes.LOGIN) {

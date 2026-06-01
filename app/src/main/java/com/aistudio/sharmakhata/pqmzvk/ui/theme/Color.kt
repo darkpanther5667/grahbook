@@ -1,6 +1,9 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.material3.MaterialTheme
 
 // === BRAND PALETTE ===
 // Primary — Deep Indigo (trust, intelligence)
@@ -16,7 +19,7 @@ val Brand100 = Color(0xFFE8EEFF)   // light surface tint
 
 // Accent — Saffron (energy, India, money in motion)
 val Saffron600 = Color(0xFFCC4E00)  // pressed state
-val Saffron500 = Color(0xFFFFFF62)  // primary accent (Note: in user prompt, saffron is 0xFFFFFF62, wait, 0xFFFFFF62 is yellow/saffron, let's verify if there is a typo: 0xFFFFFF62 vs 0xFFFF6200. The prompt states: val Saffron500 = Color(0xFFFFFF62) or wait, val Saffron500 = Color(0xFFFF6200)? Let's check prompt text: 'val Saffron500 = Color(0xFFFF6200)' under Color System and 'Color(0xFFFFFF62)'? Let's check prompt: val Saffron500 = Color(0xFFFF6200). Let's use Color(0xFFFF6200) which is true Saffron!)
+val Saffron500 = Color(0xFFFF6200)  // primary accent (true saffron/orange color for modern contrast)
 val Saffron400 = Color(0xFFFF8533)  // hover
 val Saffron300 = Color(0xFFFFAA66)  // muted
 val Saffron100 = Color(0xFFFFF0E6)  // tint surface
@@ -137,21 +140,81 @@ val StitchTeal    = RupeeGreen          // vibrant teal-green accent
 val StitchTealDark = RupeeGreenDim      // darker teal for gradients
 val StitchSky     = Brand300            // muted indigo-sky blue
 
-val StitchBg = Ink800
-val StitchSurface = Ink700
-val StitchSurfaceLow = Ink800
-val StitchSurfaceHigh = Ink600
-val StitchSurfaceHighest = Ink500
-val StitchSurfaceBright = Ink400
-val StitchSurfaceLowest = Ink900
-val StitchBorder = Ink500
-val StitchOutline = Ink300
-val StitchTextPrimary = Ink000
-val StitchTextSecondary = Ink200
-val StitchPrimary = Saffron500
-val StitchPrimaryContainer = Saffron500
-val StitchOnPrimary = Color.White
-val StitchOnPrimaryContainer = Color.White
+val StitchBg: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.background
+
+val StitchSurface: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.surface
+
+val StitchSurfaceLow: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.surface
+
+val StitchSurfaceHigh: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.surfaceVariant
+
+val StitchSurfaceHighest: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.surfaceVariant
+
+val StitchSurfaceBright: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.surfaceVariant
+
+val StitchSurfaceLowest: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.background
+
+val StitchBorder: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.outline
+
+val StitchOutline: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.outline
+
+val StitchTextPrimary: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.onBackground
+
+val StitchTextSecondary: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.onSurfaceVariant
+
+val StitchPrimary: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.primary
+
+val StitchPrimaryContainer: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.primaryContainer
+
+val StitchOnPrimary: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.onPrimary
+
+val StitchOnPrimaryContainer: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = MaterialTheme.colorScheme.onPrimaryContainer
+
 
 val BackgroundDark = Ink800
 val SurfaceDark = Ink700

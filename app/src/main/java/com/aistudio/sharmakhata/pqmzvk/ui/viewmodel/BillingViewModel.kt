@@ -178,4 +178,26 @@ class BillingViewModel @Inject constructor(
         _operationState.value = OperationState.Idle
         _lastCreatedBillId.value = null
     }
+
+    fun deleteBill(context: Context, billId: String) {
+        viewModelScope.launch {
+            _operationState.value = OperationState.Loading
+            val result = billingRepository.deleteBill(context, billId)
+            _operationState.value = when (result) {
+                is RepoResult.Success -> OperationState.Success(result.message)
+                is RepoResult.Error -> OperationState.Error(result.message)
+            }
+        }
+    }
+
+    fun deleteTransaction(context: Context, transactionId: String) {
+        viewModelScope.launch {
+            _operationState.value = OperationState.Loading
+            val result = billingRepository.deleteTransaction(context, transactionId)
+            _operationState.value = when (result) {
+                is RepoResult.Success -> OperationState.Success(result.message)
+                is RepoResult.Error -> OperationState.Error(result.message)
+            }
+        }
+    }
 }

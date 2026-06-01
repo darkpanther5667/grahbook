@@ -235,3 +235,238 @@ fun ShimmerCard(
         }
     }
 }
+
+// ============================================================
+// DASHBOARD SHIMMER — matches the redesigned dashboard layout
+// ============================================================
+
+@Composable
+fun DashboardShimmer(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Summary cards row (4 cards)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            repeat(4) {
+                Box(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(110.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(shimmerBrush(150.dp, 110.dp))
+                )
+            }
+        }
+
+        // Quick actions row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            repeat(4) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(22.dp))
+                            .background(ShimmerBase)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(ShimmerBase)
+                    )
+                }
+            }
+        }
+
+        // Section title
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 20.dp)
+                .width(140.dp)
+                .height(16.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(ShimmerBase)
+        )
+
+        // Transaction items
+        repeat(3) {
+            ShimmerTxnRow()
+        }
+
+        // WhatsApp bot card
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(120.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(shimmerBrush(400.dp, 120.dp))
+        )
+    }
+}
+
+@Composable
+private fun ShimmerTxnRow() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(ShimmerBase)
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.45f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(ShimmerBase)
+            )
+            Spacer(Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(ShimmerBase)
+            )
+        }
+        Box(
+            modifier = Modifier
+                .width(80.dp)
+                .height(14.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(ShimmerBase)
+        )
+    }
+}
+
+// ============================================================
+// CUSTOMER LIST SHIMMER — matches the redesigned customer cards
+// ============================================================
+
+@Composable
+fun CustomerListShimmer(count: Int = 6, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Search bar shimmer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(shimmerBrush(400.dp, 52.dp))
+        )
+
+        // Filter chips shimmer
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            repeat(3) {
+                Box(
+                    modifier = Modifier
+                        .width(90.dp)
+                        .height(32.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(ShimmerBase)
+                )
+            }
+        }
+
+        Spacer(Modifier.height(4.dp))
+
+        repeat(count) {
+            CustomerCardShimmer()
+        }
+    }
+}
+
+@Composable
+private fun CustomerCardShimmer() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White)
+            .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Avatar
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(ShimmerBase)
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(ShimmerBase)
+            )
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .width(80.dp)
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(ShimmerBase)
+            )
+        }
+        Box(
+            modifier = Modifier
+                .width(70.dp)
+                .height(14.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(ShimmerBase)
+        )
+    }
+}
+
+// ============================================================
+// BILL LIST SHIMMER — matches bill card layout
+// ============================================================
+
+@Composable
+fun BillListShimmer(count: Int = 5, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        repeat(count) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(88.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(shimmerBrush(400.dp, 88.dp))
+            )
+        }
+    }
+}

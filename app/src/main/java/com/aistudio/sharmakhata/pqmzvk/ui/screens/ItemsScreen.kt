@@ -571,6 +571,7 @@ private fun ModernEmptyInventory(onAddItem: () -> Unit) {
 
 private enum class StockLevel { InStock, Low, OutOfStock }
 
+@Composable
 private fun getItemAvatarColor(name: String): Color {
     val colors = listOf(
         StitchPrimaryContainer,

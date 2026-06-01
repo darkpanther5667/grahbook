@@ -77,4 +77,27 @@ object FormatUtils {
             isoString.take(10)
         }
     }
+
+    fun getRelativeTimeSpan(isoString: String?): String {
+        if (isoString.isNullOrBlank()) return "N/A"
+        val date = parseDate(isoString) ?: return "N/A"
+        val now = System.currentTimeMillis()
+        val diff = now - date.time
+
+        val seconds = diff / 1000
+        val minutes = seconds / 60
+        val hours = minutes / 60
+        val days = hours / 24
+
+        return when {
+            diff < 0 -> "Abhi"
+            seconds < 60 -> "Abhi"
+            minutes < 60 -> "$minutes min pehle"
+            hours < 24 -> "$hours ghante pehle"
+            days == 1L -> "Kal"
+            days < 30 -> "$days din pehle"
+            days < 365 -> "${days / 30} mahine pehle"
+            else -> "${days / 365} saal pehle"
+        }
+    }
 }

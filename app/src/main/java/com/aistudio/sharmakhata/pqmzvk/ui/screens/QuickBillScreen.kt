@@ -1,6 +1,7 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -508,32 +509,98 @@ fun QuickBillScreen(
                             // Item rows
                             items.forEachIndexed { index, item ->
                                 val itemTotal = (item.price.toDoubleOrNull() ?: 0.0) * (item.qty.toIntOrNull() ?: 1)
+
+                                // Autocomplete suggestions for this item slot
+                                val suggestions = remember(item.name, storedItems) {
+                                    if (item.name.length >= 1)
+                                        storedItems.filter {
+                                            it.name.contains(item.name, ignoreCase = true)
+                                        }.take(5)
+                                    else emptyList()
+                                }
+                                var showSuggestions by remember { mutableStateOf(false) }
+
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Item name
-                                    OutlinedTextField(
-                                        value = item.name,
-                                        onValueChange = { newName ->
-                                            items = items.toMutableList().also { it[index] = item.copy(name = newName) }
-                                        },
-                                        modifier = Modifier
-                                            .weight(1.5f)
-                                            .height(48.dp),
-                                        placeholder = { Text(stringResource(R.string.item_name_placeholder_small), fontSize = 12.sp) },
-                                        textStyle = MaterialTheme.typography.bodySmall,
-                                        singleLine = true,
-                                        shape = RoundedCornerShape(8.dp),
-                                        colors = TextFieldDefaults.colors(
-                                            focusedIndicatorColor = IndigoPrimary,
-                                            unfocusedIndicatorColor = CardBorder,
-                                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                            unfocusedContainerColor = BackgroundLight
+                                    // Item name with autocomplete dropdown
+                                    Box(modifier = Modifier.weight(1.5f)) {
+                                        OutlinedTextField(
+                                            value = item.name,
+                                            onValueChange = { newName ->
+                                                items = items.toMutableList().also { it[index] = item.copy(name = newName) }
+                                                showSuggestions = newName.isNotEmpty() && storedItems.any {
+                                                    it.name.contains(newName, ignoreCase = true)
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(48.dp),
+                                            placeholder = { Text("Item name", fontSize = 12.sp) },
+                                            textStyle = MaterialTheme.typography.bodySmall,
+                                            singleLine = true,
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = TextFieldDefaults.colors(
+                                                focusedIndicatorColor = IndigoPrimary,
+                                                unfocusedIndicatorColor = CardBorder,
+                                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                                unfocusedContainerColor = BackgroundLight
+                                            )
                                         )
-                                    )
+                                        // Dropdown of suggestions
+                                        if (showSuggestions && suggestions.isNotEmpty()) {
+                                            Card(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(top = 48.dp),
+                                                shape = RoundedCornerShape(8.dp),
+                                                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                            ) {
+                                                Column {
+                                                    suggestions.forEach { suggestion ->
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .clickable {
+                                                                    items = items.toMutableList().also {
+                                                                        it[index] = item.copy(
+                                                                            name = suggestion.name,
+                                                                            price = suggestion.lastPrice.toString()
+                                                                        )
+                                                                    }
+                                                                    showSuggestions = false
+                                                                }
+                                                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Text(
+                                                                text = suggestion.name,
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                fontWeight = FontWeight.Medium,
+                                                                modifier = Modifier.weight(1f),
+                                                                maxLines = 1,
+                                                                overflow = TextOverflow.Ellipsis
+                                                            )
+                                                            Text(
+                                                                text = "₹${suggestion.lastPrice.toInt()}",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = IndigoPrimary,
+                                                                fontWeight = FontWeight.SemiBold
+                                                            )
+                                                        }
+                                                        if (suggestion != suggestions.last()) {
+                                                            HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
 
                                     Spacer(modifier = Modifier.width(4.dp))
 

@@ -24,19 +24,38 @@ object WhatsAppUtils {
         }
     }
 
-    fun buildReminderMessage(customerName: String, outstanding: Double, shopName: String): String {
+    fun buildReminderMessage(
+        customerId: String,
+        customerName: String,
+        outstanding: Double,
+        shopName: String,
+        upiId: String? = null
+    ): String {
         val amount = FormatUtils.formatCurrency(outstanding)
-        return "Namaste $customerName ji \uD83D\uDE4F\n" +
-                "Aapka baaki: $amount\n" +
-                "Kripya jaldi se payment karein.\n" +
-                "- $shopName"
+        val baseUrl = Constants.BASE_URL
+        val viewUrl = "${baseUrl}view/customer/$customerId/statement"
+        val resolvedUpi = if (upiId.isNullOrBlank()) "sharmakhata@upi" else upiId
+        val cleanShopName = shopName.replace(Regex("[^a-zA-Z0-9 ]"), "").trim()
+        val upiLink = "upi://pay?pa=$resolvedUpi&pn=${Uri.encode(cleanShopName)}&am=$outstanding&cu=INR&tn=Reminder"
+
+        return "🙏 *$shopName*\n\n" +
+                "Namaste $customerName ji \uD83D\uDE4F\n\n" +
+                "Aapka baaki (outstanding): $amount\n" +
+                "Kripya jaldi se payment karein.\n\n" +
+                "📊 *View Statement & Pay:* $viewUrl\n" +
+                "📱 *Direct UPI Payment:* $upiLink\n\n" +
+                "Shukriya 🙏"
     }
 
     fun buildInvoiceMessage(billId: String, amount: Double, shopName: String): String {
         val formatted = FormatUtils.formatCurrency(amount)
-        return "Namaste \uD83D\uDE4F\n" +
+        val baseUrl = Constants.BASE_URL
+        val viewUrl = "${baseUrl}view/bill/$billId"
+        return "🙏 *$shopName*\n\n" +
+                "Namaste \uD83D\uDE4F\n\n" +
                 "Aapka bill #$billId — Total: $formatted\n" +
-                "Kripya payment karein.\n" +
-                "- $shopName"
+                "Kripya payment karein.\n\n" +
+                "🧾 *View Bill & Pay:* $viewUrl\n\n" +
+                "Shukriya 🙏"
     }
 }

@@ -79,7 +79,7 @@ fun DashboardScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Ink800)) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             // === CUSTOM TOP BAR ===
             DashboardTopBar(
@@ -198,13 +198,13 @@ private fun DashboardTopBar(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Brand600)
+                    .background(MaterialTheme.colorScheme.primary)
                     .clickable { onMenuClick() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = shopInitial,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     style = TextStyle(
                         fontFamily = Syne,
                         fontWeight = FontWeight.Bold,
@@ -219,12 +219,12 @@ private fun DashboardTopBar(
                 Text(
                     text = "Namaste 👋",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Ink300
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = shopName,
                     style = MaterialTheme.typography.titleLarge,
-                    color = Ink000,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -236,13 +236,13 @@ private fun DashboardTopBar(
                     Icon(
                         Icons.Default.SmartToy,
                         contentDescription = "Bot Status",
-                        tint = Ink200
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Box(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(if (isBotActive) RupeeGreen else Ink400)
+                            .background(if (isBotActive) RupeeGreen else MaterialTheme.colorScheme.outline)
                             .align(Alignment.TopEnd)
                     )
                 }
@@ -254,7 +254,7 @@ private fun DashboardTopBar(
                     Icon(
                         Icons.Default.Notifications,
                         contentDescription = "Notifications",
-                        tint = Ink200
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Box(
                         modifier = Modifier
@@ -298,14 +298,15 @@ private fun DashboardContent(
         // ===== SECTION 1: SUMMARY CARDS =====
         item {
             Spacer(modifier = Modifier.height(GrahbookSpacing.md))
+            Spacer(modifier = Modifier.height(GrahbookSpacing.md))
             Text(
-                text = "AAJK KA HISAB",
+                text = "AAJ KA HISAB / आज का हिसाब",
                 style = TextStyle(
                     fontFamily = Syne,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = Saffron500,
-                    letterSpacing = 2.sp
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.5.sp
                 ),
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = GrahbookSpacing.xs)
             )
@@ -361,13 +362,13 @@ private fun DashboardContent(
         // ===== SECTION 2: QUICK ACTIONS =====
         item {
             Text(
-                text = "JALDI KARO",
+                text = "QUICK ACTIONS / जल्दी करें",
                 style = TextStyle(
                     fontFamily = Syne,
                     fontWeight = FontWeight.Bold,
                     fontSize = 11.sp,
-                    color = Ink300,
-                    letterSpacing = 2.sp
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 1.5.sp
                 ),
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
@@ -395,18 +396,18 @@ private fun DashboardContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent Activity",
+                    text = "Recent Activity / हाल की गतिविधि",
                     style = TextStyle(
                         fontFamily = Syne,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = Ink000
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 )
                 Text(
                     text = "Sab Dekho →",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Brand300,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable { onNavigateToCustomers() }
                 )
             }
@@ -437,16 +438,16 @@ private fun DashboardContent(
                         .padding(horizontal = 20.dp)
                         .height(120.dp)
                         .clip(RoundedCornerShape(GrahbookRadius.lg))
-                        .background(Ink700),
+                        .background(MaterialTheme.colorScheme.surface),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.ReceiptLong, contentDescription = null, tint = Ink400, modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.ReceiptLong, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(32.dp))
                         Spacer(Modifier.height(GrahbookSpacing.xs))
                         Text(
                             text = "No transactions yet. Pehla bill banao!",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Ink300
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -470,7 +471,7 @@ private fun QuickActionsCard(
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
         shape = RoundedCornerShape(GrahbookRadius.lg),
-        colors = CardDefaults.cardColors(containerColor = Ink700)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -524,7 +525,7 @@ private fun QuickActionsCard(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Ink100,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -595,7 +596,7 @@ private fun WhatsAppBotActiveCard(onWhatsApp: () -> Unit) {
                 Text(
                     text = "Ramesh ne 500 diya → ✓ Recorded",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Ink200,
+                    color = Color.White.copy(alpha = 0.7f),
                     fontWeight = FontWeight.Normal
                 )
             }
@@ -636,14 +637,14 @@ private fun TransactionItem(
             Text(
                 name,
                 style = MaterialTheme.typography.titleLarge,
-                color = Ink000,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 detail,
                 style = MaterialTheme.typography.bodySmall,
-                color = Ink300
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         
@@ -656,7 +657,7 @@ private fun TransactionItem(
             Text(
                 text = time,
                 style = MaterialTheme.typography.bodySmall,
-                color = Ink400
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
     }

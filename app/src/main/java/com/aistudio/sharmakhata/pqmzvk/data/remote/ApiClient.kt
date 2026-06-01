@@ -23,7 +23,8 @@ object ApiClient {
         .build()
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.HEADERS
+                else HttpLoggingInterceptor.Level.NONE
     }
 
     private val _unauthorizedEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)

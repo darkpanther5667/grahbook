@@ -16,7 +16,10 @@ data class FullDatabase(
 data class Shop(
     val name: String? = null,
     val owner: String? = null,
-    val address: String? = null
+    val address: String? = null,
+    @Json(name = "upi_id") val upiId: String? = null,
+    val gstin: String? = null,
+    @Json(name = "invoice_template") val invoiceTemplate: String? = "modern"
 )
 
 @JsonClass(generateAdapter = true)

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
@@ -67,6 +68,11 @@ import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.*
 import com.aistudio.sharmakhata.pqmzvk.ui.theme.GrahbookTheme
 import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.BuildConfig
+import java.util.Locale
+import android.content.res.Configuration
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Check
 import com.aistudio.sharmakhata.pqmzvk.util.SessionManager
 import com.aistudio.sharmakhata.pqmzvk.util.BiometricAuthHelper
 import com.aistudio.sharmakhata.pqmzvk.ui.components.UpdateAvailableDialog
@@ -74,6 +80,26 @@ import com.aistudio.sharmakhata.pqmzvk.util.AppUpdateManager
 import com.aistudio.sharmakhata.pqmzvk.util.UpdateInfo
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+
+@Composable
+fun LocalePhoneWrapper(
+  languageCode: String,
+  content: @Composable () -> Unit
+) {
+  val context = LocalContext.current
+  val locale = remember(languageCode) { Locale(languageCode) }
+  val configuration = remember(languageCode) {
+    Configuration(context.resources.configuration).apply {
+      setLocale(locale)
+    }
+  }
+  val localeContext = remember(languageCode) {
+    context.createConfigurationContext(configuration)
+  }
+  CompositionLocalProvider(LocalContext provides localeContext) {
+    content()
+  }
+}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -97,10 +123,12 @@ class MainActivity : ComponentActivity() {
     // Load saved theme preference
     val sharedPrefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val savedDarkMode = sharedPrefs.getBoolean(KEY_DARK_MODE, true)
+    val savedLanguage = sharedPrefs.getString("language_code", "en") ?: "en"
 
     setContent {
       val context = LocalContext.current
       var isDarkTheme by remember { mutableStateOf(savedDarkMode) }
+      var currentLanguage by remember { mutableStateOf(savedLanguage) }
       var onboardingComplete by remember { mutableStateOf(isOnboardingComplete(context)) }
       val biometricUnlocked by BiometricAuthHelper.authState.collectAsState()
       val isUnlocked = !BiometricAuthHelper.isAvailable(context) || biometricUnlocked
@@ -136,74 +164,88 @@ class MainActivity : ComponentActivity() {
         }
       }
 
-      if (BiometricAuthHelper.isAvailable(context) && !isUnlocked) {
-        // Lock screen while waiting for biometric
-        Box(
-          modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-          contentAlignment = Alignment.Center
-        ) {
-          Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+      LocalePhoneWrapper(languageCode = currentLanguage) {
+        if (BiometricAuthHelper.isAvailable(context) && !isUnlocked) {
+          // Lock screen while waiting for biometric
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center
           ) {
-            Icon(
-              imageVector = Icons.Default.DarkMode,
-              contentDescription = null,
-              modifier = Modifier.size(64.dp),
-              tint = StitchTeal
-            )
-            Text(
-              text = "Grahbook Pro",
-              style = MaterialTheme.typography.headlineMedium,
-              fontWeight = FontWeight.Bold,
-              color = MaterialTheme.colorScheme.onBackground
-            )
-            Text(
-              text = "Verify your identity to continue",
-              style = MaterialTheme.typography.bodyLarge,
-              color = TextSecondaryLight
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(8.dp))
-            TextButton(
-              onClick = {
-                val fa = context as? androidx.fragment.app.FragmentActivity
-                if (fa != null) BiometricAuthHelper.showPrompt(fa)
-              }
+            Column(
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-              Text("Tap to retry")
+              Icon(
+                imageVector = Icons.Default.DarkMode,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = StitchTeal
+              )
+              Text(
+                text = "Grahbook Pro",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+              )
+              Text(
+                text = "Verify your identity to continue",
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextSecondaryLight
+              )
+              Spacer(modifier = Modifier.height(24.dp))
+              CircularProgressIndicator()
+              Spacer(modifier = Modifier.height(8.dp))
+              TextButton(
+                onClick = {
+                  val fa = context as? androidx.fragment.app.FragmentActivity
+                  if (fa != null) BiometricAuthHelper.showPrompt(fa)
+                }
+              ) {
+                Text("Tap to retry")
+              }
             }
           }
-        }
-      } else {
-        val toggleTheme: (Boolean) -> Unit = {
-          isDarkTheme = it
-          sharedPrefs.edit().putBoolean(KEY_DARK_MODE, it).apply()
-        }
-
-        if (!onboardingComplete) {
-          val shopNamePref = context.getSharedPreferences("grahbook_session", Context.MODE_PRIVATE)
-              .getString("store_name", "") ?: ""
-          OnboardingScreen(
-            shopName = shopNamePref,
-            onComplete = { state ->
-              setOnboardingComplete(context)
-              onboardingComplete = true
-            },
-            onSkip = {
-              setOnboardingComplete(context)
-              onboardingComplete = true
-            }
-          )
         } else {
-          GrahbookTheme(darkTheme = isDarkTheme) {
-            AppNavGraph(
-              isDarkTheme = isDarkTheme,
-              onToggleTheme = toggleTheme
+          val toggleTheme: (Boolean) -> Unit = {
+            isDarkTheme = it
+            sharedPrefs.edit().putBoolean(KEY_DARK_MODE, it).apply()
+          }
+
+          val toggleLanguage: (String) -> Unit = {
+            currentLanguage = it
+            sharedPrefs.edit().putString("language_code", it).apply()
+          }
+
+          if (!onboardingComplete) {
+            val shopNamePref = context.getSharedPreferences("grahbook_session", Context.MODE_PRIVATE)
+                .getString("store_name", "") ?: ""
+            OnboardingScreen(
+              shopName = shopNamePref,
+              onComplete = { state ->
+                val langCode = when (state.language) {
+                  "Hindi" -> "hi"
+                  else -> "en"
+                }
+                toggleLanguage(langCode)
+                setOnboardingComplete(context)
+                onboardingComplete = true
+              },
+              onSkip = {
+                setOnboardingComplete(context)
+                onboardingComplete = true
+              }
             )
+          } else {
+            GrahbookTheme(darkTheme = isDarkTheme) {
+              AppNavGraph(
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = toggleTheme,
+                currentLanguage = currentLanguage,
+                onLanguageChange = toggleLanguage
+              )
+            }
           }
         }
       }
@@ -282,13 +324,14 @@ fun BiometricLockScreen(
   }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
   viewModel: MainViewModel,
   isDarkTheme: Boolean,
   onToggleTheme: (Boolean) -> Unit,
+  currentLanguage: String,
+  onLanguageChange: (String) -> Unit,
   onLogout: () -> Unit
 ) {
   val context = androidx.compose.ui.platform.LocalContext.current
@@ -310,6 +353,37 @@ fun ProfileScreen(
     is UiState.Success -> s.data.bills.size
     else -> 0
   }
+
+  val shop = (dbState as? UiState.Success)?.data?.shop
+  val currentAddress = shop?.address ?: ""
+  val currentUpiId = shop?.upiId ?: ""
+  val currentGstin = shop?.gstin ?: ""
+
+  val snackbarHostState = remember { SnackbarHostState() }
+  val operationState by viewModel.operationState.collectAsState()
+  val scope = rememberCoroutineScope()
+
+  LaunchedEffect(operationState) {
+    when (operationState) {
+      is OperationState.Success -> {
+        snackbarHostState.showSnackbar((operationState as OperationState.Success).message)
+        viewModel.resetOperationState()
+      }
+      is OperationState.Error -> {
+        snackbarHostState.showSnackbar((operationState as OperationState.Error).message)
+        viewModel.resetOperationState()
+      }
+      else -> {}
+    }
+  }
+
+  var showLanguageDialog by remember { mutableStateOf(false) }
+  var showEditStoreDialog by remember { mutableStateOf(false) }
+  var editStoreName by remember { mutableStateOf(storeName) }
+  var editOwnerName by remember { mutableStateOf(ownerName) }
+  var editAddress by remember { mutableStateOf(currentAddress) }
+  var editUpiId by remember { mutableStateOf(currentUpiId) }
+  var editGstin by remember { mutableStateOf(currentGstin) }
 
   Box(modifier = Modifier.fillMaxSize()) {
     // Stitch-style gradient header
@@ -336,7 +410,8 @@ fun ProfileScreen(
           )
         )
       },
-      containerColor = Color.Transparent
+      containerColor = Color.Transparent,
+      snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
       Column(
         modifier = Modifier
@@ -396,7 +471,7 @@ fun ProfileScreen(
           }
         }
 
-        // White rounded container for settings
+        // rounded container for settings
         Column(
           modifier = Modifier
             .fillMaxSize()
@@ -469,7 +544,7 @@ fun ProfileScreen(
             SettingsItem(
               icon = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
               iconTint = StitchTeal,
-              title = "Dark Mode",
+              title = "Dark Mode / नाइट मोड",
               subtitle = if (isDarkTheme) "Currently dark" else "Currently light",
               trailing = {
                 Switch(
@@ -483,6 +558,38 @@ fun ProfileScreen(
                   )
                 )
               }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp), thickness = 0.5.dp, color = DividerColor)
+
+            // Edit Store Details
+            SettingsItem(
+              icon = Icons.Default.Edit,
+              iconTint = StitchTeal,
+              title = "Edit Store Details / दुकान की जानकारी",
+              subtitle = "Name, Owner, Address, UPI ID, GSTIN",
+              onClick = {
+                editStoreName = storeName
+                editOwnerName = ownerName
+                editAddress = currentAddress
+                editUpiId = currentUpiId
+                editGstin = currentGstin
+                showEditStoreDialog = true
+              }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp), thickness = 0.5.dp, color = DividerColor)
+
+            // Language picker
+            SettingsItem(
+              icon = Icons.Default.Language,
+              iconTint = StitchTeal,
+              title = "Language / भाषा",
+              subtitle = when (currentLanguage) {
+                "hi" -> "हिंदी (Hindi)"
+                else -> "English (Hinglish)"
+              },
+              onClick = { showLanguageDialog = true }
             )
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp), thickness = 0.5.dp, color = DividerColor)
@@ -537,6 +644,118 @@ fun ProfileScreen(
         }
       }
     }
+
+    if (showLanguageDialog) {
+      AlertDialog(
+        onDismissRequest = { showLanguageDialog = false },
+        title = { Text("Choose Language / भाषा चुनें", fontWeight = FontWeight.Bold) },
+        text = {
+          Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val languages = listOf(
+              "en" to "English (Hinglish)",
+              "hi" to "हिंदी (Hindi)"
+            )
+            languages.forEach { (code, name) ->
+              Row(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .clickable {
+                    onLanguageChange(code)
+                    showLanguageDialog = false
+                  }
+                  .padding(vertical = 12.dp, horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Text(name, style = MaterialTheme.typography.bodyLarge)
+                if (currentLanguage == code) {
+                  Icon(Icons.Default.Check, contentDescription = "Selected", tint = MaterialTheme.colorScheme.primary)
+                }
+              }
+            }
+          }
+        },
+        confirmButton = {
+          TextButton(onClick = { showLanguageDialog = false }) {
+            Text("Close")
+          }
+        }
+      )
+    }
+
+    if (showEditStoreDialog) {
+      AlertDialog(
+        onDismissRequest = { showEditStoreDialog = false },
+        title = { Text("Edit Store Details", fontWeight = FontWeight.Bold) },
+        text = {
+          Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.verticalScroll(rememberScrollState())
+          ) {
+            OutlinedTextField(
+              value = editStoreName,
+              onValueChange = { editStoreName = it },
+              label = { Text("Store Name") },
+              modifier = Modifier.fillMaxWidth(),
+              singleLine = true
+            )
+            OutlinedTextField(
+              value = editOwnerName,
+              onValueChange = { editOwnerName = it },
+              label = { Text("Owner Name") },
+              modifier = Modifier.fillMaxWidth(),
+              singleLine = true
+            )
+            OutlinedTextField(
+              value = editAddress,
+              onValueChange = { editAddress = it },
+              label = { Text("Address") },
+              modifier = Modifier.fillMaxWidth(),
+              singleLine = false,
+              maxLines = 3
+            )
+            OutlinedTextField(
+              value = editUpiId,
+              onValueChange = { editUpiId = it },
+              label = { Text("UPI ID (e.g. store@upi)") },
+              modifier = Modifier.fillMaxWidth(),
+              singleLine = true
+            )
+            OutlinedTextField(
+              value = editGstin,
+              onValueChange = { editGstin = it },
+              label = { Text("GSTIN") },
+              modifier = Modifier.fillMaxWidth(),
+              singleLine = true
+            )
+          }
+        },
+        confirmButton = {
+          Button(
+            onClick = {
+              if (editStoreName.isNotBlank() && editOwnerName.isNotBlank()) {
+                viewModel.updateStoreProfile(
+                  storeName = editStoreName,
+                  ownerName = editOwnerName,
+                  address = editAddress.ifBlank { null },
+                  upiId = editUpiId.ifBlank { null },
+                  gstin = editGstin.ifBlank { null },
+                  context = context
+                )
+                showEditStoreDialog = false
+              }
+            }
+          ) {
+            Text("Save")
+          }
+        },
+        dismissButton = {
+          TextButton(onClick = { showEditStoreDialog = false }) {
+            Text("Cancel")
+          }
+        }
+      )
+    }
   }
 }
 
@@ -546,12 +765,15 @@ private fun SettingsItem(
   iconTint: Color,
   title: String,
   subtitle: String = "",
+  onClick: (() -> Unit)? = null,
   trailing: @Composable (() -> Unit)? = null
 ) {
+  var modifier = Modifier.fillMaxWidth()
+  if (onClick != null) {
+    modifier = modifier.clickable { onClick() }
+  }
   Row(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(horizontal = 8.dp, vertical = 12.dp),
+    modifier = modifier.padding(horizontal = 8.dp, vertical = 12.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(14.dp)
   ) {

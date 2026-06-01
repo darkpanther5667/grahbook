@@ -90,10 +90,10 @@ fun BillsScreen(
                 ) { Text("Yes, Mark Paid", color = Color.White, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmDialog = null }) { Text("Cancel", color = Ink300) }
+                TextButton(onClick = { showConfirmDialog = null }) { Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             },
             shape = RoundedCornerShape(GrahbookRadius.lg),
-            containerColor = Ink700
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
@@ -103,16 +103,16 @@ fun BillsScreen(
                 title = { Text("Bills", fontFamily = Syne, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Ink000)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Ink800,
-                    titleContentColor = Ink000
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         },
-        containerColor = Ink800,
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         val pullToRefreshState = rememberPullToRefreshState()
@@ -124,7 +124,7 @@ fun BillsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Ink800)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             when (dbState) {
                 is UiState.Loading -> {
@@ -150,7 +150,7 @@ fun BillsScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Ink800)
+                            .background(MaterialTheme.colorScheme.background)
                     ) {
                         // Filter Chips Row
                         LazyRow(
@@ -286,7 +286,7 @@ private fun InvoiceCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(GrahbookRadius.lg),
-        colors = CardDefaults.cardColors(containerColor = Ink700)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Top row: Invoice # and Status Badge
@@ -299,12 +299,12 @@ private fun InvoiceCard(
                     Text(
                         text = "Invoice #${bill.id.take(8).uppercase()}",
                         style = MaterialTheme.typography.titleLarge,
-                        color = Ink000
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = FormatUtils.formatDate(bill.createdAt),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Ink300
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -318,14 +318,14 @@ private fun InvoiceCard(
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    tint = Brand300,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = customerName,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Ink200,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -342,7 +342,7 @@ private fun InvoiceCard(
                 Text(
                     text = "Total Amount",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Ink300
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 AmountText(
                     amount = (bill.total * 100).toLong(),
@@ -357,12 +357,12 @@ private fun InvoiceCard(
                 Text(
                     text = "${bill.items.size} item(s)",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Ink300
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = Ink600)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
             Spacer(modifier = Modifier.height(12.dp))
 
             // Action buttons row
@@ -375,8 +375,8 @@ private fun InvoiceCard(
                     onClick = onOpenPdf,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(GrahbookRadius.md),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Brand300),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Ink500)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
                     Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
@@ -389,7 +389,7 @@ private fun InvoiceCard(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(GrahbookRadius.md),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF25D366)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Ink500)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
                     Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))

@@ -175,4 +175,36 @@ class BillingRepository @Inject constructor(
             emptyList()
         }
     }
+
+    suspend fun deleteBill(context: Context, billId: String): RepoResult {
+        return try {
+            if (!NetworkUtils.isNetworkAvailable(context)) {
+                return RepoResult.Error("No internet connection — delete requires online access")
+            }
+            val response = ApiClient.apiService.deleteBill(billId)
+            if (response.isSuccessful && response.body()?.success == true) {
+                RepoResult.Success("Bill deleted")
+            } else {
+                RepoResult.Error(response.body()?.message ?: "Failed to delete bill")
+            }
+        } catch (e: Exception) {
+            RepoResult.Error("Failed to delete bill: ${e.message}")
+        }
+    }
+
+    suspend fun deleteTransaction(context: Context, transactionId: String): RepoResult {
+        return try {
+            if (!NetworkUtils.isNetworkAvailable(context)) {
+                return RepoResult.Error("No internet connection — delete requires online access")
+            }
+            val response = ApiClient.apiService.deleteTransaction(transactionId)
+            if (response.isSuccessful && response.body()?.success == true) {
+                RepoResult.Success("Transaction deleted")
+            } else {
+                RepoResult.Error(response.body()?.message ?: "Failed to delete transaction")
+            }
+        } catch (e: Exception) {
+            RepoResult.Error("Failed to delete transaction: ${e.message}")
+        }
+    }
 }
