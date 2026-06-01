@@ -93,9 +93,16 @@ fun LocalePhoneWrapper(
       setLocale(locale)
     }
   }
+  
+  // Resolve base activity context safely to retain Hilt entry points
   val localeContext = remember(languageCode) {
-    context.createConfigurationContext(configuration)
+    var baseContext = context
+    while (baseContext is android.content.ContextWrapper && baseContext !is android.app.Activity) {
+      baseContext = baseContext.baseContext
+    }
+    baseContext.createConfigurationContext(configuration)
   }
+  
   CompositionLocalProvider(LocalContext provides localeContext) {
     content()
   }
