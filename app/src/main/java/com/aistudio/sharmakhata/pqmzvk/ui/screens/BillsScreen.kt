@@ -1,6 +1,7 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,8 +17,11 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,6 +30,10 @@ import androidx.compose.ui.unit.sp
 import com.aistudio.sharmakhata.pqmzvk.data.model.Bill
 import com.aistudio.sharmakhata.pqmzvk.ui.components.EmptyState
 import com.aistudio.sharmakhata.pqmzvk.ui.components.ShimmerLoading
+import com.aistudio.sharmakhata.pqmzvk.ui.components.AmountText
+import com.aistudio.sharmakhata.pqmzvk.ui.components.GrahbookAmountType
+import com.aistudio.sharmakhata.pqmzvk.ui.components.StatusBadge
+import com.aistudio.sharmakhata.pqmzvk.ui.components.GrahbookStatus
 import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.BillingViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.OperationState
@@ -65,43 +73,46 @@ fun BillsScreen(
         }
     }
 
-    // Confirmation Dialog
+    // Confirmation Dialog in custom Grahbook style
     if (showConfirmDialog != null) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = null },
-            title = { Text("Mark as Paid?") },
-            text = { Text("This will mark the bill as paid. Continue?") },
+            title = { Text("Mark as Paid?", color = Ink000, fontFamily = Syne, fontWeight = FontWeight.Bold) },
+            text = { Text("This will mark the bill as paid. Continue?", color = Ink100) },
             confirmButton = {
                 Button(
                     onClick = {
                         showConfirmDialog?.let { viewModel.markBillPaid(context, it) }
                         showConfirmDialog = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                ) { Text("Yes, Mark Paid") }
+                    colors = ButtonDefaults.buttonColors(containerColor = RupeeGreen),
+                    shape = RoundedCornerShape(GrahbookRadius.pill)
+                ) { Text("Yes, Mark Paid", color = Color.White, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmDialog = null }) { Text("Cancel") }
+                TextButton(onClick = { showConfirmDialog = null }) { Text("Cancel", color = Ink300) }
             },
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(GrahbookRadius.lg),
+            containerColor = Ink700
         )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Bills", fontWeight = FontWeight.SemiBold) },
+                title = { Text("Bills", fontFamily = Syne, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Ink000)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = Ink800,
+                    titleContentColor = Ink000
                 )
             )
         },
+        containerColor = Ink800,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         val pullToRefreshState = rememberPullToRefreshState()
@@ -113,7 +124,7 @@ fun BillsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.background)
+                .background(Ink800)
         ) {
             when (dbState) {
                 is UiState.Loading -> {
@@ -139,61 +150,34 @@ fun BillsScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background)
+                            .background(Ink800)
                     ) {
-                        // Filter Chips
+                        // Filter Chips Row
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             item {
-                                FilterChip(
+                                FilterChipItem(
                                     selected = selectedFilter == "All",
                                     onClick = { viewModel.setBillFilter("All") },
-                                    label = { Text("All") },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = IndigoPrimary,
-                                        selectedLabelColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(10.dp)
+                                    text = "Sab"
                                 )
                             }
                             item {
-                                FilterChip(
+                                FilterChipItem(
                                     selected = selectedFilter == "Paid",
                                     onClick = { viewModel.setBillFilter("Paid") },
-                                    label = { Text("Paid") },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = SuccessGreen,
-                                        selectedLabelColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(10.dp)
+                                    text = "Paid"
                                 )
                             }
                             item {
-                                FilterChip(
+                                FilterChipItem(
                                     selected = selectedFilter == "Unpaid",
                                     onClick = { viewModel.setBillFilter("Unpaid") },
-                                    label = { Text("Unpaid") },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = ErrorRed,
-                                        selectedLabelColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-                            }
-                            item {
-                                FilterChip(
-                                    selected = selectedFilter == "Overdue",
-                                    onClick = { viewModel.setBillFilter("Overdue") },
-                                    label = { Text("Overdue") },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = AmberWarning,
-                                        selectedLabelColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(10.dp)
+                                    text = "Unpaid"
                                 )
                             }
                         }
@@ -212,23 +196,22 @@ fun BillsScreen(
                                     Icon(
                                         Icons.Outlined.ReceiptLong,
                                         contentDescription = null,
-                                        tint = TextSecondaryLight,
+                                        tint = Ink400,
                                         modifier = Modifier.size(72.dp)
                                     )
                                     Text(
                                         text = if (allBillsForCustomer.isEmpty()) "No bills found for this customer"
                                         else "No ${selectedFilter.lowercase()} bills",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onBackground,
+                                        color = Ink100,
                                         textAlign = TextAlign.Center
                                     )
                                 }
                             }
                         } else {
                             LazyColumn(
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(14.dp)
+                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(count = pagedBills.itemCount, key = { index -> pagedBills[index]?.id ?: index }) { index ->
                                     val bill = pagedBills[index]
@@ -253,6 +236,39 @@ fun BillsScreen(
 }
 
 @Composable
+private fun FilterChipItem(
+    selected: Boolean,
+    onClick: () -> Unit,
+    text: String
+) {
+    val brush = if (selected) {
+        Brush.horizontalGradient(listOf(Brand500, Brand600))
+    } else {
+        Brush.horizontalGradient(listOf(Ink600, Ink600))
+    }
+
+    Box(
+        modifier = Modifier
+            .height(32.dp)
+            .clip(RoundedCornerShape(GrahbookRadius.pill))
+            .background(brush)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = TextStyle(
+                fontFamily = Syne,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = if (selected) Color.White else Ink200
+            )
+        )
+    }
+}
+
+@Composable
 private fun InvoiceCard(
     bill: Bill,
     customerName: String,
@@ -261,27 +277,16 @@ private fun InvoiceCard(
     onOpenPdf: () -> Unit,
 ) {
     val isPaid = bill.status == "paid"
-    val statusColor = when {
-        isPaid -> SuccessGreen
-        bill.status == "overdue" -> AmberWarning
-        else -> ErrorRed
-    }
-    val statusBgColor = when {
-        isPaid -> SuccessGreen.copy(alpha = 0.1f)
-        bill.status == "overdue" -> AmberWarning.copy(alpha = 0.1f)
-        else -> ErrorRed.copy(alpha = 0.1f)
-    }
-    val statusText = when {
-        isPaid -> "Paid"
-        bill.status == "overdue" -> "Overdue"
-        else -> "Unpaid"
+    val status = when {
+        isPaid -> GrahbookStatus.PAID
+        bill.status == "overdue" -> GrahbookStatus.LOW_STOCK // low stock has same warning amber color
+        else -> GrahbookStatus.UNPAID
     }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(GrahbookRadius.lg),
+        colors = CardDefaults.cardColors(containerColor = Ink700)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Top row: Invoice # and Status Badge
@@ -293,30 +298,17 @@ private fun InvoiceCard(
                 Column {
                     Text(
                         text = "Invoice #${bill.id.take(8).uppercase()}",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Ink000
                     )
                     Text(
                         text = FormatUtils.formatDate(bill.createdAt),
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondaryLight
+                        color = Ink300
                     )
                 }
 
-                // Status Badge
-                Box(
-                    modifier = Modifier
-                        .background(statusBgColor, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = statusText,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = statusColor
-                    )
-                }
+                StatusBadge(status = status)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -326,20 +318,20 @@ private fun InvoiceCard(
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    tint = IndigoPrimary.copy(alpha = 0.7f),
+                    tint = Brand300,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = customerName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondaryLight,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Ink200,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Total Amount
             Row(
@@ -350,73 +342,71 @@ private fun InvoiceCard(
                 Text(
                     text = "Total Amount",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondaryLight
+                    color = Ink300
                 )
-                Text(
-                    text = FormatUtils.formatCurrency(bill.total),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                AmountText(
+                    amount = (bill.total * 100).toLong(),
+                    type = if (isPaid) GrahbookAmountType.RECEIVED else GrahbookAmountType.OUTSTANDING,
+                    size = 20.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
             // Items count if any
             if (bill.items.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${bill.items.size} item(s)",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondaryLight
+                    color = Ink300
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            HorizontalDivider(color = CardBorder)
-
-            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(color = Ink600)
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Action buttons row
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // PDF
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // PDF Button
                 OutlinedButton(
                     onClick = onOpenPdf,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = IndigoPrimary),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
+                    shape = RoundedCornerShape(GrahbookRadius.md),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Brand300),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Ink500)
                 ) {
                     Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("PDF", fontSize = 12.sp)
+                    Text("PDF", fontSize = 12.sp, fontFamily = Syne)
                 }
 
-                // WhatsApp
+                // WhatsApp Button
                 OutlinedButton(
                     onClick = onSendWhatsApp,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(GrahbookRadius.md),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF25D366)),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Ink500)
                 ) {
                     Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("WhatsApp", fontSize = 12.sp)
+                    Text("WhatsApp", fontSize = 12.sp, fontFamily = Syne)
                 }
 
-                // Mark Paid (only if unpaid)
+                // Mark Paid Button (only if unpaid)
                 if (!isPaid) {
                     Button(
                         onClick = onMarkPaid,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
-                        contentPadding = PaddingValues(horizontal = 8.dp)
+                        shape = RoundedCornerShape(GrahbookRadius.md),
+                        colors = ButtonDefaults.buttonColors(containerColor = RupeeGreen)
                     ) {
                         Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Paid", fontSize = 12.sp)
+                        Text("Paid", fontSize = 12.sp, fontFamily = Syne, color = Color.White)
                     }
                 }
             }

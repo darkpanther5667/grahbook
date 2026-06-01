@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,10 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aistudio.sharmakhata.pqmzvk.data.model.Customer
 import com.aistudio.sharmakhata.pqmzvk.data.model.FullDatabase
-import com.aistudio.sharmakhata.pqmzvk.ui.components.AppAvatar
 import com.aistudio.sharmakhata.pqmzvk.ui.components.EmptyState
 import com.aistudio.sharmakhata.pqmzvk.ui.components.HamburgerAppBar
 import com.aistudio.sharmakhata.pqmzvk.ui.components.ShimmerListItem
+import com.aistudio.sharmakhata.pqmzvk.ui.components.AmountText
+import com.aistudio.sharmakhata.pqmzvk.ui.components.GrahbookAmountType
+import com.aistudio.sharmakhata.pqmzvk.ui.components.CustomerAvatar
 import com.aistudio.sharmakhata.pqmzvk.ui.theme.*
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.CustomerViewModel
 import com.aistudio.sharmakhata.pqmzvk.ui.viewmodel.UiState
@@ -69,20 +72,26 @@ fun CustomersScreen(
                 shopInitial = shopInitial,
                 actions = {
                     IconButton(onClick = onNavigateToSearch) {
-                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search), tint = StitchTextSecondary)
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search), tint = Ink100)
                     }
                 }
             )
         },
-        containerColor = StitchBg,
+        containerColor = Ink800,
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddCustomer,
-                containerColor = StitchPrimaryContainer,
-                contentColor = Color.White,
-                shape = FabShape
+            Box(
+                modifier = Modifier
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(GrahbookRadius.pill))
+                    .background(Brush.horizontalGradient(listOf(Saffron500, Saffron600)))
+                    .clickable { onAddCustomer() }
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.PersonAdd, contentDescription = stringResource(R.string.add_customer_action))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.PersonAdd, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Text("+ Naya Customer", style = MaterialTheme.typography.labelLarge, color = Color.White)
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -96,18 +105,18 @@ fun CustomersScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.background)
+                .background(Ink800)
         ) {
             when (dbState) {
                 is UiState.Loading -> {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(Spacing.large)
+                            .padding(20.dp)
                     ) {
                         repeat(6) {
                             ShimmerListItem()
-                            Spacer(modifier = Modifier.height(Spacing.small))
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                 }
@@ -156,90 +165,97 @@ fun CustomersList(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedFilter by viewModel.filter.collectAsState()
 
+    // Calculate Total Outstanding
+    val totalOutstanding = remember(db) {
+        db.customers.sumOf { customer ->
+            val transactions = db.transactions.filter { it.customerId == customer.id }
+            val bills = db.bills.filter { it.customerId == customer.id }
+            val payments = transactions.filter { it.type == "payment" }.sumOf { it.amount }
+            val credits = transactions.filter { it.type == "credit" }.sumOf { it.amount }
+            val billTotal = bills.sumOf { it.total }
+            credits + billTotal - payments
+        }.coerceAtLeast(0.0)
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        // Search Bar
+        // Pill Search Bar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { viewModel.setSearchQuery(it) },
-            placeholder = { Text(stringResource(R.string.search_by_name_or_phone), color = TextTertiaryLight) },
+            placeholder = { Text("Naam ya phone number...", color = Ink300, fontFamily = DMSans) },
             leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = null, tint = StitchPrimaryContainer)
+                Icon(Icons.Default.Search, contentDescription = null, tint = Ink300)
             },
             trailingIcon = if (searchQuery.isNotEmpty()) {
                 {
                     IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear), tint = TextSecondaryLight)
+                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear), tint = Ink200)
                     }
                 }
             } else null,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.large, vertical = Spacing.small),
-            shape = SearchBarShape,
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = StitchPrimaryContainer,
-                unfocusedIndicatorColor = CardBorder,
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                focusedTextColor = TextPrimaryLight,
-                unfocusedTextColor = TextPrimaryLight
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            shape = RoundedCornerShape(GrahbookRadius.pill),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Ink600,
+                unfocusedContainerColor = Ink600,
+                focusedBorderColor = Brand400,
+                unfocusedBorderColor = Color.Transparent,
+                focusedTextColor = Ink000,
+                unfocusedTextColor = Ink000
             ),
             singleLine = true
         )
 
-        // Filter Chips
+        // Sticky Header Strip
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Ink900)
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Total Udhaar",
+                style = MaterialTheme.typography.bodySmall,
+                color = Ink300,
+                fontWeight = FontWeight.SemiBold
+            )
+            AmountText(
+                amount = (totalOutstanding * 100).toLong(),
+                type = GrahbookAmountType.OUTSTANDING,
+                size = 20.sp
+            )
+        }
+
+        // Filter Chips Row
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.large, vertical = Spacing.small),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.small)
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                FilterChip(
+                FilterChipItem(
                     selected = selectedFilter == "All",
                     onClick = { viewModel.setFilter("All") },
-                    label = { Text(stringResource(R.string.all_with_count, db.customers.size)) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = StitchTeal,
-                        selectedLabelColor = Color.White,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        labelColor = TextSecondaryLight
-                    ),
-                    shape = RoundedCornerShape(10.dp)
+                    text = "Sab (${db.customers.size})"
                 )
             }
             item {
-                FilterChip(
+                FilterChipItem(
                     selected = selectedFilter == "With Outstanding",
                     onClick = { viewModel.setFilter("With Outstanding") },
-                    label = { Text(stringResource(R.string.with_outstanding)) },
-                    leadingIcon = if (selectedFilter == "With Outstanding") {
-                        { Icon(Icons.Default.TrendingUp, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                    } else null,
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = ErrorRed,
-                        selectedLabelColor = Color.White,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        labelColor = TextSecondaryLight
-                    ),
-                    shape = RoundedCornerShape(10.dp)
+                    text = "With Outstanding"
                 )
             }
             item {
-                FilterChip(
+                FilterChipItem(
                     selected = selectedFilter == "Paid",
                     onClick = { viewModel.setFilter("Paid") },
-                    label = { Text(stringResource(R.string.paid_filter)) },
-                    leadingIcon = if (selectedFilter == "Paid") {
-                        { Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                    } else null,
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = SuccessGreen,
-                        selectedLabelColor = Color.White,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        labelColor = TextSecondaryLight
-                    ),
-                    shape = RoundedCornerShape(10.dp)
+                    text = "Paid"
                 )
             }
         }
@@ -248,30 +264,29 @@ fun CustomersList(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(Spacing.xxxlarge),
+                    .padding(32.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.medium)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Icon(
                         Icons.Outlined.PersonSearch,
                         contentDescription = null,
-                        tint = TextTertiaryLight,
-                        modifier = Modifier.size(IconSize.huge)
+                        tint = Ink400,
+                        modifier = Modifier.size(48.dp)
                     )
                     Text(
                         text = if (searchQuery.isNotEmpty()) stringResource(R.string.no_customers_matching, searchQuery)
                         else stringResource(R.string.no_filter_customers, selectedFilter.lowercase()),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextSecondaryLight,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Ink200,
                         textAlign = TextAlign.Center
                     )
                     if (searchQuery.isNotEmpty()) {
                         TextButton(onClick = { viewModel.setSearchQuery("") }) {
-                            Text(stringResource(R.string.clear_search), color = IndigoPrimary, fontWeight = FontWeight.Medium)
+                            Text(stringResource(R.string.clear_search), color = Brand300, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -279,20 +294,19 @@ fun CustomersList(
         } else {
             LazyColumn(
                 contentPadding = PaddingValues(
-                    start = Spacing.large,
-                    end = Spacing.large,
-                    top = Spacing.small,
-                    bottom = 80.dp
+                    start = 20.dp,
+                    top = 8.dp,
+                    end = 20.dp,
+                    bottom = 90.dp
                 ),
-                verticalArrangement = Arrangement.spacedBy(Spacing.listItemGap)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(count = pagedCustomers.itemCount, key = { index -> pagedCustomers[index]?.id ?: index }) { index ->
                     val customer = pagedCustomers[index]
                     if (customer != null) {
-                        CustomerCard(
+                        CustomerItemRow(
                             customer = customer,
                             db = db,
-                            colorIndex = abs(customer.id.hashCode()) % AvatarColors.size,
                             onClick = { onCustomerClick(customer.id) }
                         )
                     }
@@ -303,13 +317,44 @@ fun CustomersList(
 }
 
 @Composable
-fun CustomerCard(
+private fun FilterChipItem(
+    selected: Boolean,
+    onClick: () -> Unit,
+    text: String
+) {
+    val brush = if (selected) {
+        Brush.horizontalGradient(listOf(Brand500, Brand600))
+    } else {
+        Brush.horizontalGradient(listOf(Ink600, Ink600))
+    }
+
+    Box(
+        modifier = Modifier
+            .height(36.dp)
+            .clip(RoundedCornerShape(GrahbookRadius.pill))
+            .background(brush)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = TextStyle(
+                fontFamily = Syne,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = if (selected) Color.White else Ink200
+            )
+        )
+    }
+}
+
+@Composable
+private fun CustomerItemRow(
     customer: Customer,
     db: FullDatabase,
-    colorIndex: Int,
     onClick: () -> Unit
 ) {
-    // Calculate balance
     val transactions = db.transactions.filter { it.customerId == customer.id }
     val bills = db.bills.filter { it.customerId == customer.id }
     val payments = transactions.filter { it.type == "payment" }.sumOf { it.amount }
@@ -317,93 +362,73 @@ fun CustomerCard(
     val billTotal = bills.sumOf { it.total }
     val balance = credits + billTotal - payments
 
-    val balanceColor = when {
-        balance > 0 -> AmountDue
-        balance < 0 -> AmountCredit
-        else -> AmountNeutral
-    }
-    val balanceLabel = when {
-        balance > 0 -> stringResource(R.string.due_label)
-        balance < 0 -> stringResource(R.string.you_get_label)
-        else -> stringResource(R.string.settled_label)
+    val balanceType = when {
+        balance > 0 -> GrahbookAmountType.OUTSTANDING
+        balance < 0 -> GrahbookAmountType.RECEIVED
+        else -> GrahbookAmountType.NEUTRAL
     }
 
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = ListCardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.low)
+            .height(72.dp)
+            .clickable(onClick = onClick)
+            .background(Ink800)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Spacing.cardPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Colored avatar
-            AppAvatar(
-                name = customer.name,
-                size = ComponentSize.avatarLarge,
-                colorIndex = colorIndex
+        CustomerAvatar(
+            name = customer.name,
+            outstandingPaise = (balance * 100).toLong(),
+            size = 48.dp
+        )
+
+        Spacer(Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = customer.name,
+                style = MaterialTheme.typography.titleLarge,
+                color = Ink000,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.width(Spacing.medium))
-
-            Column(modifier = Modifier.weight(1f)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Phone,
+                    contentDescription = null,
+                    tint = Ink300,
+                    modifier = Modifier.size(12.dp)
+                )
                 Text(
-                    text = customer.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold,
+                    text = customer.phone ?: stringResource(R.string.no_phone),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Ink300,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xsmall),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.Phone,
-                        contentDescription = null,
-                        tint = StitchTeal.copy(alpha = 0.6f),
-                        modifier = Modifier.size(IconSize.xsmall)
-                    )
-                    Text(
-                        text = customer.phone ?: stringResource(R.string.no_phone),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondaryLight,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
+        }
 
-            // Balance amount
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = FormatUtils.formatCurrency(abs(balance)),
-                    style = AmountSmallStyle,
-                    fontWeight = FontWeight.Bold,
-                    color = balanceColor
-                )
-                Text(
-                    text = balanceLabel,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = balanceColor,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+        Spacer(Modifier.width(8.dp))
 
-            Spacer(modifier = Modifier.width(Spacing.small))
-
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = stringResource(R.string.view_details),
-                tint = TextTertiaryLight,
-                modifier = Modifier.size(IconSize.medium)
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            AmountText(
+                amount = (abs(balance) * 100).toLong(),
+                type = balanceType,
+                size = 16.sp
+            )
+            Text(
+                text = "2 din pehle",
+                style = MaterialTheme.typography.bodySmall,
+                color = Ink400
             )
         }
     }

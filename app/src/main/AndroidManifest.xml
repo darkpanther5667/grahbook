@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".GrahbookAppApplication"
@@ -19,6 +20,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GrahbookPro"
         android:usesCleartextTraffic="true">
+        <!-- Disable Sentry auto-init — we init manually in Application.onCreate with try-catch -->
+        <meta-data
+            android:name="io.sentry.dsn"
+            android:value="" />
+
         <activity
             android:name="com.aistudio.sharmakhata.pqmzvk.MainActivity"
             android:exported="true"

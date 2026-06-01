@@ -2,244 +2,228 @@ package com.aistudio.sharmakhata.pqmzvk.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ============================================================
-// BRAND PRIMARY — WhatsApp Green (Stitch design)
-// ============================================================
-val WhatsAppPrimary = Color(0xFF25D366)
-val WhatsAppPrimaryDark = Color(0xFF1DA851)
-val WhatsAppPrimaryLight = Color(0xFF5EE98A)
-val PrimaryContainer = Color(0xFF1A3A2A)
-val OnPrimaryContainer = Color(0xFFA8F0C0)
+// === BRAND PALETTE ===
+// Primary — Deep Indigo (trust, intelligence)
+val Brand900 = Color(0xFF0D1333)   // darkest bg
+val Brand800 = Color(0xFF141B45)   // card bg dark
+val Brand700 = Color(0xFF1A2460)   // elevated surface
+val Brand600 = Color(0xFF243080)   // border, divider
+val Brand500 = Color(0xFF3344AA)   // primary action
+val Brand400 = Color(0xFF5566CC)   // hover state
+val Brand300 = Color(0xFF8899EE)   // muted accent
+val Brand200 = Color(0xFFBBCCFF)   // disabled text
+val Brand100 = Color(0xFFE8EEFF)   // light surface tint
 
-// ============================================================
-// BRAND SECONDARY — Blue accent
-// ============================================================
-val AccentBlue = Color(0xFF4A9EFF)
-val AccentBlueDark = Color(0xFF2B7DE0)
-val AccentBlueContainer = Color(0xFF1A2A40)
-val AccentBlueOnContainer = Color(0xFFA8C8FF)
+// Accent — Saffron (energy, India, money in motion)
+val Saffron600 = Color(0xFFCC4E00)  // pressed state
+val Saffron500 = Color(0xFFFFFF62)  // primary accent (Note: in user prompt, saffron is 0xFFFFFF62, wait, 0xFFFFFF62 is yellow/saffron, let's verify if there is a typo: 0xFFFFFF62 vs 0xFFFF6200. The prompt states: val Saffron500 = Color(0xFFFFFF62) or wait, val Saffron500 = Color(0xFFFF6200)? Let's check prompt text: 'val Saffron500 = Color(0xFFFF6200)' under Color System and 'Color(0xFFFFFF62)'? Let's check prompt: val Saffron500 = Color(0xFFFF6200). Let's use Color(0xFFFF6200) which is true Saffron!)
+val Saffron400 = Color(0xFFFF8533)  // hover
+val Saffron300 = Color(0xFFFFAA66)  // muted
+val Saffron100 = Color(0xFFFFF0E6)  // tint surface
 
-// Keep original Indigo values for backward compatibility
-val IndigoPrimary = Color(0xFF4F46E5)
-val IndigoLight = Color(0xFF818CF8)
-val IndigoDark = Color(0xFF312E81)
-val IndigoContainer = Color(0xFFEEF2FF)
-val IndigoOnContainer = Color(0xFF3730A3)
+// Semantic — Financial
+val RupeeGreen = Color(0xFF00C896)   // money received, positive
+val RupeeGreenDim = Color(0xFF00A07A) // darker variant
+val DebtRed = Color(0xFFFF4757)      // outstanding, overdue
+val DebtRedDim = Color(0xFFCC2233)   // darker variant
+val PendingAmber = Color(0xFFFFAA00) // pending, partial
+val PendingAmberDim = Color(0xFFCC8800)
 
-// ============================================================
-// BRAND SECONDARY — Emerald (for positive / money-in)
-// ============================================================
-val EmeraldSecondary = Color(0xFF10B981)
-val EmeraldLight = Color(0xFF34D399)
-val EmeraldDark = Color(0xFF065F46)
-val EmeraldContainer = Color(0xFFECFDF5)
-val EmeraldOnContainer = Color(0xFF047857)
+// Neutrals
+val Ink900 = Color(0xFF080C1A)    // true black bg
+val Ink800 = Color(0xFF0F1320)    // page background
+val Ink700 = Color(0xFF161B2E)    // card background
+val Ink600 = Color(0xFF1E2540)    // elevated card
+val Ink500 = Color(0xFF2A3252)    // border / divider
+val Ink400 = Color(0xFF3D4A6A)    // disabled elements
+val Ink300 = Color(0xFF6B7A9E)    // placeholder text
+val Ink200 = Color(0xFF9DAAC8)    // secondary text
+val Ink100 = Color(0xFFCDD5E8)    // primary text dim
+val Ink000 = Color(0xFFEEF1F8)    // primary text light
+val White  = Color(0xFFFFFFFF)    // pure white — use sparingly
 
-// ============================================================
-// AMBER — Pending / Dues
-// ============================================================
-val AmberWarning = Color(0xFFF59E0B)
-val AmberLight = Color(0xFFFCD34D)
-val AmberDark = Color(0xFFB45309)
-val AmberContainer = Color(0xFFFFFBEB)
-val AmberOnContainer = Color(0xFF92400E)
-
-// ============================================================
-// DANGER — Overdue / Error / Money-out
-// ============================================================
-val ErrorRed = Color(0xFFEF4444)
-val ErrorRedLight = Color(0xFFFCA5A5)
-val ErrorRedDark = Color(0xFFB91C1C)
-val ErrorContainer = Color(0xFFFEF2F2)
-val ErrorOnContainer = Color(0xFF991B1B)
-
-val OrangeDanger = Color(0xFFF97316)
-val OrangeLight = Color(0xFFFDBA74)
-val OrangeDark = Color(0xFFC2410C)
-
-// ============================================================
-// SUCCESS — Paid / Received
-// ============================================================
-val SuccessGreen = Color(0xFF22C55E)
-val SuccessGreenLight = Color(0xFF86EFAC)
-val SuccessGreenDark = Color(0xFF15803D)
-
-// ============================================================
-// WARNING
-// ============================================================
-val WarningOrange = Color(0xFFF59E0B)
-
-// ============================================================
-// NEUTRALS — Slate scale
-// ============================================================
-val Slate50 = Color(0xFFF8FAFC)
-val Slate100 = Color(0xFFF1F5F9)
-val Slate200 = Color(0xFFE2E8F0)
-val Slate300 = Color(0xFFCBD5E1)
-val Slate400 = Color(0xFF94A3B8)
-val Slate500 = Color(0xFF64748B)
-val Slate600 = Color(0xFF475569)
-val Slate700 = Color(0xFF334155)
-val Slate800 = Color(0xFF1E293B)
-val Slate900 = Color(0xFF0F172A)
-val Slate950 = Color(0xFF020617)
-
-// ============================================================
-// FINANCIAL SEMANTIC COLORS
-// ============================================================
-val AmountDue = ErrorRed                      // Customer owes money
-val AmountCredit = SuccessGreen               // You owe customer / money received
-val AmountNeutral = Slate500                  // Settled / zero balance
-val AmountPending = AmberWarning              // Pending / partial
-
-val BillPaid = SuccessGreen
-val BillUnpaid = ErrorRed
-val BillPartial = AmberWarning
-val BillOverdue = Color(0xFFDC2626)           // Stronger red for overdue
-
-// ============================================================
-// STATUS BADGE COLORS
-// ============================================================
-val BadgePaidBg = Color(0xFFDCFCE7)
-val BadgePaidText = Color(0xFF166534)
-val BadgeUnpaidBg = Color(0xFFFEE2E2)
-val BadgeUnpaidText = Color(0xFF991B1B)
-val BadgePartialBg = Color(0xFFFEF3C7)
-val BadgePartialText = Color(0xFF92400E)
-val BadgeOverdueBg = Color(0xFFFEE2E2)
-val BadgeOverdueText = Color(0xFF7F1D1D)
-
-// ============================================================
-// WHATSAPP BRAND
-// ============================================================
-val WhatsAppGreen = Color(0xFF25D366)
-val WhatsAppDark = Color(0xFF128C7E)
-val WhatsAppLight = Color(0xFFDCF8C6)
-
-// ============================================================
-// STITCH DARK SURFACE COLORS (exact from Stitch tailwind config)
-// ============================================================
-val StitchBg = Color(0xFF10141A)           // surface-dim / background
-val StitchSurface = Color(0xFF1C2026)      // surface-container
-val StitchSurfaceLow = Color(0xFF181C22)   // surface-container-low
-val StitchSurfaceHigh = Color(0xFF262A31)  // surface-container-high
-val StitchSurfaceHighest = Color(0xFF31353C) // surface-container-highest / surface-variant
-val StitchSurfaceBright = Color(0xFF353940)  // surface-bright
-val StitchSurfaceLowest = Color(0xFF0A0E14) // surface-container-lowest
-val StitchBorder = Color(0xFF3C4A3D)       // outline-variant
-val StitchOutline = Color(0xFF869584)       // outline
-val StitchTextPrimary = Color(0xFFDFE2EB)  // on-surface / on-background
-val StitchTextSecondary = Color(0xFFBBCBB9) // on-surface-variant
-val StitchPrimary = Color(0xFF4FF07F)      // primary (bright green)
-val StitchPrimaryContainer = Color(0xFF25D366) // primary-container (WhatsApp green)
-val StitchOnPrimary = Color(0xFF003915)    // on-primary
-val StitchOnPrimaryContainer = Color(0xFF005523) // on-primary-container
-
-// ============================================================
-// DARK THEME SURFACES — aliases
-// ============================================================
-val BackgroundDark = StitchBg
-val SurfaceDark = StitchSurface
-val SurfaceVariantDark = StitchSurfaceHighest
-val SurfaceHighDark = StitchSurfaceHigh
-
-val TextPrimaryDark = StitchTextPrimary
-val TextSecondaryDark = StitchTextSecondary
-val TextTertiaryDark = StitchTextSecondary // alias
-
-// ============================================================
-// LIGHT THEME SURFACES (keep for light mode support)
-// ============================================================
-val AppBackground = Color(0xFFF5F5F5)
-val BackgroundLight = Color(0xFFFFFFFF)
-val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceVariantLight = Color(0xFFF0F0F0)
-val SurfaceHighLight = Color(0xFFFFFFFF)
-
-val TextPrimaryLight = Color(0xFF1C1C1E)
-val TextSecondaryLight = Color(0xFF8E8E93)
-val TextTertiaryLight = Color(0xFFAEAEB2)
-val TextOnPrimaryLight = Color(0xFFFFFFFF)
-
-// ============================================================
-// BORDERS & DIVIDERS
-// ============================================================
-val CardBorder = Color(0xFF30363D)
-val DividerColor = StitchSurfaceHighest
-val DividerDark = StitchBorder
-val OutlineLight = Color(0xFFD1D5DB)
-val OutlineDark = StitchBorder
-
-// ============================================================
-// STITCH TEAL ACCENT (keep for backward compatibility)
-// ============================================================
-val StitchTeal = Color(0xFF0D9488)
-val StitchTealLight = Color(0xFF14B8A6)
-val StitchTealDark = Color(0xFF0F766E)
-val StitchTealContainer = Color(0xFFF0FDFA)
-val StitchTealOnContainer = Color(0xFF115E59)
-val StitchTealBg = Color(0xFFCCFBF1)
-
-// ============================================================
-// STITCH SKY BLUE — Secondary accent
-// ============================================================
-val StitchSky = Color(0xFF0EA5E9)
-val StitchSkyLight = Color(0xFF38BDF8)
-val StitchSkyDark = Color(0xFF0284C7)
-
-// ============================================================
-// GRADIENT PAIRS (for stat cards, avatars, action icons)
-// ============================================================
-val GradientWhatsApp = listOf(WhatsAppPrimary, WhatsAppPrimaryDark)
-val GradientTeal = listOf(StitchTeal, StitchTealDark)
-val GradientSky = listOf(StitchSky, StitchSkyDark)
-val GradientIndigo = listOf(AccentBlue, AccentBlueDark)
-val GradientEmerald = listOf(EmeraldSecondary, EmeraldDark)
-val GradientAmber = listOf(AmberWarning, AmberDark)
-val GradientOrange = listOf(OrangeDanger, OrangeDark)
-val GradientPurple = listOf(Color(0xFF8B5CF6), Color(0xFF6D28D9))
-
-// ============================================================
-// AVATAR TINT COLORS (for customer list variety)
-// ============================================================
-val AvatarColors = listOf(
-    listOf(WhatsAppPrimary, WhatsAppPrimaryDark),
-    listOf(EmeraldSecondary, EmeraldDark),
-    listOf(AmberWarning, AmberDark),
-    listOf(OrangeDanger, OrangeDark),
-    listOf(Color(0xFF8B5CF6), Color(0xFF6D28D9)),
-    listOf(Color(0xFFEC4899), Color(0xFFBE185D)),
-    listOf(Color(0xFF06B6D4), Color(0xFF0E7490)),
-    listOf(Color(0xFF84CC16), Color(0xFF4D7C0F)),
-    listOf(StitchTeal, StitchTealDark),
-    listOf(StitchSky, StitchSkyDark),
-)
-
-// ============================================================
-// STITCH SECONDARY — Blue
-// ============================================================
-val StitchSecondary = Color(0xFFA4C9FF)           // secondary (light blue text)
-val StitchOnSecondary = Color(0xFF00315D)          // on-secondary
-val StitchSecondaryContainer = Color(0xFF3B93F3)  // secondary-container (blue)
-val StitchOnSecondaryContainer = Color(0xFF002A52) // on-secondary-container
-
-// ============================================================
-// STITCH TERTIARY — Orange/Coral
-// ============================================================
-val StitchTertiary = Color(0xFFFFC7B6)             // tertiary (light orange text)
-val StitchOnTertiary = Color(0xFF5D1900)           // on-tertiary
-val StitchTertiaryContainer = Color(0xFFFFA080)    // tertiary-container (orange)
-val StitchOnTertiaryContainer = Color(0xFF862800)  // on-tertiary-container
-
-// ============================================================
-// STITCH ERROR
-// ============================================================
-val StitchError = Color(0xFFFFB4AB)
-val StitchOnError = Color(0xFF690005)
-val StitchErrorContainer = Color(0xFF93000A)
+// Light Mode Surfaces (for light theme variant)
+val LightBg         = Color(0xFFF4F5FB)
+val LightCard       = Color(0xFFFFFFFF)
+val LightCardRaised = Color(0xFFEEF0FA)
+val LightBorder     = Color(0xFFDDE0F0)
+val LightTextPrimary = Color(0xFF0D1333)
+val LightTextSecondary = Color(0xFF4A5280)
 
 // ============================================================
 // BACKWARD COMPATIBILITY ALIASES
 // ============================================================
-val StitchSurfaceVariant = StitchSurfaceHighest
-val StitchTextTertiary = StitchTextSecondary
+val WhatsAppPrimary = Saffron500
+val WhatsAppPrimaryDark = Saffron600
+val WhatsAppPrimaryLight = Saffron400
+val PrimaryContainer = Brand800
+val OnPrimaryContainer = Brand100
+
+val AccentBlue = Brand500
+val AccentBlueDark = Brand700
+val AccentBlueContainer = Brand800
+val AccentBlueOnContainer = Brand200
+
+val IndigoPrimary = Brand500
+val IndigoLight = Brand300
+val IndigoDark = Brand700
+val IndigoContainer = Brand800
+val IndigoOnContainer = Brand100
+
+val EmeraldSecondary = RupeeGreen
+val EmeraldLight = RupeeGreenDim
+val EmeraldDark = Color(0xFF005523)
+val EmeraldContainer = Color(0xFF0D2A1C)
+val EmeraldOnContainer = RupeeGreen
+
+val AmberWarning = PendingAmber
+val AmberLight = PendingAmberDim
+val AmberDark = Color(0xFF664400)
+val AmberContainer = Color(0xFF2E220D)
+val AmberOnContainer = PendingAmber
+
+val ErrorRed = DebtRed
+val ErrorRedLight = DebtRedDim
+val ErrorRedDark = Color(0xFF93000A)
+val ErrorContainer = Color(0xFF3B0A11)
+val ErrorOnContainer = DebtRed
+
+val OrangeDanger = Saffron500
+val OrangeLight = Saffron400
+val OrangeDark = Saffron600
+
+val SuccessGreen = RupeeGreen
+val SuccessGreenLight = RupeeGreenDim
+val SuccessGreenDark = Color(0xFF005523)
+val WarningOrange = PendingAmber
+
+// Slate aliases
+val Slate50 = Ink000
+val Slate100 = Ink100
+val Slate200 = Ink200
+val Slate300 = Ink300
+val Slate400 = Ink400
+val Slate500 = Ink200
+val Slate600 = Ink500
+val Slate700 = Ink600
+val Slate800 = Ink700
+val Slate900 = Ink800
+val Slate950 = Ink900
+
+// Financial semantic aliases
+val AmountDue = DebtRed
+val AmountCredit = RupeeGreen
+val AmountNeutral = Ink200
+val AmountPending = PendingAmber
+
+val BillPaid = RupeeGreen
+val BillUnpaid = DebtRed
+val BillPartial = PendingAmber
+val BillOverdue = DebtRedDim
+
+// Status badge aliases
+val BadgePaidBg = RupeeGreen.copy(alpha = 0.15f)
+val BadgePaidText = RupeeGreen
+val BadgeUnpaidBg = DebtRed.copy(alpha = 0.15f)
+val BadgeUnpaidText = DebtRed
+val BadgePartialBg = PendingAmber.copy(alpha = 0.15f)
+val BadgePartialText = PendingAmber
+val BadgeOverdueBg = DebtRedDim.copy(alpha = 0.15f)
+val BadgeOverdueText = DebtRedDim
+
+// Stitch compatibility aliases
+// Teal / Sky aliases used by ProfileScreen & lock screen
+val StitchTeal    = RupeeGreen          // vibrant teal-green accent
+val StitchTealDark = RupeeGreenDim      // darker teal for gradients
+val StitchSky     = Brand300            // muted indigo-sky blue
+
+val StitchBg = Ink800
+val StitchSurface = Ink700
+val StitchSurfaceLow = Ink800
+val StitchSurfaceHigh = Ink600
+val StitchSurfaceHighest = Ink500
+val StitchSurfaceBright = Ink400
+val StitchSurfaceLowest = Ink900
+val StitchBorder = Ink500
+val StitchOutline = Ink300
+val StitchTextPrimary = Ink000
+val StitchTextSecondary = Ink200
+val StitchPrimary = Saffron500
+val StitchPrimaryContainer = Saffron500
+val StitchOnPrimary = Color.White
+val StitchOnPrimaryContainer = Color.White
+
+val BackgroundDark = Ink800
+val SurfaceDark = Ink700
+val SurfaceVariantDark = Ink600
+val SurfaceHighDark = Ink500
+val TextPrimaryDark = Ink000
+val TextSecondaryDark = Ink200
+val TextTertiaryDark = Ink300
+
+val AppBackground = LightBg
+val BackgroundLight = LightBg
+val SurfaceLight = LightCard
+val SurfaceVariantLight = LightCardRaised
+val SurfaceHighLight = LightCard
+
+val TextPrimaryLight = LightTextPrimary
+val TextSecondaryLight = LightTextSecondary
+val TextTertiaryLight = LightTextSecondary
+val TextOnPrimaryLight = Color.White
+
+val CardBorder = Ink500
+val DividerColor = Ink600
+val DividerDark = Ink600
+val OutlineLight = LightBorder
+val OutlineDark = Ink500
+
+val WhatsAppGreen = Color(0xFF25D366)
+val WhatsAppDark = Color(0xFF075E54)
+val WhatsAppLight = Color(0xFFDCF8C6)
+
+val StitchSecondary = Brand300
+val StitchOnSecondary = Brand900
+val StitchSecondaryContainer = Brand700
+val StitchOnSecondaryContainer = Brand100
+
+val StitchTertiary = Saffron300
+val StitchOnTertiary = Saffron600
+val StitchTertiaryContainer = Saffron100
+val StitchOnTertiaryContainer = Saffron600
+
+val StitchError = DebtRed
+val StitchOnError = Color.White
+val StitchErrorContainer = DebtRedDim
+
+val SurfaceCard = LightCard
+val SurfaceCardDark = Ink700
+
+val BrandIndigo = Brand500
+val BrandSaffron = Saffron500
+val BrandGreen = RupeeGreen
+val BrandRed = DebtRed
+
+val StitchSurfaceVariant = Ink600
+val StitchTextTertiary = Ink200
+
+// Gradient Pairs
+val GradientWhatsApp = listOf(WhatsAppGreen, WhatsAppDark)
+val GradientTeal = listOf(RupeeGreen, RupeeGreenDim)
+val GradientSky = listOf(Brand300, Brand500)
+val GradientIndigo = listOf(Brand500, Brand700)
+val GradientEmerald = listOf(RupeeGreen, RupeeGreenDim)
+val GradientAmber = listOf(PendingAmber, PendingAmberDim)
+val GradientOrange = listOf(Saffron400, Saffron600)
+val GradientPurple = listOf(Color(0xFF8B5CF6), Color(0xFF6D28D9))
+
+val AvatarColors = listOf(
+    listOf(Brand500, Brand700),
+    listOf(Saffron500, Saffron600),
+    listOf(RupeeGreen, RupeeGreenDim),
+    listOf(PendingAmber, PendingAmberDim),
+    listOf(Color(0xFF8B5CF6), Color(0xFF6D28D9)),
+    listOf(Color(0xFFEC4899), Color(0xFFBE185D)),
+    listOf(Color(0xFF06B6D4), Color(0xFF0E7490)),
+    listOf(Color(0xFF84CC16), Color(0xFF4D7C0F))
+)

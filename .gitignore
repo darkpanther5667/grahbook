@@ -16,6 +16,8 @@
 local.properties
 .env
 .env.android
+.env.local
+client-web/.env.local
 debug.keystore
 db.json
 .aider*
@@ -27,3 +29,4 @@ scratch/
 stitch_assets/
 stitch_ui/
 .kiro/
+*.apk

@@ -57,6 +57,7 @@ function requiresMobileApiKey(req) {
   if (req.method === 'GET') {
     if (req.path === '/api/test-db') return false;
     if (req.path === '/api/test-wa') return false;
+    if (req.path === '/api/app/version') return false;
     if (/^\/api\/bill\/[^/]+\/pdf$/.test(req.path)) return false;
     if (/^\/api\/customer\/[^/]+\/statement\/pdf$/.test(req.path)) return false;
     if (/^\/api\/report\/[^/]+\/pdf$/.test(req.path)) return false;
@@ -101,6 +102,7 @@ function requiresSessionAuth(req) {
   if (req.method === 'GET') {
     if (req.path === '/api/test-db') return false;
     if (req.path === '/api/test-wa') return false;
+    if (req.path === '/api/app/version') return false;
     if (/^\/api\/bill\/[^/]+\/pdf$/.test(req.path)) return false;
     if (/^\/api\/customer\/[^/]+\/statement\/pdf$/.test(req.path)) return false;
     if (/^\/api\/report\/[^/]+\/pdf$/.test(req.path)) return false;
@@ -1688,6 +1690,32 @@ app.get('/api/test-wa', async (req, res) => {
       error: error.response ? error.response.data : error.message 
     });
   }
+});
+
+// ─── OTA APP UPDATE ──────────────────────────────────────────────────────────
+
+// Serve APK files from /public/downloads/ statically
+app.use('/downloads', express.static(path.join(__dirname, 'public', 'downloads')));
+
+/**
+ * GET /api/app/version
+ * Returns the current latest Android app version info.
+ * The Android app checks this on every launch and prompts the user to update
+ * if the server's versionCode is greater than the installed app's versionCode.
+ *
+ * To release a new version:
+ *   1. Bump versionCode and versionName below
+ *   2. Upload the new APK to public/downloads/grahbook-latest.apk
+ *   3. Commit and push — Render redeploys automatically
+ */
+app.get('/api/app/version', (req, res) => {
+  res.json({
+    versionCode: 1,          // ← BUMP THIS on every new release (must be integer, always increasing)
+    versionName: '1.0',      // ← Human-readable version shown in the update dialog
+    apkUrl: `${process.env.PUBLIC_BASE_URL || 'https://wpapp-xz9l.onrender.com'}/downloads/grahbook-latest.apk`,
+    releaseNotes: 'Initial release.',
+    mandatory: false          // ← Set true to force all users to update before using the app
+  });
 });
 
 // GET /api/test-db — Diagnostic route to check DB connection and setup default store
