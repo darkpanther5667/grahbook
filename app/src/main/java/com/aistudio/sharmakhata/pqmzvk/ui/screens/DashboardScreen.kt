@@ -21,10 +21,12 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -49,6 +51,7 @@ import com.aistudio.sharmakhata.pqmzvk.ui.components.AmountText
 import com.aistudio.sharmakhata.pqmzvk.ui.components.GrahbookAmountType
 import com.aistudio.sharmakhata.pqmzvk.ui.components.CustomerAvatar
 import com.aistudio.sharmakhata.pqmzvk.ui.components.MetricCard
+import com.aistudio.sharmakhata.pqmzvk.ui.components.SalesTrendChart
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -231,6 +234,17 @@ private fun DashboardTopBar(
             }
 
             // WhatsApp Bot Status
+            val infiniteTransition = rememberInfiniteTransition(label = "top_bot_pulse")
+            val dotAlpha by infiniteTransition.animateFloat(
+                initialValue = 0.4f,
+                targetValue = 1.0f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1200, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "dot_alpha"
+            )
+
             IconButton(onClick = onMenuClick) {
                 Box {
                     Icon(
@@ -243,6 +257,11 @@ private fun DashboardTopBar(
                             .size(8.dp)
                             .clip(CircleShape)
                             .background(if (isBotActive) RupeeGreen else MaterialTheme.colorScheme.outline)
+                            .graphicsLayer {
+                                if (isBotActive) {
+                                    this.alpha = dotAlpha
+                                }
+                            }
                             .align(Alignment.TopEnd)
                     )
                 }
@@ -290,8 +309,24 @@ private fun DashboardContent(
         else -> null
     }
 
+    val animY = remember { Animatable(45f) }
+    val alpha = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        launch {
+            animY.animateTo(0f, animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing))
+        }
+        launch {
+            alpha.animateTo(1f, animationSpec = tween(durationMillis = 450))
+        }
+    }
+
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                this.alpha = alpha.value
+                this.translationY = animY.value
+            },
         contentPadding = PaddingValues(bottom = 90.dp), // space for bottom nav
         verticalArrangement = Arrangement.spacedBy(GrahbookSpacing.lg)
     ) {
@@ -356,6 +391,16 @@ private fun DashboardContent(
                         icon = Icons.Default.Inventory2
                     )
                 }
+            }
+        }
+
+        // ===== SECTION 1.5: SALES TREND CHART =====
+        item {
+            if (db != null) {
+                SalesTrendChart(
+                    bills = db.bills,
+                    modifier = Modifier.padding(bottom = GrahbookSpacing.xs)
+                )
             }
         }
 
@@ -471,7 +516,8 @@ private fun QuickActionsCard(
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
         shape = RoundedCornerShape(GrahbookRadius.lg),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Row(
             modifier = Modifier
@@ -543,7 +589,8 @@ private fun WhatsAppBotActiveCard(onWhatsApp: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
         shape = RoundedCornerShape(GrahbookRadius.lg),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        border = BorderStroke(1.dp, Color(0xFF25D366).copy(alpha = 0.25f))
     ) {
         val infiniteTransition = rememberInfiniteTransition(label = "pulse")
         val dotScale by infiniteTransition.animateFloat(

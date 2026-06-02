@@ -7,6 +7,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -140,7 +144,31 @@ fun AppNavGraph(
             NavHost(
                 navController = navController,
                 startDestination = startDestination,
-                modifier = Modifier.padding(padding)
+                modifier = Modifier.padding(padding),
+                enterTransition = {
+                    fadeIn(animationSpec = tween(220)) + slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Start,
+                        animationSpec = tween(220)
+                    )
+                },
+                exitTransition = {
+                    fadeOut(animationSpec = tween(220)) + slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Start,
+                        animationSpec = tween(220)
+                    )
+                },
+                popEnterTransition = {
+                    fadeIn(animationSpec = tween(220)) + slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.End,
+                        animationSpec = tween(220)
+                    )
+                },
+                popExitTransition = {
+                    fadeOut(animationSpec = tween(220)) + slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.End,
+                        animationSpec = tween(220)
+                    )
+                }
             ) {
                 // ===== AUTH ROUTES =====
                 composable(NavRoutes.LOGIN) {
