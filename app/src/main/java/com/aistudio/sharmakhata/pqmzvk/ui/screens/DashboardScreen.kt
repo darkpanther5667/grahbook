@@ -156,26 +156,25 @@ private fun SyncStatusStrip(isSyncing: Boolean) {
         modifier = Modifier
             .fillMaxWidth()
             .height(28.dp)
-            .background(Ink900),
+            .background(MaterialTheme.colorScheme.surfaceVariant),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = if (isSyncing) Icons.Default.Sync else Icons.Default.Wifi,
             contentDescription = null,
-            tint = if (isSyncing) Saffron500 else RupeeGreen,
+            tint = if (isSyncing) MaterialTheme.colorScheme.primary else RupeeGreen,
             modifier = Modifier.size(14.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = if (isSyncing) "Syncing..." else "Last synced: 2 min ago",
             style = MaterialTheme.typography.bodySmall,
-            color = Ink300
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
         )
     }
 }
 
-// ===== CUSTOM TOP BAR =====
 @Composable
 private fun DashboardTopBar(
     shopName: String,
@@ -183,12 +182,13 @@ private fun DashboardTopBar(
     shopInitial: String,
     isBotActive: Boolean
 ) {
-    Box(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Ink800)
             .statusBarsPadding()
-            .height(64.dp)
+            .height(64.dp),
+        color = MaterialTheme.colorScheme.background,
+        tonalElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
@@ -658,7 +658,6 @@ private fun WhatsAppBotActiveCard(onWhatsApp: () -> Unit) {
     }
 }
 
-// ===== TRANSACTION ITEM =====
 @Composable
 private fun TransactionItem(
     name: String,
@@ -668,44 +667,52 @@ private fun TransactionItem(
     time: String,
     onClick: () -> Unit
 ) {
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .clickable { onClick() }
-            .padding(horizontal = 20.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 20.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
     ) {
-        CustomerAvatar(name = name, outstandingPaise = outstanding, size = 40.dp)
-        
-        Spacer(modifier = Modifier.width(12.dp))
-        
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                name,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                detail,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        
-        Column(horizontalAlignment = Alignment.End) {
-            AmountText(
-                amount = outstanding,
-                type = if (isPositive) GrahbookAmountType.RECEIVED else GrahbookAmountType.OUTSTANDING,
-                size = 17.sp
-            )
-            Text(
-                text = time,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CustomerAvatar(name = name, outstandingPaise = outstanding, size = 36.dp)
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    name,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    detail,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                AmountText(
+                    amount = outstanding,
+                    type = if (isPositive) GrahbookAmountType.RECEIVED else GrahbookAmountType.OUTSTANDING,
+                    size = 15.sp
+                )
+                Text(
+                    text = time,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
         }
     }
 }

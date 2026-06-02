@@ -22,10 +22,7 @@ val Poppins = FontFamily(
 val Syne = Poppins
 val DMSans = Poppins
 
-val JetBrainsMono = FontFamily(
-    Font(R.font.jetbrainsmono_regular, FontWeight.Normal),
-    Font(R.font.jetbrainsmono_bold, FontWeight.Bold)
-)
+val JetBrainsMono = Poppins
 
 // === GRAHBOOK PRO TYPOGRAPHY ===
 

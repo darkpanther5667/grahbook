@@ -1,6 +1,8 @@
 package com.aistudio.sharmakhata.pqmzvk.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -248,17 +250,27 @@ private fun FilterChipItem(
     onClick: () -> Unit,
     text: String
 ) {
-    val brush = if (selected) {
-        Brush.horizontalGradient(listOf(Brand500, Brand600))
+    val containerColor = if (selected) {
+        MaterialTheme.colorScheme.primary
     } else {
-        Brush.horizontalGradient(listOf(Ink600, Ink600))
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    val textColor = if (selected) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Box(
         modifier = Modifier
-            .height(32.dp)
+            .height(34.dp)
             .clip(RoundedCornerShape(GrahbookRadius.pill))
-            .background(brush)
+            .background(containerColor)
+            .border(
+                width = 1.dp,
+                color = if (selected) Color.Transparent else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(GrahbookRadius.pill)
+            )
             .clickable { onClick() }
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center
@@ -269,7 +281,7 @@ private fun FilterChipItem(
                 fontFamily = Syne,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
-                color = if (selected) Color.White else Ink200
+                color = textColor
             )
         )
     }
@@ -286,134 +298,161 @@ private fun InvoiceCard(
     val isPaid = bill.status == "paid"
     val status = when {
         isPaid -> GrahbookStatus.PAID
-        bill.status == "overdue" -> GrahbookStatus.LOW_STOCK // low stock has same warning amber color
+        bill.status == "overdue" -> GrahbookStatus.LOW_STOCK
         else -> GrahbookStatus.UNPAID
     }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(GrahbookRadius.lg),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Top row: Invoice # and Status Badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+        ) {
+            // Visual left semantic stripe
+            val stripeColor = when (status) {
+                GrahbookStatus.PAID -> RupeeGreen
+                GrahbookStatus.LOW_STOCK -> PendingAmber
+                else -> DebtRed
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(4.dp)
+                    .background(stripeColor)
+            )
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(16.dp)
             ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.invoice_hash, bill.id.take(8).uppercase()),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                // Top row: Invoice # and Status Badge
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.invoice_hash, bill.id.take(8).uppercase()),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = FormatUtils.formatDate(bill.createdAt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    StatusBadge(status = status)
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Customer name
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
                     )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = FormatUtils.formatDate(bill.createdAt),
+                        text = customerName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Total Amount
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.total_amount),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    AmountText(
+                        amount = (bill.total * 100).toLong(),
+                        type = if (isPaid) GrahbookAmountType.RECEIVED else GrahbookAmountType.OUTSTANDING,
+                        size = 20.sp
+                    )
+                }
+
+                // Items count if any
+                if (bill.items.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.items_count, bill.items.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                StatusBadge(status = status)
-            }
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Customer name
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Person,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = customerName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Total Amount
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.total_amount),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                AmountText(
-                    amount = (bill.total * 100).toLong(),
-                    type = if (isPaid) GrahbookAmountType.RECEIVED else GrahbookAmountType.OUTSTANDING,
-                    size = 20.sp
-                )
-            }
-
-            // Items count if any
-            if (bill.items.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.items_count, bill.items.size),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Action buttons row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // PDF Button
-                OutlinedButton(
-                    onClick = onOpenPdf,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(GrahbookRadius.md),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                // Action buttons row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.pdf_label), fontSize = 12.sp, fontFamily = Syne)
-                }
-
-                // WhatsApp Button
-                OutlinedButton(
-                    onClick = onSendWhatsApp,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(GrahbookRadius.md),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF25D366)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                ) {
-                    Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.whatsapp_label), fontSize = 12.sp, fontFamily = Syne)
-                }
-
-                // Mark Paid Button (only if unpaid)
-                if (!isPaid) {
-                    Button(
-                        onClick = onMarkPaid,
+                    // PDF Button
+                    OutlinedButton(
+                        onClick = onOpenPdf,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(GrahbookRadius.md),
-                        colors = ButtonDefaults.buttonColors(containerColor = RupeeGreen)
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                     ) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.mark_paid_button), fontSize = 12.sp, fontFamily = Syne, color = Color.White)
+                        Text(stringResource(R.string.pdf_label), fontSize = 12.sp, fontFamily = Syne)
+                    }
+
+                    // WhatsApp Button
+                    OutlinedButton(
+                        onClick = onSendWhatsApp,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF25D366)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                    ) {
+                        Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.whatsapp_label), fontSize = 12.sp, fontFamily = Syne)
+                    }
+
+                    // Mark Paid Button (only if unpaid)
+                    if (!isPaid) {
+                        Button(
+                            onClick = onMarkPaid,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = RupeeGreen)
+                        ) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.mark_paid_button), fontSize = 12.sp, fontFamily = Syne, color = Color.White)
+                        }
                     }
                 }
             }

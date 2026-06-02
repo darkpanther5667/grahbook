@@ -3,6 +3,7 @@ package com.aistudio.sharmakhata.pqmzvk.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -58,17 +59,19 @@ fun FloatingBottomNav(
     ) {
         Surface(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 16.dp)
-                .height(64.dp)
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .height(68.dp)
                 .fillMaxWidth(),
-            shape = RoundedCornerShape(GrahbookRadius.xxl),
-            color = Ink700,
-            shadowElevation = 8.dp
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 10.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -77,13 +80,13 @@ fun FloatingBottomNav(
                     
                     var isPressed by remember { mutableStateOf(false) }
                     val scale by animateFloatAsState(
-                        targetValue = if (isPressed) 0.85f else 1f,
-                        animationSpec = spring(dampingRatio = 0.5f, stiffness = 400f),
+                        targetValue = if (isPressed) 0.9f else 1f,
+                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f),
                         label = "nav_item_scale"
                     )
 
                     val tintColor by animateColorAsState(
-                        targetValue = if (selected) Saffron500 else Ink300,
+                        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         label = "nav_item_tint"
                     )
 
@@ -92,7 +95,7 @@ fun FloatingBottomNav(
                             .weight(1f)
                             .fillMaxHeight()
                             .scale(scale)
-                            .clip(RoundedCornerShape(GrahbookRadius.lg))
+                            .clip(RoundedCornerShape(12.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 isPressed = true
@@ -104,9 +107,9 @@ fun FloatingBottomNav(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(38.dp)
                                 .then(
-                                    if (selected) Modifier.background(Brand600.copy(alpha = 0.3f), CircleShape)
+                                    if (selected) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                                     else Modifier
                                 ),
                             contentAlignment = Alignment.Center
@@ -118,7 +121,7 @@ fun FloatingBottomNav(
                                 modifier = Modifier.size(22.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = item.label,
                             color = tintColor,

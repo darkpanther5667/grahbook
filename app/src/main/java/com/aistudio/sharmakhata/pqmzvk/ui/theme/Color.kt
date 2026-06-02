@@ -7,51 +7,51 @@ import androidx.compose.material3.MaterialTheme
 
 // === BRAND PALETTE ===
 // Primary — Deep Indigo (trust, intelligence)
-val Brand900 = Color(0xFF0D1333)   // darkest bg
-val Brand800 = Color(0xFF141B45)   // card bg dark
-val Brand700 = Color(0xFF1A2460)   // elevated surface
-val Brand600 = Color(0xFF243080)   // border, divider
-val Brand500 = Color(0xFF3344AA)   // primary action
-val Brand400 = Color(0xFF5566CC)   // hover state
-val Brand300 = Color(0xFF8899EE)   // muted accent
-val Brand200 = Color(0xFFBBCCFF)   // disabled text
-val Brand100 = Color(0xFFE8EEFF)   // light surface tint
+val Brand900 = Color(0xFF1E1B4B)   // darkest bg
+val Brand800 = Color(0xFF312E81)   // card bg dark
+val Brand700 = Color(0xFF3730A3)   // elevated surface
+val Brand600 = Color(0xFF4338CA)   // border, divider
+val Brand500 = Color(0xFF4F46E5)   // primary action
+val Brand400 = Color(0xFF6366F1)   // hover state
+val Brand300 = Color(0xFFA5B4FC)   // muted accent
+val Brand200 = Color(0xFFC7D2FE)   // disabled text
+val Brand100 = Color(0xFFE0E7FF)   // light surface tint
 
 // Accent — Saffron (energy, India, money in motion)
-val Saffron600 = Color(0xFFCC4E00)  // pressed state
-val Saffron500 = Color(0xFFFF6200)  // primary accent (true saffron/orange color for modern contrast)
-val Saffron400 = Color(0xFFFF8533)  // hover
-val Saffron300 = Color(0xFFFFAA66)  // muted
+val Saffron600 = Color(0xFFD45900)  // pressed state
+val Saffron500 = Color(0xFFFF6B00)  // primary accent (true saffron/orange color for modern contrast)
+val Saffron400 = Color(0xFFFF8C33)  // hover
+val Saffron300 = Color(0xFFFFAC66)  // muted
 val Saffron100 = Color(0xFFFFF0E6)  // tint surface
 
 // Semantic — Financial
-val RupeeGreen = Color(0xFF00C896)   // money received, positive
-val RupeeGreenDim = Color(0xFF00A07A) // darker variant
-val DebtRed = Color(0xFFFF4757)      // outstanding, overdue
-val DebtRedDim = Color(0xFFCC2233)   // darker variant
-val PendingAmber = Color(0xFFFFAA00) // pending, partial
-val PendingAmberDim = Color(0xFFCC8800)
+val RupeeGreen = Color(0xFF10B981)   // money received, positive
+val RupeeGreenDim = Color(0xFF059669) // darker variant
+val DebtRed = Color(0xFFEF4444)      // outstanding, overdue
+val DebtRedDim = Color(0xFFDC2626)   // darker variant
+val PendingAmber = Color(0xFFF59E0B) // pending, partial
+val PendingAmberDim = Color(0xFFD97706)
 
 // Neutrals
-val Ink900 = Color(0xFF080C1A)    // true black bg
-val Ink800 = Color(0xFF0F1320)    // page background
-val Ink700 = Color(0xFF161B2E)    // card background
-val Ink600 = Color(0xFF1E2540)    // elevated card
-val Ink500 = Color(0xFF2A3252)    // border / divider
-val Ink400 = Color(0xFF3D4A6A)    // disabled elements
-val Ink300 = Color(0xFF6B7A9E)    // placeholder text
-val Ink200 = Color(0xFF9DAAC8)    // secondary text
-val Ink100 = Color(0xFFCDD5E8)    // primary text dim
-val Ink000 = Color(0xFFEEF1F8)    // primary text light
+val Ink900 = Color(0xFF070B14)    // true black bg
+val Ink800 = Color(0xFF0E1322)    // page background
+val Ink700 = Color(0xFF161F35)    // card background
+val Ink600 = Color(0xFF222E4D)    // elevated card
+val Ink500 = Color(0xFF32426C)    // border / divider
+val Ink400 = Color(0xFF4C5E8A)    // disabled elements
+val Ink300 = Color(0xFF7285B5)    // placeholder text
+val Ink200 = Color(0xFF98A9D4)    // secondary text
+val Ink100 = Color(0xFFCAD4F0)    // primary text dim
+val Ink000 = Color(0xFFF1F4FA)    // primary text light
 val White  = Color(0xFFFFFFFF)    // pure white — use sparingly
 
 // Light Mode Surfaces (for light theme variant)
-val LightBg         = Color(0xFFF4F5FB)
+val LightBg         = Color(0xFFF8FAFC)
 val LightCard       = Color(0xFFFFFFFF)
-val LightCardRaised = Color(0xFFEEF0FA)
-val LightBorder     = Color(0xFFDDE0F0)
-val LightTextPrimary = Color(0xFF0D1333)
-val LightTextSecondary = Color(0xFF4A5280)
+val LightCardRaised = Color(0xFFF1F5F9)
+val LightBorder     = Color(0xFFE2E8F0)
+val LightTextPrimary = Color(0xFF0F172A)
+val LightTextSecondary = Color(0xFF475569)
 
 // ============================================================
 // BACKWARD COMPATIBILITY ALIASES

@@ -28,13 +28,12 @@ fun HamburgerAppBar(
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     Surface(
-        color = StitchBg,
-        tonalElevation = 0.dp,
+        color = MaterialTheme.colorScheme.background,
+        tonalElevation = 2.dp,
         shadowElevation = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp)
-            .border(width = 0.5.dp, color = StitchBorder)
     ) {
         Row(
             modifier = Modifier
