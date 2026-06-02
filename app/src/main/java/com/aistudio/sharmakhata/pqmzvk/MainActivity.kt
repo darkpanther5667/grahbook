@@ -100,7 +100,16 @@ fun LocalePhoneWrapper(
     while (baseContext is android.content.ContextWrapper && baseContext !is android.app.Activity) {
       baseContext = baseContext.baseContext
     }
-    baseContext.createConfigurationContext(configuration)
+    val configContext = baseContext.createConfigurationContext(configuration)
+    if (baseContext is android.app.Activity) {
+      object : android.content.ContextWrapper(baseContext) {
+        override fun getResources(): android.content.res.Resources = configContext.resources
+        override fun getAssets(): android.content.res.AssetManager = configContext.assets
+        override fun getTheme(): android.content.res.Resources.Theme = configContext.theme
+      }
+    } else {
+      configContext
+    }
   }
   
   CompositionLocalProvider(LocalContext provides localeContext) {
