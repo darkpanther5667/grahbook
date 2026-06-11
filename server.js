@@ -177,6 +177,7 @@ function requiresSessionAuth(req) {
   if (req.path === '/api/auth/request-code') return false;
   if (req.path === '/api/auth/verify-code') return false;
   if (req.path === '/api/auth/login') return false;
+  if (req.path === '/api/auth/google') return false;
   if (req.path === '/api/auth/logout') return false;
   if (req.path === '/api/admin/clear-all') return false;
 
