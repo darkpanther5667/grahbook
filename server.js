@@ -71,18 +71,29 @@ const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.set('trust proxy', 1);
 
-// CORS: allow only configured origins; deny null origin to prevent CSRF from iframes
-const corsAllowedOrigins = (process.env.ALLOWED_ORIGIN || '').split(',').map(o => o.trim()).filter(Boolean);
+// CORS — always allow the Vercel frontend + any extra origins in ALLOWED_ORIGIN env var
+const HARDCODED_ORIGINS = [
+  'https://grahbook.vercel.app',
+  'https://grahbook.in',
+  'http://localhost:3000',
+  'http://localhost:3001',
+];
+const extraOrigins = (process.env.ALLOWED_ORIGIN || '').split(',').map(o => o.trim()).filter(Boolean);
+const corsAllowedOrigins = [...new Set([...HARDCODED_ORIGINS, ...extraOrigins])];
+
 app.use((req, res, next) => {
   const origin = req.get('Origin');
-  // Allow same-origin requests (no Origin header) and explicitly configured origins
-  if (!origin || corsAllowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin || corsAllowedOrigins[0] || '*');
+  if (!origin) {
+    // Same-origin or server-to-server — always allow
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else if (corsAllowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
   }
-  // Deny null origin — it's used by sandboxed iframes for CSRF attacks
-  // Native apps don't send Origin headers, so they still work fine
+  // null origin is denied (sandboxed iframes — CSRF protection)
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-KEY, X-ADMIN-KEY');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
