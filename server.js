@@ -472,7 +472,7 @@ async function writeDB(data, expectedVersion) {
     // Atomic bulkWrite: individual upserts → no mass data loss on crash
     // Shop is a single doc → replaceOne with upsert
     if (data.shop) {
-      await database.collection('shop').replaceOne(
+      await database.collection('shop').updateOne(
         { _id: 'shop_config' },
         { $set: { ...data.shop, _id: 'shop_config' } },
         { upsert: true }
