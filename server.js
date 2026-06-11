@@ -2817,14 +2817,41 @@ app.post('/api/payment/payu-hash', sessionAuthMiddleware, async (req, res) => {
       return res.status(500).json({ success: false, message: 'PayU credentials missing' });
     }
 
+    const sid = req.storeId || 'default';
     // Hash formula: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT
-    const hashString = `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${salt}`;
+    const hashString = `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|${sid}||||||||||${salt}`;
     const hash = crypto.createHash('sha512').update(hashString).digest('hex');
 
-    res.json({ success: true, hash, txnid, key });
+    res.json({ success: true, hash, txnid, key, udf1: sid });
   } catch (error) {
     console.error('Error generating PayU hash:', error);
     res.status(500).json({ success: false, message: 'Failed to generate hash' });
+  }
+});
+
+// POST /api/payment/payu-success - PayU webhook/redirect callback
+app.post('/api/payment/payu-success', express.urlencoded({ extended: true }), async (req, res) => {
+  try {
+    const { txnid, status, hash, amount, productinfo, firstname, email, udf1 } = req.body;
+    // udf1 contains the store_id passed during hash generation
+    const sid = udf1;
+    
+    if (status === 'success' && sid) {
+      const database = await connectDB();
+      if (database) {
+        // Upgrade the plan
+        await database.collection('stores').updateOne(
+          { id: sid },
+          { $set: { plan: productinfo || 'pro' } }
+        );
+      }
+    }
+    
+    // Redirect back to frontend dashboard
+    res.redirect('https://grahbook.vercel.app/dashboard');
+  } catch (error) {
+    console.error('Error processing PayU success:', error);
+    res.redirect('https://grahbook.vercel.app/dashboard?payment=error');
   }
 });
 
