@@ -4334,12 +4334,6 @@ app.get('/api/report/:date/pdf', pdfAuthMiddleware, async (req, res) => {
   }
 });
 
-// ─── SERVE NEXT.JS WEB PANEL (custom server mode) ─────────────────────────
-// Next.js handles client-side routing including dynamic routes (/customers/abc123, etc.).
-// API routes are handled by Express before reaching this handler.
-const nextApp = require('./client-web/node_modules/next')({ dev: false, dir: path.join(__dirname, 'client-web') });
-const nextHandle = nextApp.getRequestHandler();
-
 // ─── START SERVER ──────────────────────────────────────────────────────────────
 
 // Serve the landing page
