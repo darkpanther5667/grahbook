@@ -2811,8 +2811,8 @@ app.post('/api/payment/payu-hash', sessionAuthMiddleware, async (req, res) => {
   try {
     const { amount, productinfo, firstname, email, phone } = req.body;
     const txnid = 'txn_' + Date.now();
-    const key = process.env.PAYU_KEY;
-    const salt = process.env.PAYU_SALT;
+    const key = process.env.PAYU_KEY || 'J9MObM';
+    const salt = process.env.PAYU_SALT || 'W4lRFHXt4hTGM4BjEto8ZVf2JxRFayMQ';
     
     if (!key || !salt) {
       return res.status(500).json({ success: false, message: 'PayU credentials missing' });
