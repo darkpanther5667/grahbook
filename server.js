@@ -2589,6 +2589,60 @@ app.post('/api/payment/add', async (req, res) => {
   }
 });
 
+app.post('/api/items/add', sessionAuthMiddleware, async (req, res) => {
+  try {
+    const { name, price, stock, gst_rate } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Item name is required' });
+    }
+    const sid = req.storeId || 'default';
+    const fullDb = await readDB();
+    if (!fullDb.items) fullDb.items = [];
+
+    const newItem = {
+      id: genId('i'),
+      store_id: sid,
+      name: name.trim(),
+      price: Math.max(0, Number(price) || 0),
+      stock: Math.max(0, Number(stock) || 0),
+      gst_rate: Math.max(0, Number(gst_rate) || 0),
+      created_at: new Date().toISOString()
+    };
+    fullDb.items.push(newItem);
+    await writeDB(fullDb);
+    cachedDB = null;
+    res.json({ success: true, item: newItem });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.post('/api/items/update', sessionAuthMiddleware, async (req, res) => {
+  try {
+    const { id, name, price, stock, gst_rate } = req.body;
+    if (!id) return res.status(400).json({ success: false, message: 'Item ID is required' });
+    const sid = req.storeId || 'default';
+    const fullDb = await readDB();
+    if (!fullDb.items) fullDb.items = [];
+
+    const itemIndex = fullDb.items.findIndex(i => i.id === id && (i.store_id || 'default') === sid);
+    if (itemIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Item not found' });
+    }
+
+    if (name && name.trim()) fullDb.items[itemIndex].name = name.trim();
+    if (price !== undefined) fullDb.items[itemIndex].price = Math.max(0, Number(price) || 0);
+    if (stock !== undefined) fullDb.items[itemIndex].stock = Math.max(0, Number(stock) || 0);
+    if (gst_rate !== undefined) fullDb.items[itemIndex].gst_rate = Math.max(0, Number(gst_rate) || 0);
+
+    await writeDB(fullDb);
+    cachedDB = null;
+    res.json({ success: true, item: fullDb.items[itemIndex] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // POST /api/bill/create - Create a new bill
 app.post('/api/bill/create', async (req, res) => {
   try {
