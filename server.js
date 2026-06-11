@@ -2379,7 +2379,7 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
       };
     } catch (verifyErr) {
       console.error('Google token verification failed:', verifyErr.message);
-      return res.status(401).json({ success: false, message: 'Invalid Google credential' });
+      return res.status(401).json({ success: false, message: 'Invalid Google credential: ' + verifyErr.message });
     }
 
     const database = await connectDB();
