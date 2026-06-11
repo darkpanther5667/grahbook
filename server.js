@@ -340,6 +340,7 @@ async function readStoreDB(storeId) {
     transactions: (db.transactions || []).filter(t => (t.store_id || 'default') === sid),
     bills: storeBills,
     staff: (db.staff || []).filter(s => (s.store_id || 'default') === sid),
+    items: (db.items || []).filter(i => (i.store_id || 'default') === sid),
   };
 }
 
