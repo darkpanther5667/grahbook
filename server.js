@@ -128,6 +128,7 @@ function requiresMobileApiKey(req) {
     if (req.path === '/api/test-db') return false;
     if (req.path === '/api/test-wa') return false;
     if (req.path === '/api/app/version') return false;
+    if (req.path === '/api/debug/store-status') return false;
     if (/^\/api\/bill\/[^/]+\/pdf$/.test(req.path)) return false;
     if (/^\/api\/customer\/[^/]+\/statement\/pdf$/.test(req.path)) return false;
     if (/^\/api\/report\/[^/]+\/pdf$/.test(req.path)) return false;
