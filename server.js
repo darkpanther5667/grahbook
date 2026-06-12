@@ -2416,15 +2416,7 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
     if (payload.email) {
       existingStaff = await database.collection('staff').findOne({ email: payload.email });
       
-      // Cleanup junk staff account from earlier failed google logins
-      if (existingStaff) {
-        const storeCheck = await database.collection('stores').findOne({ id: existingStaff.store_id });
-        if (storeCheck && storeCheck.status === 'pending_registration') {
-          await database.collection('staff').deleteOne({ _id: existingStaff._id });
-          await database.collection('stores').deleteOne({ _id: storeCheck._id });
-          existingStaff = null;
-        }
-      }
+
 
       // Fallback: If staff doesn't have email but store does (legacy registration)
       if (!existingStaff) {
