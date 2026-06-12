@@ -2362,6 +2362,8 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
     // Verify the Google ID token
     // The credential is a JWT signed by Google. We verify it by checking the header.
     let payload;
+    let isFirebaseToken = false;
+    let realGoogleSub = null;
     try {
       // Decode the JWT payload (middle segment)
       const parts = credential.split('.');
@@ -2370,7 +2372,7 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
 
       // Basic validation: check issuer and audience
       const allowedIssuers = ['accounts.google.com', 'https://accounts.google.com'];
-      const isFirebaseToken = decoded.iss && decoded.iss.startsWith('https://securetoken.google.com/');
+      isFirebaseToken = decoded.iss && decoded.iss.startsWith('https://securetoken.google.com/');
       if (!allowedIssuers.includes(decoded.iss) && !isFirebaseToken) {
         throw new Error('Invalid issuer: ' + decoded.iss);
       }
@@ -2390,7 +2392,6 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
       // lives inside firebase.identities.google.com[0].
       // Without this, Android (Firebase) and Web (raw Google JWT) would
       // create separate stores for the SAME Google account.
-      let realGoogleSub = null;
       if (isFirebaseToken && decoded.firebase?.identities?.['google.com']?.[0]) {
         realGoogleSub = decoded.firebase.identities['google.com'][0];
       }
