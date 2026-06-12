@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Grahbook</title>
+  <meta name="description" content="Grahbook Privacy Policy. Learn how we collect, use, and protect your personal information when you use our WhatsApp commerce platform.">
+  <meta name="theme-color" content="#25d366">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;overflow-x:hidden;background:#f7f9fb;color:#191c1e;line-height:1.7}
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-track{background:#f7f9fb}
+    ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#25d366,#128c7e);border-radius:4px}
+    :root{--bg-body:#f7f9fb;--bg-card:#ffffff;--text-secondary:#0f172a;--text-tertiary:#64748b;--border:#e0e3e5;--nav-bg:rgba(255,255,255,0.82);--nav-border:rgba(224,227,229,0.6)}
+    [data-theme=dark]{--bg-body:#080c18;--bg-card:#111827;--text-secondary:#f1f5f9;--text-tertiary:#94a3b8;--border:#1e293b;--nav-bg:rgba(15,23,42,0.9);--nav-border:rgba(30,41,59,0.8)}
+    nav{position:fixed;top:0;left:0;right:0;z-index:9997;padding:0 24px;transition:all .5s;background:var(--nav-bg);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--nav-border)}
+    .nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:68px}
+    .nav-link{position:relative;padding:4px 0;overflow:hidden;text-decoration:none;font-size:14px;font-weight:500;color:var(--text-tertiary);transition:color .3s}
+    .nav-link::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:2px;background:#25d366;transform:translateX(-102%);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+    .nav-link:hover::after{transform:translateX(0)}
+    .theme-toggle{width:48px;height:28px;border-radius:14px;background:#e0e3e5;border:none;padding:0;flex-shrink:0;transition:background .3s;position:relative}
+    [data-theme=dark] .theme-toggle{background:#1e293b}
+    .theme-toggle .thumb{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;transition:transform .4s cubic-bezier(.34,1.56,.64,1),background .3s;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+    [data-theme=dark] .theme-toggle .thumb{transform:translateX(20px);background:#0f172a}
+    .theme-toggle .thumb .material-icons{font-size:14px}
+    .mobile-menu{position:fixed;top:64px;left:0;right:0;background:var(--nav-bg);backdrop-filter:blur(24px);border-bottom:1px solid var(--nav-border);padding:20px 24px;transform:translateY(-120%);opacity:0;visibility:hidden;transition:all .5s cubic-bezier(.16,1,.3,1);z-index:9996}
+    .mobile-menu.active{transform:translateY(0);opacity:1;visibility:visible}
+    .page-hero{padding:120px 24px 60px;background:linear-gradient(135deg,#25d366,#128c7e,#075e54);text-align:center}
+    .page-hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;color:#fff;margin-bottom:12px}
+    .page-hero p{font-size:clamp(1rem,1.5vw,1.2rem);color:rgba(255,255,255,.8);max-width:600px;margin:0 auto}
+    .content{max-width:800px;margin:0 auto;padding:60px 24px 100px}
+    .content h2{font-size:1.5rem;font-weight:700;color:var(--text-secondary);margin:40px 0 16px}
+    .content h3{font-size:1.15rem;font-weight:600;color:var(--text-secondary);margin:28px 0 12px}
+    .content p{color:var(--text-tertiary);margin-bottom:16px;font-size:15px}
+    .content ul,.content ol{margin:0 0 16px 20px;color:var(--text-tertiary)}
+    .content li{margin-bottom:8px;font-size:15px}
+    .content strong{color:var(--text-secondary)}
+    .content a{color:#25d366;text-decoration:none}
+    .content a:hover{text-decoration:underline}
+    .effective-date{display:inline-block;padding:6px 16px;border-radius:100px;background:rgba(37,211,102,.1);font-size:13px;font-weight:600;color:#25d366;margin-bottom:24px}
+    footer{background:#0f172a;padding:64px 24px 0;transition:background .3s}
+    [data-theme=dark] footer{background:#020617}
+    footer .f-grid{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr;gap:40px}
+    footer .f-col{min-width:0}
+    footer .f-brand{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    footer .f-desc{font-size:14px;line-height:1.7;color:rgba(255,255,255,.45);max-width:320px}
+    footer .f-head{font-weight:600;color:#fff;margin-bottom:16px;font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+    footer .f-links{display:flex;flex-direction:column;gap:10px}
+    footer .f-links a{color:rgba(255,255,255,.45);text-decoration:none;font-size:14px;transition:all .3s;display:flex;align-items:center;gap:6px}
+    footer .f-links a:hover{color:#25d366;transform:translateX(4px)}
+    footer .f-bottom{max-width:1280px;margin:0 auto;padding:28px 0;margin-top:48px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+    footer .f-bottom p{font-size:13px;color:rgba(255,255,255,.35)}
+    footer .f-badges{display:flex;gap:12px}
+    footer .f-badges span{padding:4px 12px;border-radius:100px;background:rgba(255,255,255,.05);font-size:11px;color:rgba(255,255,255,.35)}
+    @media(max-width:900px){footer .f-grid{grid-template-columns:1fr 1fr;gap:32px}}
+    @media(max-width:600px){footer .f-grid{grid-template-columns:1fr;gap:28px}footer .f-bottom{flex-direction:column;text-align:center}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none">
+      <span class="material-icons" style="font-size:30px;color:#25d366">storefront</span>
+      <span style="font-size:20px;font-weight:700;color:var(--text-secondary)">Grahbook</span>
+    </a>
+    <div id="navDesktop" style="display:flex;align-items:center;gap:20px">
+      <a href="index.html#features" class="nav-link">Features</a>
+      <a href="index.html#pricing" class="nav-link">Pricing</a>
+      <a href="about.html" class="nav-link">About</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme"><span class="thumb"><span class="material-icons" id="themeIcon" style="color:#f59e0b">dark_mode</span></span></button>
+    </div>
+    <div id="navMobile" style="display:none;align-items:center;gap:8px">
+      <button id="themeToggleMob" class="theme-toggle" aria-label="Toggle theme"><span class="thumb"><span class="material-icons" id="themeIconMob" style="color:#f59e0b">dark_mode</span></span></button>
+      <button id="menuBtn" style="background:none;border:none;padding:6px;border-radius:8px;color:var(--text-tertiary)" aria-label="Menu"><span class="material-icons" style="font-size:28px">menu</span></button>
+    </div>
+  </div>
+  <div id="mobileMenu" class="mobile-menu">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <a href="index.html#features" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">Features</a>
+      <a href="index.html#pricing" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">Pricing</a>
+      <a href="about.html" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">About</a>
+      <a href="contact.html" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <h1>Privacy Policy</h1>
+  <p>Your privacy is important to us. This policy explains how we handle your data.</p>
+</div>
+
+<div class="content">
+  <span class="effective-date">Effective Date: January 1, 2026</span>
+
+  <p>This Privacy Policy describes how <strong>Neha Agrawal</strong> ("we," "us," "our," or the "Operator") collects, uses, stores, shares, and protects your personal information when you use the Grahbook platform, website (grahbook.in), mobile application, and related services (collectively, the "Service").</p>
+  <p>By accessing or using our Service, you agree to the collection and use of information in accordance with this Privacy Policy. If you do not agree, please do not use the Service.</p>
+
+  <h2>1. Information We Collect</h2>
+
+  <h3>1.1 Information You Provide Directly</h3>
+  <ul>
+    <li><strong>Account Information:</strong> When you register for a Grahbook account, we collect your full name, email address, phone number, store name, business type, and password.</li>
+    <li><strong>Payment Information:</strong> When you process transactions through the Service, we collect payment details including UPI ID, transaction amounts (in INR), and payment confirmation data. We do not store credit/debit card numbers on our servers.</li>
+    <li><strong>Business Information:</strong> Store details, product catalogs, pricing (in INR), inventory data, and GST information that you upload to the Service.</li>
+    <li><strong>Customer Data:</strong> Information about your customers that you input into the Service, including names, phone numbers, order history, and transaction records.</li>
+    <li><strong>Communications:</strong> Messages you send through the Service, including WhatsApp messages processed through our platform, support inquiries, and feedback.</li>
+    <li><strong>KYC Information:</strong> If you opt for verified seller status, we may collect PAN card details, Aadhaar information, and business registration documents as required by law.</li>
+  </ul>
+
+  <h3>1.2 Information Collected Automatically</h3>
+  <ul>
+    <li><strong>Device Information:</strong> Device type, operating system, unique device identifiers, and mobile network information.</li>
+    <li><strong>Log Data:</strong> IP address, browser type, access times, pages viewed, and referring URLs.</li>
+    <li><strong>Usage Data:</strong> Features used, actions taken, time spent on the Service, and interaction patterns.</li>
+    <li><strong>Location Data:</strong> Approximate location based on IP address and, with your consent, precise GPS location for delivery and business purposes.</li>
+    <li><strong>Cookies and Similar Technologies:</strong> We use cookies, web beacons, and similar tracking technologies to enhance your experience and collect usage data.</li>
+  </ul>
+
+  <h3>1.3 Information from Third Parties</h3>
+  <ul>
+    <li><strong>WhatsApp Business API:</strong> Message metadata, delivery status, and interaction data from the WhatsApp platform.</li>
+    <li><strong>Payment Processors:</strong> Transaction confirmation and settlement data from PayU and other payment partners.</li>
+    <li><strong>Analytics Providers:</strong> Aggregated usage statistics and performance data.</li>
+  </ul>
+
+  <h2>2. How We Use Your Information</h2>
+  <p>We use your personal information for the following purposes:</p>
+  <ul>
+    <li><strong>Service Delivery:</strong> To provide, operate, and maintain the Grahbook platform, including processing orders, generating GST-compliant invoices (in INR), and facilitating UPI payments.</li>
+    <li><strong>Account Management:</strong> To create and manage your account, verify your identity, and provide customer support.</li>
+    <li><strong>Transaction Processing:</strong> To process payments, generate invoices, manage refunds, and handle financial records in INR.</li>
+    <li><strong>Communication:</strong> To send you service-related notifications, security alerts, support messages, and (with your consent) marketing communications.</li>
+    <li><strong>AI and Personalization:</strong> To power our AI features, including catalog recommendations, customer interaction automation, and business insights.</li>
+    <li><strong>Analytics and Improvement:</strong> To analyze usage patterns, improve the Service, develop new features, and optimize performance.</li>
+    <li><strong>Security and Fraud Prevention:</strong> To detect, prevent, and address fraud, unauthorized access, and other harmful activities.</li>
+    <li><strong>Legal Compliance:</strong> To comply with applicable laws, regulations, and legal processes, including GST requirements, IT Act compliance, and RBI guidelines.</li>
+    <li><strong>Business Transfers:</strong> In connection with any merger, acquisition, or sale of assets (though we will notify you before your information becomes subject to a different privacy policy).</li>
+  </ul>
+
+  <h2>3. How We Share Your Information</h2>
+  <p>We do not sell your personal information. We may share your information in the following circumstances:</p>
+  <ul>
+    <li><strong>Payment Processors:</strong> We share transaction data with PayU and other payment processors to facilitate UPI payments and settlements.</li>
+    <li><strong>Service Providers:</strong> We share data with trusted third-party vendors who provide hosting, analytics, customer support, and other operational services, under strict contractual obligations.</li>
+    <li><strong>WhatsApp/Meta:</strong> Message content and metadata are processed through the WhatsApp Business API, subject to Meta's privacy policies.</li>
+    <li><strong>Legal Requirements:</strong> We may disclose information if required by law, court order, or governmental authority, including compliance with IT Act, 2000 requirements.</li>
+    <li><strong>Business Partners:</strong> With your explicit consent, we may share data with integration partners (e.g., Tally, CRM systems).</li>
+    <li><strong>Aggregated Data:</strong> We may share anonymized, aggregated data that cannot be used to identify you (e.g., industry trends, regional statistics).</li>
+  </ul>
+
+  <h2>4. Data Security</h2>
+  <p>We implement industry-standard security measures to protect your personal information:</p>
+  <ul>
+    <li>All data is encrypted in transit using TLS 1.3 and at rest using AES-256 encryption.</li>
+    <li>Access to personal data is restricted to authorized personnel on a need-to-know basis.</li>
+    <li>We conduct regular security audits and penetration testing.</li>
+    <li>Payment data is processed through PCI DSS-compliant payment processors (PayU).</li>
+    <li>We maintain encrypted backups and disaster recovery procedures.</li>
+  </ul>
+  <p>However, no method of transmission over the Internet or electronic storage is 100% secure. While we strive to protect your data, we cannot guarantee absolute security.</p>
+
+  <h2>5. Data Retention</h2>
+  <p>We retain your personal information for as long as your account is active or as needed to provide the Service. Specifically:</p>
+  <ul>
+    <li><strong>Account Data:</strong> Retained for the duration of your account plus 3 years after account closure, as required by Indian tax and business laws.</li>
+    <li><strong>Transaction Data:</strong> Retained for 7 years from the date of transaction, as required by GST and income tax regulations.</li>
+    <li><strong>Message Data:</strong> WhatsApp messages processed through the Service are retained for 90 days for dispute resolution, then deleted.</li>
+    <li><strong>Log Data:</strong> Server logs are retained for 90 days for security purposes.</li>
+    <li><strong>Marketing Data:</strong> Retained until you withdraw consent for marketing communications.</li>
+  </ul>
+
+  <h2>6. Your Rights</h2>
+  <p>Under applicable Indian data protection laws, you have the following rights:</p>
+  <ul>
+    <li><strong>Right to Access:</strong> You can request a copy of all personal data we hold about you.</li>
+    <li><strong>Right to Correction:</strong> You can request that we correct inaccurate or incomplete data.</li>
+    <li><strong>Right to Deletion:</strong> You can request deletion of your personal data, subject to legal retention requirements.</li>
+    <li><strong>Right to Portability:</strong> You can request your data in a structured, machine-readable format.</li>
+    <li><strong>Right to Withdraw Consent:</strong> You can withdraw consent for data processing at any time.</li>
+    <li><strong>Right to Object:</strong> You can object to certain types of data processing, including direct marketing.</li>
+  </ul>
+  <p>To exercise these rights, please contact our Grievance Officer at <a href="mailto:agrawalmanas150@gmail.com">agrawalmanas150@gmail.com</a>.</p>
+
+  <h2>7. Cookies Policy</h2>
+  <p>We use the following types of cookies:</p>
+  <ul>
+    <li><strong>Essential Cookies:</strong> Required for the Service to function properly (e.g., authentication, session management).</li>
+    <li><strong>Analytics Cookies:</strong> Help us understand how users interact with the Service (e.g., Google Analytics).</li>
+    <li><strong>Preference Cookies:</strong> Remember your settings and preferences (e.g., theme selection, language).</li>
+    <li><strong>Marketing Cookies:</strong> Used for targeted advertising (only with your consent).</li>
+  </ul>
+  <p>You can control cookies through your browser settings. Disabling essential cookies may affect the functionality of the Service.</p>
+
+  <h2>8. Children's Privacy</h2>
+  <p>The Service is not intended for children under the age of 18. We do not knowingly collect personal information from children. If we become aware that we have collected data from a child, we will delete it immediately.</p>
+
+  <h2>9. International Data Transfers</h2>
+  <p>Your data is primarily stored on servers located in India. If we transfer data outside India, we ensure adequate protection through contractual safeguards and compliance with applicable data protection laws.</p>
+
+  <h2>10. Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the updated policy on our website and, where appropriate, by email. The "Effective Date" at the top of this page indicates when the policy was last revised.</p>
+
+  <h2>11. Grievance Officer</h2>
+  <p>If you have any questions, concerns, or complaints about this Privacy Policy or our data practices, please contact:</p>
+  <p>
+    <strong>Neha Agrawal</strong><br>
+    Grievance Officer, Grahbook<br>
+    Phone: <a href="tel:+918052402633">805-2402-633</a><br>
+    Email: <a href="mailto:agrawalmanas150@gmail.com">agrawalmanas150@gmail.com</a>
+  </p>
+  <p>We will endeavor to resolve your grievance within 30 days from the date of receipt.</p>
+</div>
+
+<footer>
+  <div class="f-grid">
+    <div class="f-col">
+      <div class="f-brand">
+        <span class="material-icons" style="font-size:28px;color:#25d366">storefront</span>
+        <span style="font-weight:700;font-size:18px;color:#fff">Grahbook</span>
+      </div>
+      <p class="f-desc">The first AI-powered store bot built for Bharat. Manage billing, UPI payments, and customer chats — all without leaving WhatsApp.</p>
+    </div>
+    <div class="f-col">
+      <h4 class="f-head">Platform</h4>
+      <div class="f-links">
+        <a href="index.html#features"><span class="material-icons" style="font-size:14px">chevron_right</span> Features</a>
+        <a href="index.html#pricing"><span class="material-icons" style="font-size:14px">chevron_right</span> Pricing</a>
+        <a href="index.html#dashboard"><span class="material-icons" style="font-size:14px">chevron_right</span> Dashboard</a>
+      </div>
+    </div>
+    <div class="f-col">
+      <h4 class="f-head">Legal</h4>
+      <div class="f-links">
+        <a href="privacy-policy.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Privacy Policy</a>
+        <a href="return-refund-policy.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Return & Refund</a>
+        <a href="cancellation-policy.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Cancellation</a>
+        <a href="shipping-policy.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Shipping Policy</a>
+      </div>
+    </div>
+    <div class="f-col">
+      <h4 class="f-head">Company</h4>
+      <div class="f-links">
+        <a href="about.html"><span class="material-icons" style="font-size:14px">chevron_right</span> About Us</a>
+        <a href="contact.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Contact Us</a>
+      </div>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <p>&copy; 2026 Grahbook India. All rights reserved. Operated by Neha Agrawal.</p>
+    <div class="f-badges">
+      <span>Make in India</span>
+      <span>UPI Certified</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+function getTheme(){return localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}
+function applyTheme(t){if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('themeIcon').textContent='light_mode';document.getElementById('themeIconMob').textContent='light_mode';document.getElementById('themeIcon').style.color='#fbbf24';document.getElementById('themeIconMob').style.color='#fbbf24'}else{document.documentElement.removeAttribute('data-theme');document.getElementById('themeIcon').textContent='dark_mode';document.getElementById('themeIconMob').textContent='dark_mode';document.getElementById('themeIcon').style.color='#f59e0b';document.getElementById('themeIconMob').style.color='#f59e0b'}localStorage.setItem('theme',t)}
+applyTheme(getTheme());
+document.getElementById('themeToggle').addEventListener('click',()=>applyTheme(getTheme()==='dark'?'light':'dark'));
+document.getElementById('themeToggleMob').addEventListener('click',()=>applyTheme(getTheme()==='dark'?'light':'dark'));
+function updNav(){const w=window.innerWidth;document.getElementById('navDesktop').style.display=w>=768?'flex':'none';document.getElementById('navMobile').style.display=w<768?'flex':'none'}
+updNav();window.addEventListener('resize',updNav);
+const mb=document.getElementById('menuBtn'),mm=document.getElementById('mobileMenu');
+mb?.addEventListener('click',()=>{mm.classList.toggle('active');mb.querySelector('.material-icons').textContent=mm.classList.contains('active')?'close':'menu'});
+mm?.querySelectorAll('a').forEach(l=>l.addEventListener('click',()=>{mm.classList.remove('active');mb.querySelector('.material-icons').textContent='menu'}));
+</script>
+</body>
+</html>

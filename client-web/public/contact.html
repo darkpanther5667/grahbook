@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us — Grahbook</title>
+  <meta name="description" content="Get in touch with Grahbook. Contact Neha Agrawal for support, business inquiries, or any questions about our WhatsApp commerce platform.">
+  <meta name="theme-color" content="#25d366">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;overflow-x:hidden;background:#f7f9fb;color:#191c1e;line-height:1.7}
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-track{background:#f7f9fb}
+    ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#25d366,#128c7e);border-radius:4px}
+    :root{
+      --bg-body:#f7f9fb;--bg-card:#ffffff;--bg-section:#ffffff;--bg-alt:#f7f9fb;
+      --text-primary:#191c1e;--text-secondary:#0f172a;--text-tertiary:#64748b;
+      --border:#e0e3e5;--primary:#25d366;--primary-dark:#128c7e;
+      --nav-bg:rgba(255,255,255,0.82);--nav-border:rgba(224,227,229,0.6);
+    }
+    [data-theme=dark]{
+      --bg-body:#080c18;--bg-card:#111827;--bg-section:#0f172a;--bg-alt:#0a0e1a;
+      --text-primary:#e2e8f0;--text-secondary:#f1f5f9;--text-tertiary:#94a3b8;
+      --border:#1e293b;--nav-bg:rgba(15,23,42,0.9);--nav-border:rgba(30,41,59,0.8);
+    }
+    nav{position:fixed;top:0;left:0;right:0;z-index:9997;padding:0 24px;transition:all .5s;background:var(--nav-bg);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--nav-border)}
+    .nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:68px}
+    .nav-link{position:relative;padding:4px 0;overflow:hidden;text-decoration:none;font-size:14px;font-weight:500;color:var(--text-tertiary);transition:color .3s}
+    .nav-link::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:2px;background:#25d366;transform:translateX(-102%);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+    .nav-link:hover::after{transform:translateX(0)}
+    .theme-toggle{width:48px;height:28px;border-radius:14px;background:#e0e3e5;border:none;padding:0;flex-shrink:0;transition:background .3s;position:relative}
+    [data-theme=dark] .theme-toggle{background:#1e293b}
+    .theme-toggle .thumb{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;transition:transform .4s cubic-bezier(.34,1.56,.64,1),background .3s;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+    [data-theme=dark] .theme-toggle .thumb{transform:translateX(20px);background:#0f172a}
+    .theme-toggle .thumb .material-icons{font-size:14px}
+    .mobile-menu{position:fixed;top:64px;left:0;right:0;background:var(--nav-bg);backdrop-filter:blur(24px);border-bottom:1px solid var(--nav-border);padding:20px 24px;transform:translateY(-120%);opacity:0;visibility:hidden;transition:all .5s cubic-bezier(.16,1,.3,1);z-index:9996}
+    .mobile-menu.active{transform:translateY(0);opacity:1;visibility:visible}
+    .page-hero{padding:120px 24px 60px;background:linear-gradient(135deg,#25d366,#128c7e,#075e54);text-align:center}
+    .page-hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;color:#fff;margin-bottom:12px}
+    .page-hero p{font-size:clamp(1rem,1.5vw,1.2rem);color:rgba(255,255,255,.8);max-width:600px;margin:0 auto}
+    .content{max-width:800px;margin:0 auto;padding:60px 24px 100px}
+    .content h2{font-size:1.6rem;font-weight:700;color:var(--text-secondary);margin:40px 0 16px}
+    .content p{color:var(--text-tertiary);margin-bottom:16px;font-size:15px}
+    .content strong{color:var(--text-secondary)}
+    .contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin:40px 0}
+    .contact-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px 24px;text-align:center;transition:all .3s}
+    .contact-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.08)}
+    .contact-card .icon{width:56px;height:56px;border-radius:16px;background:rgba(37,211,102,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+    .contact-card h3{font-size:16px;font-weight:700;color:var(--text-secondary);margin-bottom:4px}
+    .contact-card p{font-size:14px;color:var(--text-tertiary);margin-bottom:0}
+    .contact-card a{color:#25d366;text-decoration:none;font-weight:500}
+    .contact-card a:hover{text-decoration:underline}
+    .legal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px;margin:40px 0}
+    .legal-box h3{font-size:17px;font-weight:700;color:var(--text-secondary);margin-bottom:12px}
+    .legal-box p{font-size:14px;color:var(--text-tertiary);margin-bottom:8px}
+    .legal-box strong{color:var(--text-secondary)}
+    footer{background:#0f172a;padding:64px 24px 0;transition:background .3s}
+    [data-theme=dark] footer{background:#020617}
+    footer .f-grid{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr;gap:40px}
+    footer .f-col{min-width:0}
+    footer .f-brand{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    footer .f-desc{font-size:14px;line-height:1.7;color:rgba(255,255,255,.45);max-width:320px}
+    footer .f-head{font-weight:600;color:#fff;margin-bottom:16px;font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+    footer .f-links{display:flex;flex-direction:column;gap:10px}
+    footer .f-links a{color:rgba(255,255,255,.45);text-decoration:none;font-size:14px;transition:all .3s;display:flex;align-items:center;gap:6px}
+    footer .f-links a:hover{color:#25d366;transform:translateX(4px)}
+    footer .f-bottom{max-width:1280px;margin:0 auto;padding:28px 0;margin-top:48px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+    footer .f-bottom p{font-size:13px;color:rgba(255,255,255,.35)}
+    footer .f-badges{display:flex;gap:12px}
+    footer .f-badges span{padding:4px 12px;border-radius:100px;background:rgba(255,255,255,.05);font-size:11px;color:rgba(255,255,255,.35)}
+    @media(max-width:900px){footer .f-grid{grid-template-columns:1fr 1fr;gap:32px}}
+    @media(max-width:600px){footer .f-grid{grid-template-columns:1fr;gap:28px}footer .f-bottom{flex-direction:column;text-align:center}}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none">
+      <span class="material-icons" style="font-size:30px;color:#25d366">storefront</span>
+      <span style="font-size:20px;font-weight:700;color:var(--text-secondary)">Grahbook</span>
+    </a>
+    <div id="navDesktop" style="display:flex;align-items:center;gap:20px">
+      <a href="index.html#features" class="nav-link">Features</a>
+      <a href="index.html#pricing" class="nav-link">Pricing</a>
+      <a href="about.html" class="nav-link">About</a>
+      <a href="contact.html" class="nav-link" style="color:#25d366">Contact</a>
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="thumb"><span class="material-icons" id="themeIcon" style="color:#f59e0b">dark_mode</span></span>
+      </button>
+    </div>
+    <div id="navMobile" style="display:none;align-items:center;gap:8px">
+      <button id="themeToggleMob" class="theme-toggle" aria-label="Toggle theme">
+        <span class="thumb"><span class="material-icons" id="themeIconMob" style="color:#f59e0b">dark_mode</span></span>
+      </button>
+      <button id="menuBtn" style="background:none;border:none;padding:6px;border-radius:8px;color:var(--text-tertiary)" aria-label="Menu">
+        <span class="material-icons" style="font-size:28px">menu</span>
+      </button>
+    </div>
+  </div>
+  <div id="mobileMenu" class="mobile-menu">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <a href="index.html#features" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">Features</a>
+      <a href="index.html#pricing" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">Pricing</a>
+      <a href="about.html" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">About</a>
+      <a href="contact.html" style="color:#25d366;text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <h1>Contact Us</h1>
+  <p>We're here to help. Reach out to us for any queries, support, or business inquiries.</p>
+</div>
+
+<div class="content">
+  <div class="legal-box">
+    <h3>Website Operator</h3>
+    <p>This website is operated by <strong>Neha Agrawal</strong>. All services under the brand name "Grahbook" are provided by the sole proprietor.</p>
+  </div>
+
+  <div class="contact-grid">
+    <div class="contact-card">
+      <div class="icon"><span class="material-icons" style="font-size:28px;color:#25d366">phone</span></div>
+      <h3>Phone</h3>
+      <p><a href="tel:+918052402633">805-2402-633</a></p>
+      <p style="font-size:12px;margin-top:4px">Mon - Sat, 10:00 AM - 7:00 PM IST</p>
+    </div>
+    <div class="contact-card">
+      <div class="icon"><span class="material-icons" style="font-size:28px;color:#25d366">email</span></div>
+      <h3>Email</h3>
+      <p><a href="mailto:agrawalmanas150@gmail.com">agrawalmanas150@gmail.com</a></p>
+      <p style="font-size:12px;margin-top:4px">We respond within 24 hours</p>
+    </div>
+    <div class="contact-card">
+      <div class="icon"><span class="material-icons" style="font-size:28px;color:#25d366">storefront</span></div>
+      <h3>Business Name</h3>
+      <p><strong>Grahbook</strong></p>
+      <p style="font-size:12px;margin-top:4px">Operated by Neha Agrawal</p>
+    </div>
+  </div>
+
+  <h2>Grievance Officer</h2>
+  <p>In accordance with the Information Technology Act, 2000 and the rules made thereunder, the name and contact details of the Grievance Officer are provided below:</p>
+  <div class="legal-box">
+    <p><strong>Grievance Officer:</strong> Neha Agrawal</p>
+    <p><strong>Email:</strong> <a href="mailto:agrawalmanas150@gmail.com" style="color:#25d366">agrawalmanas150@gmail.com</a></p>
+    <p><strong>Phone:</strong> <a href="tel:+918052402633" style="color:#25d366">805-2402-633</a></p>
+    <p>The Grievance Officer shall endeavor to resolve any grievance within 30 days from the date of receipt of the grievance.</p>
+  </div>
+
+  <h2>Business Hours</h2>
+  <p><strong>Monday to Saturday:</strong> 10:00 AM - 7:00 PM IST</p>
+  <p><strong>Sunday:</strong> Closed</p>
+  <p><strong>Public Holidays:</strong> Closed</p>
+  <p>For urgent matters outside business hours, please send an email and we will respond as soon as possible.</p>
+
+  <h2>Registered Address</h2>
+  <div class="legal-box">
+    <p><strong>Neha Agrawal</strong></p>
+    <p>Grahbook</p>
+    <p>Phone: 805-2402-633</p>
+    <p>Email: <a href="mailto:agrawalmanas150@gmail.com" style="color:#25d366">agrawalmanas150@gmail.com</a></p>
+  </div>
+
+  <h2>Support Channels</h2>
+  <p>We offer support through multiple channels:</p>
+  <ul style="margin:0 0 16px 20px;color:var(--text-tertiary)">
+    <li><strong>Phone Support:</strong> Call us at 805-2402-633 for immediate assistance</li>
+    <li><strong>Email Support:</strong> Write to us at agrawalmanas150@gmail.com</li>
+    <li><strong>WhatsApp:</strong> Send a message to our support WhatsApp number</li>
+    <li><strong>Web Dashboard:</strong> Use the support section in your Grahbook dashboard</li>
+  </ul>
+  <p>For technical issues, please include your registered phone number and store ID when contacting us.</p>
+
+  <h2>Response Time</h2>
+  <p>We aim to respond to all inquiries within:</p>
+  <ul style="margin:0 0 16px 20px;color:var(--text-tertiary)">
+    <li><strong>Phone calls:</strong> Immediate during business hours</li>
+    <li><strong>Emails:</strong> Within 24 hours (excluding Sundays and public holidays)</li>
+    <li><strong>Grievance complaints:</strong> Within 30 days as per IT Act requirements</li>
+  </ul>
+</div>
+
+<footer>
+  <div class="f-grid">
+    <div class="f-col">
+      <div class="f-brand">
+        <span class="material-icons" style="font-size:28px;color:#25d366">storefront</span>
+        <span style="font-weight:700;font-size:18px;color:#fff">Grahbook</span>
+      </div>
+      <p class="f-desc">The first AI-powered store bot built for Bharat. Manage billing, UPI payments, and customer chats — all without leaving WhatsApp.</p>
+    </div>
+    <div class="f-col">
+      <h4 class="f-head">Platform</h4>
+      <div class="f-links">
+        <a href="index.html#features"><span class="material-icons" style="font-size:14px">chevron_right</span> Features</a>
+        <a href="index.html#pricing"><span class="material-icons" style="font-size:14px">chevron_right</span> Pricing</a>
+        <a href="index.html#dashboard"><span class="material-icons" style="font-size:14px">chevron_right</span> Dashboard</a>
+      </div>
+    </div>
+    <div class="f-col">
+      <h4 class="f-head">Legal</h4>
+      <div class="f-links">
+        <a href="privacy-policy.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Privacy Policy</a>
+        <a href="return-refund-policy.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Return & Refund</a>
+        <a href="cancellation-policy.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Cancellation</a>
+        <a href="shipping-policy.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Shipping Policy</a>
+      </div>
+    </div>
+    <div class="f-col">
+      <h4 class="f-head">Company</h4>
+      <div class="f-links">
+        <a href="about.html"><span class="material-icons" style="font-size:14px">chevron_right</span> About Us</a>
+        <a href="contact.html"><span class="material-icons" style="font-size:14px">chevron_right</span> Contact Us</a>
+      </div>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <p>&copy; 2026 Grahbook India. All rights reserved. Operated by Neha Agrawal.</p>
+    <div class="f-badges">
+      <span>Make in India</span>
+      <span>UPI Certified</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+function getTheme(){return localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}
+function applyTheme(t){if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('themeIcon').textContent='light_mode';document.getElementById('themeIconMob').textContent='light_mode';document.getElementById('themeIcon').style.color='#fbbf24';document.getElementById('themeIconMob').style.color='#fbbf24'}else{document.documentElement.removeAttribute('data-theme');document.getElementById('themeIcon').textContent='dark_mode';document.getElementById('themeIconMob').textContent='dark_mode';document.getElementById('themeIcon').style.color='#f59e0b';document.getElementById('themeIconMob').style.color='#f59e0b'}localStorage.setItem('theme',t)}
+applyTheme(getTheme());
+document.getElementById('themeToggle').addEventListener('click',()=>applyTheme(getTheme()==='dark'?'light':'dark'));
+document.getElementById('themeToggleMob').addEventListener('click',()=>applyTheme(getTheme()==='dark'?'light':'dark'));
+function updNav(){const w=window.innerWidth;document.getElementById('navDesktop').style.display=w>=768?'flex':'none';document.getElementById('navMobile').style.display=w<768?'flex':'none'}
+updNav();window.addEventListener('resize',updNav);
+const mb=document.getElementById('menuBtn'),mm=document.getElementById('mobileMenu');
+mb?.addEventListener('click',()=>{mm.classList.toggle('active');mb.querySelector('.material-icons').textContent=mm.classList.contains('active')?'close':'menu'});
+mm?.querySelectorAll('a').forEach(l=>l.addEventListener('click',()=>{mm.classList.remove('active');mb.querySelector('.material-icons').textContent='menu'}));
+</script>
+</body>
+</html>
