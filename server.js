@@ -2577,7 +2577,7 @@ app.get('/api/admin/debug-user', async (req, res) => {
 });
 
 // POST /api/bill/create - Create a new bill
-app.post('/api/bill/create', async (req, res) => {
+app.post('/api/bill/create', sessionAuthMiddleware, async (req, res) => {
   try {
     const { customerId, amount, items, discount, invoice_number, gst_enabled, taxable_amount, total_cgst, total_sgst, total_igst } = req.body;
     if (!customerId || amount === undefined || amount === null || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -2734,7 +2734,7 @@ app.post('/api/customer/update', sessionAuthMiddleware, async (req, res) => {
 });
 
 // POST /api/payment/add - Record a payment
-app.post('/api/payment/add', async (req, res) => {
+app.post('/api/payment/add', sessionAuthMiddleware, async (req, res) => {
   try {
     const { customerId, amount, note, payment_mode, type } = req.body;
     const txType = type === 'credit' ? 'credit' : 'payment';
@@ -2848,7 +2848,7 @@ app.post('/api/items/update', sessionAuthMiddleware, async (req, res) => {
 });
 
 // GET /api/items — Get unique items from past bills (stored items catalog)
-app.get('/api/items', async (req, res) => {
+app.get('/api/items', sessionAuthMiddleware, async (req, res) => {
   try {
     const db = await readStoreDB(req.storeId);
     const itemMap = {};
@@ -2874,7 +2874,7 @@ app.get('/api/items', async (req, res) => {
 });
 
 // POST /api/bill/mark-paid - Mark a bill as paid
-app.post('/api/bill/mark-paid', async (req, res) => {
+app.post('/api/bill/mark-paid', sessionAuthMiddleware, async (req, res) => {
   try {
     const { billId } = req.body || {};
     if (!billId) {
