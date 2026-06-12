@@ -3021,7 +3021,7 @@ app.get('/api/store/me', sessionAuthMiddleware, async (req, res) => {
   }
 });
 
-app.get('/api/db', async (req, res) => {
+app.get('/api/db', sessionAuthMiddleware, async (req, res) => {
   const db = await readStoreDB(req.storeId);
   db.server_time = new Date().toISOString();
   res.json(db);
@@ -3032,7 +3032,7 @@ app.get('/api/db', async (req, res) => {
  * Returns only records that changed since the given ISO 8601 timestamp.
  * If `since` is missing or empty, returns a full dump (same as /api/db).
  */
-app.get('/api/db/changes', async (req, res) => {
+app.get('/api/db/changes', sessionAuthMiddleware, async (req, res) => {
   try {
     const since = req.query.since;
     if (!since) {
@@ -3621,7 +3621,7 @@ app.post('/api/send-reminders', async (req, res) => {
 });
 
 // GET /api/report — Get today's report JSON
-app.get('/api/report', async (req, res) => {
+app.get('/api/report', sessionAuthMiddleware, async (req, res) => {
   const db = await readStoreDB(req.storeId);
   const todayString = new Date().toISOString().substring(0, 10);
   const billsToday = db.bills.filter(b => b.created_at.startsWith(todayString));

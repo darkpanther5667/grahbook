@@ -24,15 +24,21 @@ object DeltaSyncManager {
 
     /**
      * Fetch the full database using delta if available, full fetch otherwise.
+     * IMPORTANT: On cold start (currentDb == null), always do a full fetch.
+     * Delta sync with null currentDb produces an empty database, since the
+     * server only returns changes since last sync, not the full data set.
      */
     suspend fun fetch(context: Context, currentDb: FullDatabase?): FullDatabase? {
+        // Cold start — no in-memory data, need full database
+        if (currentDb == null) return fullFetch(context)
+
         val since = SessionManager.lastSyncedAt
 
-        return if (since.isNullOrBlank()) {
-            fullFetch(context)
-        } else {
-            deltaThenFallback(context, since, currentDb)
+        if (since.isNullOrBlank()) {
+            return fullFetch(context)
         }
+
+        return deltaThenFallback(context, since, currentDb)
     }
 
     /**
@@ -96,7 +102,13 @@ object DeltaSyncManager {
                 }
                 if (db != null) {
                     consecutiveFailures = 0
-                    SessionManager.saveLastSyncedAt(context, Instant.now().toString())
+                    // Use server time for lastSyncedAt to avoid clock skew issues.
+                    // Subtract 2s as a safety buffer so we never miss changes.
+                    val syncTime = db.serverTime?.let { t ->
+                        try { Instant.parse(t).minusSeconds(2).toString() }
+                        catch (e: Exception) { Instant.now().minusSeconds(2).toString() }
+                    } ?: Instant.now().minusSeconds(2).toString()
+                    SessionManager.saveLastSyncedAt(context, syncTime)
                     db
                 } else {
                     handleFailure(context, "Empty or malformed database response")
