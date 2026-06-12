@@ -1,4 +1,12 @@
 {
-  "rootDirectory": "client-web",
-  "framework": "nextjs"
+  "version": 2,
+  "builds": [
+    {
+      "src": "client-web/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "client-web/$1" }
+  ]
 }
