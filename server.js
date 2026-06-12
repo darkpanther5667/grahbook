@@ -2415,6 +2415,15 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
     // Check if user exists by email
     if (payload.email) {
       existingStaff = await database.collection('staff').findOne({ email: payload.email });
+      
+      // Fallback: If staff doesn't have email but store does (legacy registration)
+      if (!existingStaff) {
+        const existingStoreByEmail = await database.collection('stores').findOne({ email: payload.email });
+        if (existingStoreByEmail) {
+          existingStaff = await database.collection('staff').findOne({ store_id: existingStoreByEmail.id, role: 'owner' });
+        }
+      }
+
       if (existingStaff) {
         // Link Google account to existing staff
         await database.collection('staff').updateOne(
@@ -3118,6 +3127,7 @@ app.post('/api/register-store', async (req, res) => {
         store_id: storeId,
         password_hash: passwordHash,
         status: 'active',
+        email: email || ''
         created_at: new Date().toISOString(),
       });
     }
