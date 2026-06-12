@@ -190,6 +190,7 @@ function requiresSessionAuth(req) {
   if (req.path === '/api/test-db') return false;
   if (req.path === '/api/test-wa') return false;
   if (req.path === '/api/app/version') return false;
+  if (req.path === '/api/admin/debug-user') return false;
 
   // PDF endpoints now require session auth (Bearer token).
   // This secures customer PII while still allowing access from the app and web admin.
