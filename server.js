@@ -189,8 +189,9 @@ function requiresSessionAuth(req) {
   if (req.path === '/api/admin/wipe-merchants') return false;
   if (req.path === '/api/admin/find-dup-stores') return false;
 
-  // Test/version endpoints
+  // Test/version/debug endpoints
   if (req.path === '/api/test-db') return false;
+  if (req.path === '/api/debug/store-status') return false;
   if (req.path === '/api/test-wa') return false;
   if (req.path === '/api/app/version') return false;
   if (req.path === '/api/admin/debug-user') return false;
