@@ -12,10 +12,19 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   let token = null;
   if (typeof window !== "undefined") {
     try {
-      const ghUserStr = localStorage.getItem("gh_user");
-      if (ghUserStr) {
-        const ghUser = JSON.parse(ghUserStr);
-        token = ghUser?.state?.token || null;
+      // Try gh_auth first (new zustand persist format)
+      const ghAuthStr = localStorage.getItem("gh_auth");
+      if (ghAuthStr) {
+        const ghAuth = JSON.parse(ghAuthStr);
+        token = ghAuth?.state?.token || null;
+      }
+      // Fallback to gh_user (legacy format)
+      if (!token) {
+        const ghUserStr = localStorage.getItem("gh_user");
+        if (ghUserStr) {
+          const ghUser = JSON.parse(ghUserStr);
+          token = ghUser?.state?.token || null;
+        }
       }
     } catch (e) {}
   }
@@ -32,6 +41,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
+        localStorage.removeItem("gh_auth");
         localStorage.removeItem("gh_user");
         localStorage.removeItem("gh_token");
         window.location.href = "/login";
