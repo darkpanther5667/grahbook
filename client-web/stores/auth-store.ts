@@ -4,7 +4,16 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Store } from "@/types";
 
+const AUTH_KEY = "gh_auth";
 const LEGACY_TOKEN_KEY = "gh_token";
+const LEGACY_USER_KEY = "gh_user";
+
+const DEFAULT_STATE = {
+  token: null as string | null,
+  store: null as Store | null,
+  user: null as { name: string; phone: string; email?: string } | null,
+  isAuthenticated: false,
+};
 
 export interface AuthState {
   token: string | null;
@@ -15,40 +24,42 @@ export interface AuthState {
   logout: () => void;
 }
 
+/** Migrate legacy auth formats from index.html login to zustand persist format */
 function migrateLegacyAuth() {
-  // Migration 1: Check if there's old zustand format in gh_user (from previous sessions)
-  // and move it to gh_auth
+  // Migration 1: old zustand format in gh_user → move to gh_auth
   try {
-    const oldRaw = localStorage.getItem("gh_user");
+    const oldRaw = localStorage.getItem(LEGACY_USER_KEY);
     if (oldRaw) {
       const old = JSON.parse(oldRaw);
       if (old && old.state && old.version !== undefined) {
-        // This is old zustand persist format - migrate to gh_auth
-        localStorage.setItem("gh_auth", oldRaw);
-        localStorage.removeItem("gh_user");
+        localStorage.setItem(AUTH_KEY, oldRaw);
+        localStorage.removeItem(LEGACY_USER_KEY);
       }
     }
   } catch { /* ignore */ }
 
-  // Migration 2: Check if landing page (index.html) stored a token
-  // First try gh_token, then fallback to token inside gh_user object
+  // Migration 2: landing page flat format (gh_token + gh_user)
   let legacyToken = localStorage.getItem(LEGACY_TOKEN_KEY);
 
-  // Parse the legacy user from gh_user (flat format from index.html)
-  // Note: gh_user might have been deleted by Migration 1 if it was zustand format
   try {
-    const raw = localStorage.getItem("gh_user");
+    const raw = localStorage.getItem(LEGACY_USER_KEY);
     if (!raw) return;
     const legacy = JSON.parse(raw);
     if (!legacy || !legacy.loggedIn) return;
 
-    // Fallback: if gh_token wasn't set, extract token from inside gh_user
+    // Fallback: extract token from inside gh_user if gh_token missing
     if (!legacyToken && legacy.token) {
       legacyToken = legacy.token;
     }
     if (!legacyToken) return;
 
-    // Build a Store object from the legacy format
+    // Reject corrupted tokens from previous bugs
+    if (legacyToken === "undefined" || legacyToken === "null") {
+      localStorage.removeItem(LEGACY_TOKEN_KEY);
+      localStorage.removeItem(LEGACY_USER_KEY);
+      return;
+    }
+
     const store: Store = {
       id: legacy.store_id || "",
       store_name: legacy.store || legacy.name || "My Store",
@@ -61,7 +72,6 @@ function migrateLegacyAuth() {
       status: "active",
     };
 
-    // Save in zustand-compatible format under gh_auth key
     const newState = {
       state: {
         token: legacyToken,
@@ -75,40 +85,65 @@ function migrateLegacyAuth() {
       },
       version: 0,
     };
-    localStorage.setItem("gh_auth", JSON.stringify(newState));
+    localStorage.setItem(AUTH_KEY, JSON.stringify(newState));
 
-    // Clean up legacy keys so this only runs once
+    // Clean up legacy keys
     localStorage.removeItem(LEGACY_TOKEN_KEY);
-    localStorage.removeItem("gh_user");
-  } catch {
-    // If parsing fails, ignore
-  }
+    localStorage.removeItem(LEGACY_USER_KEY);
+  } catch { /* ignore */ }
 }
 
-// Run migration immediately so it's in place before zustand hydrates
-if (typeof window !== "undefined") {
+function loadInitialState(): AuthState {
+  if (typeof window === "undefined") {
+    return { ...DEFAULT_STATE };
+  }
+
+  // Run migration first so gh_auth is populated
   migrateLegacyAuth();
+
+  // Read gh_auth directly (synchronous) instead of waiting for persist rehydration
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return { ...DEFAULT_STATE };
+    const parsed = JSON.parse(raw);
+    const s = parsed?.state;
+    if (!s?.isAuthenticated || !s?.token) return { ...DEFAULT_STATE };
+
+    // Reject corrupted tokens
+    if (s.token === "undefined" || s.token === "null") {
+      localStorage.removeItem(AUTH_KEY);
+      return { ...DEFAULT_STATE };
+    }
+
+    return {
+      token: s.token,
+      store: s.store || null,
+      user: s.user || null,
+      isAuthenticated: true,
+    };
+  } catch {
+    return { ...DEFAULT_STATE };
+  }
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      token: null,
-      store: null,
-      user: null,
-      isAuthenticated: false,
+      ...loadInitialState(),
+
       setAuth: (token, store, user) =>
         set({ token, store, user, isAuthenticated: true }),
+
       logout: () => {
-        // Also clear the landing page's gh_token so Google login from index.html doesn't cause re-auth
         if (typeof window !== "undefined") {
           localStorage.removeItem(LEGACY_TOKEN_KEY);
+          localStorage.removeItem(AUTH_KEY);
         }
         set({ token: null, store: null, user: null, isAuthenticated: false });
       },
     }),
     {
-      name: "gh_auth",
+      name: AUTH_KEY,
       storage: createJSONStorage(() => localStorage),
     }
   )

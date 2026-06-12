@@ -9,6 +9,7 @@ const PDFDocument = require('pdfkit');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { OAuth2Client } = require('google-auth-library');
 
 // Initialize Gemini AI
 const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -84,16 +85,21 @@ const corsAllowedOrigins = [...new Set([...HARDCODED_ORIGINS, ...extraOrigins])]
 app.use((req, res, next) => {
   const origin = req.get('Origin');
   if (!origin) {
-    // Same-origin or server-to-server — always allow
+    // Same-origin or server-to-server — allow but without credentials
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-KEY, X-ADMIN-KEY');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    return next();
   } else if (corsAllowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
   // null origin is denied (sandboxed iframes — CSRF protection)
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-KEY, X-ADMIN-KEY');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
@@ -110,6 +116,9 @@ app.use(morgan('short'));
 
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'db.json');
+
+// Google OAuth client ID (used for verifying Google ID tokens server-side)
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '884521630755-bd3rvn1a64pcsot27sjr2a2unj46boad.apps.googleusercontent.com';
 
 // ─── MOBILE API KEY AUTH ──────────────────────────────────────────────────────
 
@@ -187,15 +196,11 @@ function requiresSessionAuth(req) {
   if (req.path === '/api/auth/google') return false;
   if (req.path === '/api/auth/logout') return false;
   if (req.path === '/api/admin/clear-all') return false;
-  if (req.path === '/api/admin/wipe-merchants') return false;
-  if (req.path === '/api/admin/find-dup-stores') return false;
 
-  // Test/version/debug endpoints
+  // Test/version endpoints (no data leak)
   if (req.path === '/api/test-db') return false;
-  if (req.path === '/api/debug/store-status') return false;
   if (req.path === '/api/test-wa') return false;
   if (req.path === '/api/app/version') return false;
-  if (req.path === '/api/admin/debug-user') return false;
 
   // PDF endpoints now require session auth (Bearer token).
   // This secures customer PII while still allowing access from the app and web admin.
@@ -227,6 +232,23 @@ async function sessionAuthMiddleware(req, res, next) {
 }
 
 app.use(sessionAuthMiddleware);
+
+// ─── ADMIN AUTH MIDDLEWARE ─────────────────────────────────────────────────────
+// Requires both a valid session AND a matching ADMIN_KEY header.
+// Alternatively accepts just the ADMIN_KEY as ?key param for ad-hoc admin queries.
+function adminAuthMiddleware(req, res, next) {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) {
+    return res.status(500).json({ success: false, message: 'ADMIN_KEY not configured on server' });
+  }
+  // Allow via ?key=xxx query param (for simple GET admin tools)
+  if (req.query.key === adminKey) return next();
+  // Allow via X-ADMIN-KEY header
+  if (req.get('X-ADMIN-KEY') === adminKey) return next();
+  // Allow via Bearer token (session) — only for admin store IDs
+  if (req.storeId && req.storeId.startsWith('admin_')) return next();
+  return res.status(403).json({ success: false, message: 'Admin access required' });
+}
 
 // ─── SIGNED URL TOKENS FOR PDF SHARING ────────────────────────────────────────
 // Generates time-limited tokens so PDFs can be shared via WhatsApp without auth.
@@ -348,13 +370,14 @@ async function readStoreDB(storeId) {
     bills: storeBills,
     staff: (db.staff || []).filter(s => (s.store_id || 'default') === sid),
     items: (db.items || []).filter(i => (i.store_id || 'default') === sid),
+    expenses: (db.expenses || []).filter(e => (e.store_id || 'default') === sid),
   };
 }
 
 // ─── DATABASE HELPERS (MONGODB) ────────────────────────────────────────────────
 const { connectDB, getFullDB } = require('./db.js');
 
-let cachedDB = { shop: {}, customers: [], transactions: [], bills: [], staff: [], stores: [] };
+let cachedDB = { shop: {}, customers: [], transactions: [], bills: [], staff: [], stores: [], items: [], expenses: [] };
 let dbCacheTimestamp = 0;
 const DB_CACHE_TTL = 5000; // 5 seconds cache TTL
 
@@ -600,7 +623,7 @@ function getCustomerOutstanding(customerId, transactions, bills) {
     }
   });
   bills.forEach(b => {
-    if (b.customer_id === customerId && b.status === 'unpaid') balance += b.total;
+    if (b.customer_id === customerId && (b.status === 'unpaid' || b.status === 'overdue' || b.status === 'partial')) balance += b.total;
   });
   return balance;
 }
@@ -2050,10 +2073,13 @@ app.post('/webhook', rateLimiter({ windowMs: 60000, max: 30, keyPrefix: 'webhook
   return res.sendStatus(200);
 });
 
-// GET /api/test-wa — Diagnostic route to test WhatsApp API (requires X-ADMIN-KEY)
+// GET /api/test-wa — Diagnostic route to test WhatsApp API (requires X-ADMIN-KEY header)
 app.get('/api/test-wa', async (req, res) => {
   const adminKey = process.env.ADMIN_KEY;
-  if (adminKey && req.get('X-ADMIN-KEY') !== adminKey) {
+  if (!adminKey) {
+    return res.status(500).json({ error: 'ADMIN_KEY not configured on server' });
+  }
+  if (req.get('X-ADMIN-KEY') !== adminKey) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   const token = process.env.WHATSAPP_TOKEN;
@@ -2359,50 +2385,61 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
       return res.status(400).json({ success: false, message: 'Google credential is required' });
     }
 
-    // Verify the Google ID token
-    // The credential is a JWT signed by Google. We verify it by checking the header.
+    // Verify the Google ID token using google-auth-library (cryptographic signature verification)
     let payload;
     let isFirebaseToken = false;
     let realGoogleSub = null;
     try {
-      // Decode the JWT payload (middle segment)
-      const parts = credential.split('.');
-      if (parts.length !== 3) throw new Error('Invalid token format');
-      const decoded = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+      // Create OAuth2Client with the provided clientId for audience verification
+      const googleClient = new OAuth2Client(clientId || GOOGLE_CLIENT_ID);
 
-      // Basic validation: check issuer and audience
-      const allowedIssuers = ['accounts.google.com', 'https://accounts.google.com'];
-      isFirebaseToken = decoded.iss && decoded.iss.startsWith('https://securetoken.google.com/');
-      if (!allowedIssuers.includes(decoded.iss) && !isFirebaseToken) {
-        throw new Error('Invalid issuer: ' + decoded.iss);
+      // Try verifying as a Google ID token first
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: clientId || GOOGLE_CLIENT_ID,
+        });
+        const decoded = ticket.getPayload();
+        if (!decoded) throw new Error('Empty payload from verified token');
+
+        payload = {
+          sub: decoded.sub,
+          email: decoded.email || '',
+          name: decoded.name || decoded.email?.split('@')[0] || 'User',
+          picture: decoded.picture || '',
+          email_verified: !!decoded.email_verified,
+        };
+      } catch (googleVerifyErr) {
+        // If Google verification fails, try Firebase token verification
+        // Firebase ID tokens have a different issuer and are verified differently
+        const parts = credential.split('.');
+        if (parts.length !== 3) throw new Error('Invalid token format');
+        const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+        const decoded = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+
+        if (!decoded.iss || !decoded.iss.startsWith('https://securetoken.google.com/')) {
+          throw new Error('Token verification failed: ' + googleVerifyErr.message);
+        }
+        isFirebaseToken = true;
+
+        // Verify Firebase token: check expiry, issuer
+        if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+          throw new Error('Token expired');
+        }
+
+        // Extract the real Google account ID from Firebase token
+        if (decoded.firebase?.identities?.['google.com']?.[0]) {
+          realGoogleSub = decoded.firebase.identities['google.com'][0];
+        }
+
+        payload = {
+          sub: decoded.sub,
+          email: decoded.email || '',
+          name: decoded.name || decoded.email?.split('@')[0] || 'User',
+          picture: decoded.picture || '',
+          email_verified: decoded.email_verified || false,
+        };
       }
-
-      // If clientId is provided, verify audience (skip for Firebase secure tokens as their aud is the project ID)
-      if (clientId && decoded.aud !== clientId && !(decoded.iss && decoded.iss.startsWith('https://securetoken.google.com/'))) {
-        throw new Error('Invalid audience: ' + decoded.aud);
-      }
-
-      // Check expiry
-      if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
-        throw new Error('Token expired');
-      }
-
-      // ⭐ CRITICAL: For Firebase tokens, extract the real Google account ID
-      // Firebase ID tokens have sub = Firebase UID, but the real Google sub
-      // lives inside firebase.identities.google.com[0].
-      // Without this, Android (Firebase) and Web (raw Google JWT) would
-      // create separate stores for the SAME Google account.
-      if (isFirebaseToken && decoded.firebase?.identities?.['google.com']?.[0]) {
-        realGoogleSub = decoded.firebase.identities['google.com'][0];
-      }
-
-      payload = {
-        sub: decoded.sub,
-        email: decoded.email || '',
-        name: decoded.name || decoded.email?.split('@')[0] || 'User',
-        picture: decoded.picture || '',
-        email_verified: decoded.email_verified || false,
-      };
     } catch (verifyErr) {
       console.error('Google token verification failed:', verifyErr.message);
       return res.status(401).json({ success: false, message: 'Invalid Google credential: ' + verifyErr.message });
@@ -2562,8 +2599,7 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
   }
 });
 
-app.get('/api/admin/debug-user', async (req, res) => {
-  if (req.query.key !== 'antigravity') return res.sendStatus(403);
+app.get('/api/admin/debug-user', adminAuthMiddleware, async (req, res) => {
   try {
     const database = await connectDB();
     const email = 'agrawalmanas150@gmail.com';
@@ -2594,7 +2630,21 @@ app.post('/api/bill/create', sessionAuthMiddleware, async (req, res) => {
     if (!fullDb.customers) fullDb.customers = [];
     if (!fullDb.transactions) fullDb.transactions = [];
 
-    const customer = fullDb.customers.find(c => c.id === customerId && (c.store_id || 'default') === sid);
+    // Auto-create Walk-in Customer for QuickBill flow
+    let finalCustomerId = customerId;
+    if (customerId === 'walk-in' || customerId === 'walkin') {
+      const walkinId = genId('c');
+      fullDb.customers.push({
+        id: walkinId,
+        name: 'Walk-in Customer',
+        phone: '0000000000',
+        created_at: new Date().toISOString(),
+        store_id: sid,
+      });
+      finalCustomerId = walkinId;
+    }
+
+    const customer = fullDb.customers.find(c => c.id === finalCustomerId && (c.store_id || 'default') === sid);
     if (!customer) {
       return res.status(404).json({ success: false, message: 'Customer not found' });
     }
@@ -2624,7 +2674,7 @@ app.post('/api/bill/create', sessionAuthMiddleware, async (req, res) => {
       id: newBillId,
       invoice_number: invoice_number || newBillId,
       discount: discountVal,
-      customer_id: customerId,
+      customer_id: finalCustomerId,
       items: billItems,
       total: calculatedTotal,
       gst_enabled: gst_enabled || false,
@@ -2771,9 +2821,30 @@ app.post('/api/payment/add', sessionAuthMiddleware, async (req, res) => {
     });
 
     await writeDB(fullDb);
-    // Invalidate cache to ensure AI gets fresh data
     cachedDB = null;
     dbCacheTimestamp = 0;
+
+    // Auto-mark unpaid bill(s) as paid if payment covers them
+    if (txType === 'payment') {
+      const currentDb = await readDB();
+      const unpaidBills = currentDb.bills
+        .filter(b => b.customer_id === customerId && b.status !== 'paid' && (b.store_id || 'default') === sid)
+        .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+      const totalUnpaid = unpaidBills.reduce((sum, b) => sum + (b.total || 0), 0);
+      if (totalUnpaid > 0 && parsedAmount >= totalUnpaid) {
+        const now = new Date().toISOString();
+        unpaidBills.forEach(b => { b.status = 'paid'; b.paid_at = now; });
+        await writeDB(currentDb);
+        cachedDB = null;
+        dbCacheTimestamp = 0;
+      } else if (unpaidBills.length === 1 && parsedAmount >= (unpaidBills[0].total || 0)) {
+        unpaidBills[0].status = 'paid';
+        unpaidBills[0].paid_at = new Date().toISOString();
+        await writeDB(currentDb);
+        cachedDB = null;
+        dbCacheTimestamp = 0;
+      }
+    }
 
     const balance = getCustomerOutstanding(customerId, fullDb.transactions, fullDb.bills);
     res.json({ success: true, customerName: customer.name, amount: parsedAmount, remainingOutstanding: balance });
@@ -2847,6 +2918,28 @@ app.post('/api/items/update', sessionAuthMiddleware, async (req, res) => {
   }
 });
 
+// DELETE /api/items/delete/:id — Delete an inventory item
+app.delete('/api/items/delete/:id', sessionAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sid = req.storeId || 'default';
+    const fullDb = await readDB();
+    if (!fullDb.items) fullDb.items = [];
+    const idx = fullDb.items.findIndex(i => i.id === id && (i.store_id || 'default') === sid);
+    if (idx === -1) {
+      return res.status(404).json({ success: false, message: 'Item not found' });
+    }
+    fullDb.items.splice(idx, 1);
+    await writeDB(fullDb);
+    cachedDB = null;
+    dbCacheTimestamp = 0;
+    res.json({ success: true, message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete item' });
+  }
+});
+
 // GET /api/items — Get unique items from past bills (stored items catalog)
 app.get('/api/items', sessionAuthMiddleware, async (req, res) => {
   try {
@@ -2897,6 +2990,20 @@ app.post('/api/bill/mark-paid', sessionAuthMiddleware, async (req, res) => {
     bill.status = 'paid';
     bill.paid_at = new Date().toISOString();
 
+    // Create a payment transaction for audit trail
+    if (!fullDb.transactions) fullDb.transactions = [];
+    fullDb.transactions.push({
+      id: genId('t'),
+      customer_id: bill.customer_id,
+      type: 'payment',
+      amount: bill.total,
+      note: 'Marked as paid',
+      payment_mode: 'Cash',
+      staff_phone: '',
+      timestamp: bill.paid_at,
+      store_id: sid,
+    });
+
     await writeDB(fullDb);
     cachedDB = null;
     dbCacheTimestamp = 0;
@@ -2910,26 +3017,14 @@ app.post('/api/bill/mark-paid', sessionAuthMiddleware, async (req, res) => {
 
 // ─── DIAGNOSTIC / ADMIN ENDPOINTS ──────────────────────────────────────────────
 
-// GET /api/debug/store-status — Returns store health for current session
-// If no store_id is provided, lists all stores (summary).
+// GET /api/debug/store-status — Returns store health for authenticated session
 app.get('/api/debug/store-status', async (req, res) => {
   try {
     const fullDb = await readDB();
-    const sid = req.query.store_id || req.storeId;
-
+    // Only allow the authenticated user's own store — ignore query param override
+    const sid = req.storeId;
     if (!sid) {
-      // List all stores when no store_id is provided
-      const stores = (fullDb.stores || []).map(s => ({
-        store_id: s.id,
-        name: s.store_name,
-        email: s.email,
-        phone: s.phone,
-        status: s.status,
-        staff_count: (fullDb.staff || []).filter(st => (st.store_id || 'default') === s.id).length,
-        customer_count: (fullDb.customers || []).filter(c => (c.store_id || 'default') === s.id).length,
-        bill_count: (fullDb.bills || []).filter(b => (b.store_id || 'default') === s.id).length,
-      }));
-      return res.json({ success: true, stores });
+      return res.status(400).json({ success: false, message: 'Missing store_id' });
     }
 
     const store = (fullDb.stores || []).find(s => s.id === sid);
@@ -2956,8 +3051,7 @@ app.get('/api/debug/store-status', async (req, res) => {
 });
 
 // GET /api/admin/find-dup-stores — Find stores with same email/phone (admin only)
-app.get('/api/admin/find-dup-stores', async (req, res) => {
-  if (req.query.key !== 'antigravity') return res.sendStatus(403);
+app.get('/api/admin/find-dup-stores', adminAuthMiddleware, async (req, res) => {
   try {
     const db = await readDB();
     const stores = db.stores || [];
@@ -3098,9 +3192,8 @@ app.post('/api/db', async (req, res) => {
   res.json({ success: true });
 });
 
-// POST /api/register-store - Register a new store
-// Temporary admin wipe for testing
-app.get('/api/admin/wipe-merchants', async (req, res) => {
+// POST /api/admin/wipe-merchants — Admin-only: wipes all merchant data (requires X-ADMIN-KEY)
+app.post('/api/admin/wipe-merchants', adminAuthMiddleware, async (req, res) => {
   const database = await connectDB();
   if (database) {
     await database.collection('staff').deleteMany({});
@@ -3118,8 +3211,8 @@ app.post('/api/payment/payu-hash', sessionAuthMiddleware, async (req, res) => {
   try {
     const { amount, productinfo, firstname, email, phone } = req.body;
     const txnid = 'txn_' + Date.now();
-    const key = process.env.PAYU_KEY || 'J9MObM';
-    const salt = process.env.PAYU_SALT || 'W4lRFHXt4hTGM4BjEto8ZVf2JxRFayMQ';
+    const key = process.env.PAYU_KEY;
+    const salt = process.env.PAYU_SALT;
     
     if (!key || !salt) {
       return res.status(500).json({ success: false, message: 'PayU credentials missing' });
@@ -3567,6 +3660,90 @@ app.delete('/api/bill/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting bill:', error);
     return res.status(500).json({ success: false, message: 'Failed to delete bill' });
+  }
+});
+
+// DELETE /api/customer/:id - Delete a customer and their transactions/bills
+app.delete('/api/customer/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sid = req.storeId || 'default';
+    const fullDb = await readDB();
+    if (!fullDb.customers) fullDb.customers = [];
+    const idx = fullDb.customers.findIndex(c => c.id === id && (c.store_id || 'default') === sid);
+    if (idx === -1) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+    fullDb.customers.splice(idx, 1);
+    // Remove all transactions for this customer
+    if (fullDb.transactions) {
+      fullDb.transactions = fullDb.transactions.filter(t => (t.customer_id || t.customerId) !== id);
+    }
+    // Remove all bills for this customer
+    if (fullDb.bills) {
+      fullDb.bills = fullDb.bills.filter(b => b.customer_id !== id);
+    }
+    await writeDB(fullDb);
+    cachedDB = null;
+    dbCacheTimestamp = 0;
+    return res.json({ success: true, message: 'Customer and associated data deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting customer:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete customer' });
+  }
+});
+
+// ─── EXPENSE ROUTES ──────────────────────────────────────────────────────────────
+
+// POST /api/expense/add — Add a new expense
+app.post('/api/expense/add', async (req, res) => {
+  try {
+    const { title, amount, category, note } = req.body;
+    const sid = req.storeId || 'default';
+    if (!title || !amount) {
+      return res.status(400).json({ success: false, message: 'Title and amount are required' });
+    }
+    const fullDb = await readDB();
+    if (!fullDb.expenses) fullDb.expenses = [];
+    const expense = {
+      id: `exp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      title,
+      amount: parseFloat(amount),
+      category: category || 'Other',
+      note: note || null,
+      store_id: sid,
+      created_at: new Date().toISOString()
+    };
+    fullDb.expenses.push(expense);
+    await writeDB(fullDb);
+    cachedDB = null;
+    dbCacheTimestamp = 0;
+    return res.json({ success: true, expense, message: 'Expense added successfully' });
+  } catch (error) {
+    console.error('Error adding expense:', error);
+    return res.status(500).json({ success: false, message: 'Failed to add expense' });
+  }
+});
+
+// DELETE /api/expense/:id — Delete an expense
+app.delete('/api/expense/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sid = req.storeId || 'default';
+    const fullDb = await readDB();
+    if (!fullDb.expenses) fullDb.expenses = [];
+    const idx = fullDb.expenses.findIndex(e => e.id === id && (e.store_id || 'default') === sid);
+    if (idx === -1) {
+      return res.status(404).json({ success: false, message: 'Expense not found' });
+    }
+    fullDb.expenses.splice(idx, 1);
+    await writeDB(fullDb);
+    cachedDB = null;
+    dbCacheTimestamp = 0;
+    return res.json({ success: true, message: 'Expense deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting expense:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete expense' });
   }
 });
 
