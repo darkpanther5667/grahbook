@@ -9,7 +9,17 @@ export const apiClient: AxiosInstance = axios.create({
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("gh_token") : null;
+  let token = null;
+  if (typeof window !== "undefined") {
+    try {
+      const ghUserStr = localStorage.getItem("gh_user");
+      if (ghUserStr) {
+        const ghUser = JSON.parse(ghUserStr);
+        token = ghUser?.state?.token || null;
+      }
+    } catch (e) {}
+  }
+  
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
