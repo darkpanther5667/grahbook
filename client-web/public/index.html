@@ -1063,7 +1063,7 @@ async function handleLogin(e){
       store_id:store.id||'',
       loggedIn:true
     },d.token);
-    closeLogin();return false;
+    closeLogin();window.location.href='/dashboard';return false;
   }catch(err){
     serverErr.textContent='Server not reachable. Please try again later.';
     serverErr.style.display='block';
@@ -1182,7 +1182,7 @@ function handleGoogleCredentialResponse(response){
   .then(data=>{
     if(!data.success){alert(data.message||'Google login failed.');return;}
     var store=data.store||{};
-    setSession({name:store.owner_name||store.store_name||'Google User',email:store.email||'',phone:store.phone||'',store:store.store_name||'My Store',social:'google',loggedIn:true,token:data.token});
+    setSession({name:store.owner_name||store.store_name||'Google User',email:store.email||'',phone:store.phone||'',store:store.store_name||'My Store',social:'google',loggedIn:true},data.token);
     closeLogin();
     window.location.href='/dashboard';
   })

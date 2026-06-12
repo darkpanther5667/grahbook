@@ -30,9 +30,9 @@ function migrateLegacyAuth() {
     }
   } catch { /* ignore */ }
 
-  // Migration 2: Check if landing page (index.html) stored a token under gh_token
-  const legacyToken = localStorage.getItem(LEGACY_TOKEN_KEY);
-  if (!legacyToken) return;
+  // Migration 2: Check if landing page (index.html) stored a token
+  // First try gh_token, then fallback to token inside gh_user object
+  let legacyToken = localStorage.getItem(LEGACY_TOKEN_KEY);
 
   // Parse the legacy user from gh_user (flat format from index.html)
   // Note: gh_user might have been deleted by Migration 1 if it was zustand format
@@ -41,6 +41,12 @@ function migrateLegacyAuth() {
     if (!raw) return;
     const legacy = JSON.parse(raw);
     if (!legacy || !legacy.loggedIn) return;
+
+    // Fallback: if gh_token wasn't set, extract token from inside gh_user
+    if (!legacyToken && legacy.token) {
+      legacyToken = legacy.token;
+    }
+    if (!legacyToken) return;
 
     // Build a Store object from the legacy format
     const store: Store = {
