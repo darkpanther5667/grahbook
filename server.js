@@ -3137,7 +3137,7 @@ app.post('/api/register-store', async (req, res) => {
         store_id: storeId,
         password_hash: passwordHash,
         status: 'active',
-        email: email || ''
+        email: email || '',
         created_at: new Date().toISOString(),
       });
     }
