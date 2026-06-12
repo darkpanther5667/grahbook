@@ -185,6 +185,7 @@ function requiresSessionAuth(req) {
   if (req.path === '/api/auth/logout') return false;
   if (req.path === '/api/admin/clear-all') return false;
   if (req.path === '/api/admin/wipe-merchants') return false;
+  if (req.path === '/api/admin/find-dup-stores') return false;
 
   // Test/version endpoints
   if (req.path === '/api/test-db') return false;
@@ -2365,7 +2366,8 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
 
       // Basic validation: check issuer and audience
       const allowedIssuers = ['accounts.google.com', 'https://accounts.google.com'];
-      if (!allowedIssuers.includes(decoded.iss) && !(decoded.iss && decoded.iss.startsWith('https://securetoken.google.com/'))) {
+      const isFirebaseToken = decoded.iss && decoded.iss.startsWith('https://securetoken.google.com/');
+      if (!allowedIssuers.includes(decoded.iss) && !isFirebaseToken) {
         throw new Error('Invalid issuer: ' + decoded.iss);
       }
 
@@ -2377,6 +2379,16 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
       // Check expiry
       if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
         throw new Error('Token expired');
+      }
+
+      // ⭐ CRITICAL: For Firebase tokens, extract the real Google account ID
+      // Firebase ID tokens have sub = Firebase UID, but the real Google sub
+      // lives inside firebase.identities.google.com[0].
+      // Without this, Android (Firebase) and Web (raw Google JWT) would
+      // create separate stores for the SAME Google account.
+      let realGoogleSub = null;
+      if (isFirebaseToken && decoded.firebase?.identities?.['google.com']?.[0]) {
+        realGoogleSub = decoded.firebase.identities['google.com'][0];
       }
 
       payload = {
@@ -2394,11 +2406,26 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
     const database = await connectDB();
     if (!database) return res.status(500).json({ success: false, message: 'Server DB not configured' });
 
-    // Check if user already exists with this Google ID
-    let existingStaff = await database.collection('staff').findOne({ google_id: payload.sub });
+    // ── Step 1: Find existing staff by Google ID ─────────────────────────────
+    // For Firebase tokens, use the REAL Google sub (not Firebase UID).
+    // Also check Firebase UID for backward compatibility with legacy accounts.
+    const googleIdToMatch = realGoogleSub || payload.sub;
+    let existingStaff = await database.collection('staff').findOne({ google_id: googleIdToMatch });
+
+    // For Firebase tokens, also check by Firebase UID (legacy accounts created before this fix)
+    if (!existingStaff && isFirebaseToken && realGoogleSub) {
+      existingStaff = await database.collection('staff').findOne({ google_id: payload.sub });
+    }
 
     if (existingStaff) {
-      // Existing user — login
+      // Migrate legacy Firebase-UID google_id to real Google sub if needed
+      if (isFirebaseToken && realGoogleSub && existingStaff.google_id !== realGoogleSub) {
+        await database.collection('staff').updateOne(
+          { _id: existingStaff._id },
+          { $set: { google_id: realGoogleSub, google_picture: payload.picture } }
+        );
+      }
+
       const token = crypto.randomBytes(32).toString('hex');
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       await database.collection('sessions').insertOne({
@@ -2409,18 +2436,30 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
         expires_at: expiresAt,
       });
 
+      // Auto-activate if store was stuck in pending_registration
       const store = await database.collection('stores').findOne({ id: existingStaff.store_id });
+      if (store && store.status === 'pending_registration') {
+        await database.collection('stores').updateOne(
+          { id: existingStaff.store_id },
+          { $set: { status: 'active' } }
+        );
+        await database.collection('staff').updateMany(
+          { store_id: existingStaff.store_id },
+          { $set: { status: 'active' } }
+        );
+        store.status = 'active';
+        console.log(`✅ Auto-activated store ${existingStaff.store_id} for ${payload.email}`);
+      }
+
       console.log(`🔑 Google login: ${payload.email} → store ${existingStaff.store_id}`);
       return res.json({ success: true, token, store, isNewUser: false });
     }
 
-    // Check if user exists by email
+    // ── Step 2: Try to find & link existing account by email ──────────────────
     if (payload.email) {
       existingStaff = await database.collection('staff').findOne({ email: payload.email });
-      
 
-
-      // Fallback: If staff doesn't have email but store does (legacy registration)
+      // Fallback: search stores collection by email, then find owner staff
       if (!existingStaff) {
         const existingStoreByEmail = await database.collection('stores').findOne({ email: payload.email });
         if (existingStoreByEmail) {
@@ -2429,10 +2468,28 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
       }
 
       if (existingStaff) {
-        // Link Google account to existing staff
+        // Link Google account to existing staff (use real Google sub if available)
+        const linkGoogleId = realGoogleSub || payload.sub;
+        const updateFields = { google_id: linkGoogleId, google_picture: payload.picture };
+
+        // Clean up fake google_ phone prefix (from old pending_registration)
+        if (existingStaff.phone && existingStaff.phone.startsWith('google_')) {
+          updateFields.phone = '';
+        }
+
         await database.collection('staff').updateOne(
           { _id: existingStaff._id },
-          { $set: { google_id: payload.sub, google_picture: payload.picture } }
+          { $set: updateFields }
+        );
+
+        // Activate store if it was pending_registration
+        await database.collection('stores').updateOne(
+          { id: existingStaff.store_id, status: 'pending_registration' },
+          { $set: { status: 'active' } }
+        );
+        await database.collection('staff').updateMany(
+          { store_id: existingStaff.store_id, status: 'pending_registration' },
+          { $set: { status: 'active' } }
         );
 
         const token = crypto.randomBytes(32).toString('hex');
@@ -2446,56 +2503,54 @@ app.post('/api/auth/google', rateLimiter({ windowMs: 60000, max: 10, keyPrefix: 
         });
 
         const store = await database.collection('stores').findOne({ id: existingStaff.store_id });
-        console.log(`🔑 Google login (linked): ${payload.email} → store ${existingStaff.store_id}`);
+        console.log(`🔑 Google login (linked by email): ${payload.email} → store ${existingStaff.store_id}`);
         return res.json({ success: true, token, store, isNewUser: false });
       }
     }
 
-    // New user — create a pending store (needs phone number to complete registration)
-    // Generate a temporary store ID
-    const tempStoreId = 'google_' + crypto.randomBytes(8).toString('hex');
+    // ── Step 3: No existing account — create ACTIVE store ────────────────────
+    // No fake phone numbers, no pending_registration limbo.
+    // User can set their phone later via /api/store/activate.
+    const newStoreId = 'store_' + crypto.randomBytes(8).toString('hex');
 
-    // Create a temporary staff entry
-    const tempPhone = 'google_' + payload.sub;
     await database.collection('staff').insertOne({
       id: crypto.randomBytes(16).toString('hex'),
       name: payload.name,
-      phone: tempPhone,
+      phone: '',
       email: payload.email,
-      google_id: payload.sub,
+      google_id: realGoogleSub || payload.sub,
       google_picture: payload.picture,
-      store_id: tempStoreId,
+      store_id: newStoreId,
       role: 'owner',
-      status: 'pending_registration',
+      status: 'active',
       created_at: new Date().toISOString(),
     });
 
-    // Create a temporary store entry
     await database.collection('stores').insertOne({
-      id: tempStoreId,
+      id: newStoreId,
       store_name: payload.name + "'s Store",
       owner_name: payload.name,
-      phone: tempPhone,
+      phone: '',
       email: payload.email,
       business_type: 'retail',
       plan: 'basic',
       created_at: new Date().toISOString(),
-      status: 'pending_registration',
+      status: 'active',
     });
 
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await database.collection('sessions').insertOne({
       token,
-      store_id: tempStoreId,
-      phone: tempPhone,
+      store_id: newStoreId,
+      phone: '',
       created_at: new Date(),
       expires_at: expiresAt,
     });
 
-    const store = await database.collection('stores').findOne({ id: tempStoreId });
-    console.log(`🔑 Google new user: ${payload.email} → temp store ${tempStoreId}`);
-    return res.json({ success: true, token, store, isNewUser: true, needsPhoneVerification: true });
+    const store = await database.collection('stores').findOne({ id: newStoreId });
+    console.log(`🔑 Google new user: ${payload.email} → new store ${newStoreId} (active)`);
+    return res.json({ success: true, token, store, isNewUser: true });
   } catch (error) {
     console.error('Error in Google auth:', error);
     return res.status(500).json({ success: false, message: 'Google authentication failed' });
@@ -2848,10 +2903,85 @@ app.post('/api/bill/mark-paid', async (req, res) => {
   }
 });
 
+// ─── DIAGNOSTIC / ADMIN ENDPOINTS ──────────────────────────────────────────────
+
+// GET /api/debug/store-status — Returns store health for current session
+app.get('/api/debug/store-status', sessionAuthMiddleware, async (req, res) => {
+  try {
+    const sid = req.storeId;
+    const fullDb = await readDB();
+    const store = (fullDb.stores || []).find(s => s.id === sid);
+    const staff = (fullDb.staff || []).filter(s => (s.store_id || 'default') === sid);
+    const customers = (fullDb.customers || []).filter(c => (c.store_id || 'default') === sid);
+    const bills = (fullDb.bills || []).filter(b => (b.store_id || 'default') === sid);
+    const txns = (fullDb.transactions || []).filter(t => (t.store_id || 'default') === sid);
+
+    res.json({
+      success: true,
+      store_id: sid,
+      store_status: store?.status || 'unknown',
+      store_name: store?.store_name || '',
+      staff_count: staff.length,
+      customer_count: customers.length,
+      bill_count: bills.length,
+      transaction_count: txns.length,
+      phone_set: !!(store?.phone && !store.phone.startsWith('google_')),
+      has_email: !!store?.email,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/admin/find-dup-stores — Find stores with same email/phone (admin only)
+app.get('/api/admin/find-dup-stores', async (req, res) => {
+  if (req.query.key !== 'antigravity') return res.sendStatus(403);
+  try {
+    const db = await readDB();
+    const stores = db.stores || [];
+    const staff = db.staff || [];
+
+    // Group by email
+    const byEmail = {};
+    for (const s of stores) {
+      if (s.email) {
+        if (!byEmail[s.email]) byEmail[s.email] = [];
+        byEmail[s.email].push({ id: s.id, name: s.store_name, phone: s.phone, email: s.email, status: s.status });
+      }
+    }
+    const dupEmails = Object.entries(byEmail).filter(([, arr]) => arr.length > 1).map(([email, arr]) => ({ email, stores: arr }));
+
+    // Group by phone
+    const byPhone = {};
+    for (const s of stores) {
+      const p = s.phone && !s.phone.startsWith('google_') ? s.phone : null;
+      if (p) {
+        if (!byPhone[p]) byPhone[p] = [];
+        byPhone[p].push({ id: s.id, name: s.store_name, phone: s.phone, status: s.status });
+      }
+    }
+    const dupPhones = Object.entries(byPhone).filter(([, arr]) => arr.length > 1).map(([phone, arr]) => ({ phone, stores: arr }));
+
+    // Find staff without matching store (orphans)
+    const storeIds = new Set(stores.map(s => s.id));
+    const orphanStaff = staff.filter(s => !storeIds.has(s.store_id));
+
+    res.json({
+      success: true,
+      duplicate_emails: dupEmails,
+      duplicate_phones: dupPhones,
+      orphan_staff: orphanStaff,
+      total_stores: stores.length,
+      total_staff: staff.length,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ─── REST API ROUTES ───────────────────────────────────────────────────────────
 
 // GET /api/store/me - Get current user store details
-app.get('/api/store/me', sessionAuthMiddleware, async (req, res) => {
   try {
     const sid = req.storeId;
     const database = await connectDB();
@@ -2868,7 +2998,11 @@ app.get('/api/store/me', sessionAuthMiddleware, async (req, res) => {
   }
 });
 
-app.get('/api/db', async (req, res) => res.json(await readStoreDB(req.storeId)));
+app.get('/api/db', async (req, res) => {
+  const db = await readStoreDB(req.storeId);
+  db.server_time = new Date().toISOString();
+  res.json(db);
+});
 
 /**
  * GET /api/db/changes — Delta sync endpoint.
@@ -3053,6 +3187,74 @@ app.post('/api/store/complete-onboarding', sessionAuthMiddleware, async (req, re
   }
 });
 
+// POST /api/store/activate — Set phone + password after Google signup
+// Also activates store if it was in pending_registration.
+app.post('/api/store/activate', sessionAuthMiddleware, async (req, res) => {
+  try {
+    const { phone, password, store_name } = req.body;
+    const sid = req.storeId;
+    if (!sid) return res.status(401).json({ success: false, message: 'No session' });
+    if (!phone) return res.status(400).json({ success: false, message: 'Phone number is required' });
+
+    const np = normalizePhone(phone);
+    if (np.length < 10 || np.length > 15) {
+      return res.status(400).json({ success: false, message: 'Invalid phone number' });
+    }
+
+    let passwordHash = null;
+    if (password && password.length >= 6) {
+      passwordHash = await bcrypt.hash(password, 10);
+    }
+
+    const database = await connectDB();
+    const updateStore = { phone: np, status: 'active' };
+    if (store_name) updateStore.store_name = store_name;
+
+    if (database) {
+      await database.collection('stores').updateOne(
+        { id: sid },
+        { $set: updateStore }
+      );
+
+      const staffUpdate = { phone: np, status: 'active' };
+      await database.collection('staff').updateMany(
+        { store_id: sid },
+        { $set: staffUpdate }
+      );
+
+      // Update sessions to reflect real phone
+      await database.collection('sessions').updateMany(
+        { store_id: sid },
+        { $set: { phone: np } }
+      );
+    }
+
+    // Also update JSON fallback
+    const fullDb = await readDB();
+    let storeObj = fullDb.stores?.find(s => s.id === sid);
+    if (storeObj) {
+      storeObj.phone = np;
+      storeObj.status = 'active';
+      if (store_name) storeObj.store_name = store_name;
+    }
+    (fullDb.staff || [])
+      .filter(s => s.store_id === sid)
+      .forEach(s => { s.phone = np; s.status = 'active'; if (passwordHash) s.password_hash = passwordHash; });
+    await writeDB(fullDb);
+
+    // Send welcome WhatsApp
+    const name = storeObj?.owner_name || 'Store Owner';
+    const welcomeMsg = `🎉 *Welcome to Grahbook, ${name}!* 🎉\n\nYour store has been activated. You can now:\n✅ Manage customers & bills via WhatsApp\n📊 Track sales & reports\n🧾 Generate GST invoices\n\nReply "help" anytime to see all commands.`;
+    await sendWhatsAppMessage(np, welcomeMsg).catch(() => {});
+
+    console.log(`✅ Store ${sid} activated with phone ${np}`);
+    res.json({ success: true, message: 'Store activated successfully', store: storeObj || null });
+  } catch (error) {
+    console.error('Error activating store:', error);
+    res.status(500).json({ success: false, message: 'Failed to activate store' });
+  }
+});
+
 app.post('/api/register-store', async (req, res) => {
   try {
     const { store_name, owner_name, phone, email, business_type, plan, address, password, gstin, upi_id } = req.body;
@@ -3094,22 +3296,35 @@ app.post('/api/register-store', async (req, res) => {
     }
     
     // Check if store already exists
-    const existingStore = db.stores.find(s => s.phone === normalizePhone(phone) || (email && s.email === email));
+    const normalizedPhone = normalizePhone(phone);
+    let existingStore = db.stores.find(s => s.phone === normalizedPhone || (email && s.email === email));
+
+    // Special case: Google-created store with empty phone but matching email
+    if (!existingStore && email) {
+      existingStore = db.stores.find(s => s.email === email && (!s.phone || s.phone === ''));
+    }
+
     if (existingStore) {
-      // If a password was provided, update it for existing store
+      // Update existing store with phone and password
+      const shouldUpdate = existingStore.phone !== normalizedPhone || !existingStore.phone;
+
+      if (shouldUpdate) existingStore.phone = normalizedPhone;
       if (password && password.length >= 4) {
         const newHash = await bcrypt.hash(password, 10);
-        const existingStaff = db.staff.find(s => s.phone === normalizePhone(phone) && (s.store_id || 'default') === existingStore.id);
+        const existingStaff = db.staff.find(s => (s.phone === normalizedPhone || s.email === email) && (s.store_id || 'default') === existingStore.id);
         if (existingStaff) {
           existingStaff.password_hash = newHash;
-          await writeDB(db);
+          existingStaff.phone = normalizedPhone;
+          existingStaff.status = 'active';
         }
       }
-      // Return the existing store_id so the client can use it for login
+      existingStore.status = 'active';
+      if (shouldUpdate) await writeDB(db);
+
       return res.status(200).json({
         status: 'exists',
         store_id: existingStore.id,
-        message: 'Store is already registered with this phone or email'
+        message: 'Store found — you can login now'
       });
     }
     
