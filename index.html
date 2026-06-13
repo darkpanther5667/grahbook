@@ -432,7 +432,7 @@
       </button>
       <span id="authWrapper"><button id="loginBtnNav" onclick="openLogin()" style="padding:8px 18px;background:transparent;border:2px solid #25d366;color:#25d366;border-radius:12px;font-weight:600;font-size:13px;cursor:pointer;transition:all .3s">Sign In</button></span>
       <a href="#register" id="navRegisterBtn" class="ripple-btn" style="padding:10px 22px;background:#25d366;color:#fff;border-radius:12px;font-weight:600;font-size:14px;text-decoration:none;box-shadow:0 4px 16px rgba(37,211,102,.25);display:inline-block">Register Your Store</a>
-      <a href="/dashboard" id="navDashboardBtn" style="display:none;padding:10px 22px;background:#25d366;color:#fff;border-radius:12px;font-weight:600;font-size:14px;text-decoration:none;box-shadow:0 4px 16px rgba(37,211,102,.25)">Dashboard</a>
+      <a href="/dashboard.html" id="navDashboardBtn" style="display:none;padding:10px 22px;background:#25d366;color:#fff;border-radius:12px;font-weight:600;font-size:14px;text-decoration:none;box-shadow:0 4px 16px rgba(37,211,102,.25)">Dashboard</a>
     </div>
     <div id="navMobile" style="display:flex;align-items:center;gap:8px">
       <button id="themeToggleMob" class="theme-toggle" aria-label="Toggle theme">
@@ -451,7 +451,7 @@
       <a href="about.html" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">About</a>
       <a href="contact.html" style="color:var(--text-tertiary);text-decoration:none;font-size:16px;padding:10px 0;border-bottom:1px solid var(--border)">Contact</a>
       <a href="#" onclick="closeLoginMob()" id="mobLoginBtn" style="padding:10px;border:2px solid #25d366;color:#25d366;border-radius:12px;text-align:center;font-weight:600;text-decoration:none">Sign In</a>
-      <a href="/dashboard" id="mobDashboardBtn" style="display:none;padding:14px;background:#25d366;color:#fff;border-radius:12px;text-align:center;font-weight:600;text-decoration:none">Dashboard</a>
+      <a href="/dashboard.html" id="mobDashboardBtn" style="display:none;padding:14px;background:#25d366;color:#fff;border-radius:12px;text-align:center;font-weight:600;text-decoration:none">Dashboard</a>
       <a href="#register" id="mobRegisterBtn" style="padding:14px;background:#25d366;color:#fff;border-radius:12px;text-align:center;font-weight:600;text-decoration:none">Register Your Store</a>
     </div>
   </div>
@@ -1001,9 +1001,9 @@ function showForm(p){document.getElementById('planSelect').value=p;document.getE
 document.getElementById('registerForm').addEventListener('submit',async function(e){
   e.preventDefault();const btn=document.getElementById('submitBtn'),orig=btn.innerHTML;
   btn.disabled=true;btn.innerHTML='<span style="display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite"></span> Registering...';
-  try{const r=await fetch('/api/register-store',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({store_name:document.getElementById('storeName').value,owner_name:document.getElementById('ownerName').value,phone:document.getElementById('phone').value,email:document.getElementById('email').value,business_type:document.getElementById('businessType').value,plan:document.getElementById('planSelect').value,password:document.getElementById('phone').value.slice(-6)})});const d=await r.json();if(r.ok){document.getElementById('registerForm').style.display='none';document.getElementById('successMsg').style.display='block';document.getElementById('storeId').textContent=d.store_id;
+  try{const r=await fetch(API_BASE+'/api/register-store',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({store_name:document.getElementById('storeName').value,owner_name:document.getElementById('ownerName').value,phone:document.getElementById('phone').value,email:document.getElementById('email').value,business_type:document.getElementById('businessType').value,plan:document.getElementById('planSelect').value,password:document.getElementById('phone').value.slice(-6)})});const d=await r.json();if(r.ok){document.getElementById('registerForm').style.display='none';document.getElementById('successMsg').style.display='block';document.getElementById('storeId').textContent=d.store_id;
     // Auto-login after registration
-    try{const lr=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:document.getElementById('phone').value,password:document.getElementById('phone').value.slice(-6)})});const ld=await lr.json();if(ld.success&&ld.token){const s=ld.store||{};setSession({name:s.owner_name||document.getElementById('ownerName').value,phone:document.getElementById('phone').value,email:document.getElementById('email').value,store:s.store_name||document.getElementById('storeName').value,store_id:s.id||d.store_id||'',loggedIn:true},ld.token);}}catch(ae){}}else throw new Error();}
+    try{const lr=await fetch(API_BASE+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:document.getElementById('phone').value,password:document.getElementById('phone').value.slice(-6)})});const ld=await lr.json();if(ld.success&&ld.token){const s=ld.store||{};setSession({name:s.owner_name||document.getElementById('ownerName').value,phone:document.getElementById('phone').value,email:document.getElementById('email').value,store:s.store_name||document.getElementById('storeName').value,store_id:s.id||d.store_id||'',loggedIn:true},ld.token);goToDashboard(s.id||d.store_id||'');}}catch(ae){}}else throw new Error();}
   catch(err){alert('Registration failed. Please ensure all fields are valid.');btn.disabled=false;btn.innerHTML=orig;}
 });
 
@@ -1011,6 +1011,7 @@ document.getElementById('registerForm').addEventListener('submit',async function
 const AUTH_KEY='gh_user';
 const AUTH_TOKEN_KEY='gh_token';
 const API_BASE = 'https://wpapp-xz9l.onrender.com';
+const DASHBOARD_URL = '/dashboard';
 
 function openLogin(){document.getElementById('loginModal').classList.add('show');}
 function closeLogin(){document.getElementById('loginModal').classList.remove('show');}
@@ -1032,6 +1033,9 @@ function clearSession(){
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem(AUTH_TOKEN_KEY);
   updateAuthUI();
+}
+function goToDashboard(storeId=''){
+  window.location.href = storeId ? `${DASHBOARD_URL}?store_id=${encodeURIComponent(storeId)}` : DASHBOARD_URL;
 }
 async function handleLogin(e){
   e.preventDefault();
@@ -1063,7 +1067,9 @@ async function handleLogin(e){
       store_id:store.id||'',
       loggedIn:true
     },d.token);
-    closeLogin();return false;
+    closeLogin();
+    goToDashboard(store.id||'');
+    return false;
   }catch(err){
     serverErr.textContent='Server not reachable. Please try again later.';
     serverErr.style.display='block';
@@ -1170,9 +1176,9 @@ function handleGoogleCredentialResponse(response){
   .then(data=>{
     if(!data.success){alert(data.message||'Google login failed.');return;}
     var store=data.store||{};
-    setSession({name:store.owner_name||store.store_name||'Google User',email:store.email||'',phone:store.phone||'',store:store.store_name||'My Store',social:'google',loggedIn:true,token:data.token});
+    setSession({name:store.owner_name||store.store_name||'Google User',email:store.email||'',phone:store.phone||'',store:store.store_name||'My Store',social:'google',loggedIn:true},data.token);
     closeLogin();
-    window.location.href='/dashboard';
+    goToDashboard(store.id||'');
   })
   .catch(function(err){alert('Google login failed: '+err.message);});
 }
