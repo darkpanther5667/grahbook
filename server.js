@@ -513,7 +513,7 @@ async function writeDB(data, expectedVersion) {
     }
 
     // For array collections: upsert each doc AND remove docs not in new data
-    for (const col of ['customers', 'transactions', 'bills', 'staff', 'stores', 'items']) {
+    for (const col of ['customers', 'transactions', 'bills', 'staff', 'stores', 'items', 'deletions']) {
       const docs = Array.isArray(data[col]) ? data[col] : [];
       const ops = [];
 
@@ -755,6 +755,7 @@ async function addItemToUnpaidBillTool(customerId, itemName, price, qty, storeId
   const quantity = Number(qty) || 1;
   currentBill.items.push({ name: itemName, qty: quantity, price: Number(price), hsn_code: '', gst_rate: 0, taxable: 0, cgst: 0, sgst: 0, igst: 0, total_with_tax: 0 });
   currentBill.total += Number(price) * quantity;
+  currentBill.updated_at = new Date().toISOString();
   await writeDB(db);
   // Invalidate cache to ensure AI gets fresh data
   cachedDB = null;
@@ -803,6 +804,7 @@ async function markBillAsPaidTool(customerId, storeId) {
   }
   unpaidBill.status = 'paid';
   unpaidBill.paid_at = new Date().toISOString();
+  unpaidBill.updated_at = unpaidBill.paid_at;
   if (!db.transactions) db.transactions = [];
   db.transactions.push({
     id: genId('t'),
@@ -1846,6 +1848,8 @@ app.post('/webhook', rateLimiter({ windowMs: 60000, max: 30, keyPrefix: 'webhook
       });
       await writeDB(fullDb);
       cachedDB = null; dbCacheTimestamp = 0;
+      db.transactions = (fullDb.transactions || []).filter(t => (t.store_id || 'default') === (storeId || 'default'));
+      db.bills = (fullDb.bills || []).filter(b => (b.store_id || 'default') === (storeId || 'default'));
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `💵 *Payment Recorded!*\n` +
@@ -1876,6 +1880,8 @@ app.post('/webhook', rateLimiter({ windowMs: 60000, max: 30, keyPrefix: 'webhook
       });
       await writeDB(fullDb);
       cachedDB = null; dbCacheTimestamp = 0;
+      db.transactions = (fullDb.transactions || []).filter(t => (t.store_id || 'default') === (storeId || 'default'));
+      db.bills = (fullDb.bills || []).filter(b => (b.store_id || 'default') === (storeId || 'default'));
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `✅ *Udhar Add Ho Gaya!*\n` +
@@ -1901,6 +1907,8 @@ app.post('/webhook', rateLimiter({ windowMs: 60000, max: 30, keyPrefix: 'webhook
       });
       await writeDB(fullDb);
       cachedDB = null; dbCacheTimestamp = 0;
+      db.transactions = (fullDb.transactions || []).filter(t => (t.store_id || 'default') === (storeId || 'default'));
+      db.bills = (fullDb.bills || []).filter(b => (b.store_id || 'default') === (storeId || 'default'));
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `📝 *Bill Bana Diya!*\n` +
@@ -1914,7 +1922,12 @@ app.post('/webhook', rateLimiter({ windowMs: 60000, max: 30, keyPrefix: 'webhook
     // ── ADD ITEM TO BILL ─────────────────────────────────────────────────────────
     } else if (action.type === 'add_item') {
       const { customerId, customerName, itemName, price } = action;
-      let currentBill = db.bills.find(b => b.customer_id === customerId && b.status === 'unpaid');
+      let currentBill = db.bills.find(b => {
+        if (b.customer_id !== customerId || b.status !== 'unpaid') return false;
+        if (!b.created_at) return true;
+        const daysDiff = (new Date() - new Date(b.created_at)) / (1000 * 60 * 60 * 24);
+        return daysDiff <= 30;
+      });
       if (!currentBill) {
         currentBill = {
           id: genId('b'),
@@ -1930,8 +1943,11 @@ app.post('/webhook', rateLimiter({ windowMs: 60000, max: 30, keyPrefix: 'webhook
       }
       currentBill.items.push({ name: itemName, qty: 1, price, hsn_code: '', gst_rate: 0, taxable: 0, cgst: 0, sgst: 0, igst: 0, total_with_tax: 0 });
       currentBill.total += price;
+      currentBill.updated_at = new Date().toISOString();
       await writeDB(fullDb);
       cachedDB = null; dbCacheTimestamp = 0;
+      db.transactions = (fullDb.transactions || []).filter(t => (t.store_id || 'default') === (storeId || 'default'));
+      db.bills = (fullDb.bills || []).filter(b => (b.store_id || 'default') === (storeId || 'default'));
       const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
       replyText =
         `🛒 *Item Add Ho Gaya!*\n` +
@@ -2027,8 +2043,24 @@ app.post('/webhook', rateLimiter({ windowMs: 60000, max: 30, keyPrefix: 'webhook
       } else {
         unpaidBill.status = 'paid';
         unpaidBill.paid_at = timestampIso;
+        unpaidBill.updated_at = timestampIso;
+        if (!fullDb.transactions) fullDb.transactions = [];
+        fullDb.transactions.push({
+          id: genId('t'),
+          customer_id: customerId,
+          type: 'payment',
+          amount: unpaidBill.total,
+          note: `Bill marked as paid via Bot by ${activeStaff.name}`,
+          payment_mode: 'Cash',
+          staff_phone: staffPhone,
+          timestamp: timestampIso,
+          store_id: storeId || 'default',
+          bill_id: unpaidBill.id
+        });
         await writeDB(fullDb);
         cachedDB = null; dbCacheTimestamp = 0;
+        db.transactions = (fullDb.transactions || []).filter(t => (t.store_id || 'default') === (storeId || 'default'));
+        db.bills = (fullDb.bills || []).filter(b => (b.store_id || 'default') === (storeId || 'default'));
         const bal = getCustomerOutstanding(customerId, db.transactions, db.bills);
         replyText =
           `✅ *Bill Mark Paid Ho Gaya!*\n` +
@@ -2883,10 +2915,12 @@ app.post('/api/payment/add', sessionAuthMiddleware, async (req, res) => {
         if (remainingPayment >= billTotal) {
           bill.status = 'paid';
           bill.paid_at = new Date().toISOString();
+          bill.updated_at = bill.paid_at;
           remainingPayment -= billTotal;
           billsUpdated = true;
         } else {
           bill.status = 'partial';
+          bill.updated_at = new Date().toISOString();
           remainingPayment = 0;
           billsUpdated = true;
         }
@@ -2986,6 +3020,8 @@ app.delete('/api/items/delete/:id', sessionAuthMiddleware, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Item not found' });
     }
     fullDb.items.splice(idx, 1);
+    if (!fullDb.deletions) fullDb.deletions = [];
+    fullDb.deletions.push({ id, type: 'item', deleted_at: new Date().toISOString(), store_id: sid });
     await writeDB(fullDb);
     cachedDB = null;
     dbCacheTimestamp = 0;
@@ -3208,10 +3244,16 @@ app.get('/api/db/changes', sessionAuthMiddleware, async (req, res) => {
     );
     const newBills = storeBills.filter(b =>
       (b.created_at && new Date(b.created_at) > sinceDate) ||
-      (b.paid_at && new Date(b.paid_at) > sinceDate)
+      (b.paid_at && new Date(b.paid_at) > sinceDate) ||
+      (b.updated_at && new Date(b.updated_at) > sinceDate)
     );
     // Items inside bills don't have independent timestamps, so a bill
     // whose items changed is returned as part of the updated bills list.
+
+    const storeDeletions = (db.deletions || []).filter(d => (d.store_id || 'default') === sid);
+    const deletedRecords = storeDeletions.filter(d =>
+      d.deleted_at && new Date(d.deleted_at) > sinceDate
+    ).map(d => ({ id: d.id, type: d.type }));
 
     const serverTime = new Date().toISOString();
 
@@ -3219,6 +3261,7 @@ app.get('/api/db/changes', sessionAuthMiddleware, async (req, res) => {
       customers: newCustomers,
       transactions: newTransactions,
       bills: newBills,
+      deleted: deletedRecords,
       server_time: serverTime,
     });
   } catch (error) {
@@ -3708,6 +3751,8 @@ app.delete('/api/transaction/:id', async (req, res) => {
     }
     const txToDelete = fullDb.transactions[idx];
     fullDb.transactions.splice(idx, 1);
+    if (!fullDb.deletions) fullDb.deletions = [];
+    fullDb.deletions.push({ id, type: 'transaction', deleted_at: new Date().toISOString(), store_id: sid });
     if (txToDelete.bill_id && fullDb.bills) {
       const bill = fullDb.bills.find(b => b.id === txToDelete.bill_id);
       if (bill) {
@@ -3737,6 +3782,8 @@ app.delete('/api/bill/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Bill not found' });
     }
     fullDb.bills.splice(idx, 1);
+    if (!fullDb.deletions) fullDb.deletions = [];
+    fullDb.deletions.push({ id, type: 'bill', deleted_at: new Date().toISOString(), store_id: sid });
     if (fullDb.transactions) {
       fullDb.transactions = fullDb.transactions.filter(t => t.bill_id !== id);
     }
@@ -3762,6 +3809,8 @@ app.delete('/api/customer/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer not found' });
     }
     fullDb.customers.splice(idx, 1);
+    if (!fullDb.deletions) fullDb.deletions = [];
+    fullDb.deletions.push({ id, type: 'customer', deleted_at: new Date().toISOString(), store_id: sid });
     // Remove all transactions for this customer
     if (fullDb.transactions) {
       fullDb.transactions = fullDb.transactions.filter(t => (t.customer_id || t.customerId) !== id);
